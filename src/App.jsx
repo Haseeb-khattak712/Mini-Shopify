@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { BrowserRouter, Routes, Route, Navigate, Outlet, useOutletContext } from 'react-router-dom'
-import { getStoredOrders, saveStoredOrders, isAuthenticated, getStoredProducts, saveStoredProducts, getStoredReviews, saveStoredReviews } from './services/storage'
+import { getStoredOrders, isAuthenticated, getStoredProducts, getStoredReviews } from './services/storage'
 
 import { LandingPage, SignupFlow } from './components/Marketing'
 import { AdminLayout } from './components/AdminLayout'
@@ -9,64 +9,85 @@ import { AdminProducts } from './components/AdminProducts'
 import { AdminOrders } from './components/AdminOrders'
 import { AdminEmpty } from './components/AdminEmpty'
 import { AdminLogin } from './components/AdminLogin'
-import { StoreHome, ProductDetail, CartCheckout, OrderConfirmation } from './components/Storefront'
+import { StoreHome, ProductDetail, CartCheckout, OrderConfirmation, CartSidebar } from './components/Storefront'
 import { PrivacyPolicy, ReturnsRefunds, ContactUs } from './components/PolicyPages'
 
 // Guard for Admin Routes
 function ProtectedAdminRoute() {
+  const context = useOutletContext()
   if (!isAuthenticated()) {
     return <Navigate to="/admin/login" replace />
   }
-  return <AdminLayout><Outlet /></AdminLayout>
+  return <AdminLayout><Outlet context={context} /></AdminLayout>
 }
 
 // Wrapper for Storefront to hold cart state
 function StoreWrapper() {
   const dataContext = useOutletContext()
   const [cart, setCart] = React.useState([])
+  const [isCartOpen, setIsCartOpen] = React.useState(false)
   
-  const handleAddToCart = (product, quantity = 1) => {
+  const handleAddToCart = (product, quantity = 1, size = null, color = null) => {
     setCart(prev => {
-      const exists = prev.find(i => i.product.id === product.id)
+      const exists = prev.find(i => i.product.id === product.id && i.size === size && i.color === color)
       if (exists) {
-        return prev.map(i => i.product.id === product.id ? { ...i, quantity: i.quantity + quantity } : i)
+        return prev.map(i => (i.product.id === product.id && i.size === size && i.color === color) ? { ...i, quantity: i.quantity + quantity } : i)
       }
-      return [...prev, { product, quantity }]
+      return [...prev, { product, quantity, size, color }]
     })
+    setIsCartOpen(true) // Automatically open cart when adding
   }
 
-  const handleUpdateCart = (productId, qty) => {
+  const handleUpdateCart = (productId, qty, size = null, color = null) => {
     setCart(prev => {
-      if (qty === 0) return prev.filter(i => i.product.id !== productId)
-      return prev.map(i => i.product.id === productId ? { ...i, quantity: qty } : i)
+      if (qty === 0) return prev.filter(i => !(i.product.id === productId && i.size === size && i.color === color))
+      return prev.map(i => (i.product.id === productId && i.size === size && i.color === color) ? { ...i, quantity: qty } : i)
     })
   }
 
-  return <Outlet context={{ ...dataContext, cart, handleAddToCart, handleUpdateCart, setCart }} />
+  return (
+    <>
+      <Outlet context={{ ...dataContext, cart, handleAddToCart, handleUpdateCart, setCart, isCartOpen, setIsCartOpen }} />
+      <CartSidebar 
+        isOpen={isCartOpen} 
+        onClose={() => setIsCartOpen(false)} 
+        cart={cart} 
+        handleUpdateCart={handleUpdateCart} 
+      />
+    </>
+  )
 }
 
 // Global Data Wrapper for Shared State
 function DataWrapper({ children }) {
-  const [orders, setOrdersState] = useState(() => getStoredOrders())
-  const [products, setProductsState] = useState(() => getStoredProducts())
-  const [reviews, setReviewsState] = useState(() => getStoredReviews())
+  const [orders, setOrders] = useState([])
+  const [products, setProducts] = useState([])
+  const [reviews, setReviews] = useState([])
+  const [loading, setLoading] = useState(true)
 
-  const setOrders = (newOrders) => {
-    const updated = typeof newOrders === 'function' ? newOrders(orders) : newOrders
-    setOrdersState(updated)
-    saveStoredOrders(updated)
-  }
+  useEffect(() => {
+    Promise.all([
+      getStoredOrders(),
+      getStoredProducts(),
+      getStoredReviews()
+    ]).then(([o, p, r]) => {
+      setOrders(o || [])
+      setProducts(p || [])
+      setReviews(r || [])
+      setLoading(false)
+    }).catch(err => {
+      console.error('Failed to load data:', err)
+      setLoading(false)
+    })
+  }, [])
 
-  const setProducts = (newProducts) => {
-    const updated = typeof newProducts === 'function' ? newProducts(products) : newProducts
-    setProductsState(updated)
-    saveStoredProducts(updated)
-  }
-
-  const setReviews = (newReviews) => {
-    const updated = typeof newReviews === 'function' ? newReviews(reviews) : newReviews
-    setReviewsState(updated)
-    saveStoredReviews(updated)
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center font-display">
+        <div className="w-12 h-12 rounded-full border-4 border-indigo-200 border-t-indigo-600 animate-spin mb-4"></div>
+        <p className="text-slate-500 font-medium">Loading StoreKit Data...</p>
+      </div>
+    )
   }
 
   return (

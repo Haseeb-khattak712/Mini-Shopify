@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Button, Input, Modal, Toast, Card } from './ui'
 import { useOutletContext } from 'react-router-dom'
+import { addProduct, updateProduct, deleteProduct } from '../services/storage'
 
 export function AdminProducts() {
   const { products, setProducts } = useOutletContext()
@@ -9,7 +10,7 @@ export function AdminProducts() {
   const [showModal, setShowModal] = useState(false)
   const [toast, setToast] = useState('')
   const [editProduct, setEditProduct] = useState(null)
-  const [form, setForm] = useState({ name: '', price: '', stock: '', category: 'Apparel', description: '' })
+  const [form, setForm] = useState({ name: '', price: '', stock: '', category: 'Apparel', description: '', sizes: '', colors: '' })
   const [formErrors, setFormErrors] = useState({})
 
   const categories = ['All', ...Array.from(new Set(products.map(p => p.category)))]
@@ -22,14 +23,22 @@ export function AdminProducts() {
 
   const openAdd = () => {
     setEditProduct(null)
-    setForm({ name: '', price: '', stock: '', category: 'Apparel', description: '' })
+    setForm({ name: '', price: '', stock: '', category: 'Apparel', description: '', sizes: '', colors: '' })
     setFormErrors({})
     setShowModal(true)
   }
 
   const openEdit = (p) => {
     setEditProduct(p)
-    setForm({ name: p.name, price: String(p.price), stock: String(p.stock), category: p.category, description: p.description })
+    setForm({ 
+      name: p.name, 
+      price: String(p.price), 
+      stock: String(p.stock), 
+      category: p.category, 
+      description: p.description,
+      sizes: p.sizes ? p.sizes.join(', ') : '',
+      colors: p.colors ? p.colors.join(', ') : ''
+    })
     setFormErrors({})
     setShowModal(true)
   }
@@ -43,29 +52,37 @@ export function AdminProducts() {
     return Object.keys(e).length === 0
   }
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!validate()) return
+    const parsedSizes = form.sizes.split(',').map(s => s.trim()).filter(Boolean)
+    const parsedColors = form.colors.split(',').map(c => c.trim()).filter(Boolean)
+
     if (editProduct) {
-      setProducts(ps => ps.map(p => p.id === editProduct.id ? { ...p, ...form, price: +form.price, stock: +form.stock } : p))
+      const updated = { ...editProduct, ...form, price: +form.price, stock: +form.stock, sizes: parsedSizes, colors: parsedColors }
+      await updateProduct(updated)
+      setProducts(ps => ps.map(p => p.id === editProduct.id ? updated : p))
       setToast('Product updated successfully')
     } else {
       const newP = {
-        id: `p${Date.now()}`,
         name: form.name,
         price: +form.price,
         stock: +form.stock,
         category: form.category,
         description: form.description,
+        sizes: parsedSizes,
+        colors: parsedColors,
         image: 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=600&h=600&fit=crop&auto=format',
       }
-      setProducts(ps => [newP, ...ps])
+      const res = await addProduct(newP)
+      setProducts(ps => [{ ...newP, id: res.id }, ...ps])
       setToast('Product added successfully')
     }
     setShowModal(false)
     setTimeout(() => setToast(''), 3000)
   }
 
-  const handleDelete = (id) => {
+  const handleDelete = async (id) => {
+    await deleteProduct(id)
     setProducts(ps => ps.filter(p => p.id !== id))
     setToast('Product removed')
     setTimeout(() => setToast(''), 3000)
@@ -174,6 +191,11 @@ export function AdminProducts() {
               >
                 {['Apparel', 'Accessories', 'Home', 'Electronics', 'Other'].map(c => <option key={c}>{c}</option>)}
               </select>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-3">
+              <Input label="Sizes (comma separated)" placeholder="S, M, L" value={form.sizes} onChange={e => setForm(f => ({ ...f, sizes: e.target.value }))} />
+              <Input label="Colors (comma separated)" placeholder="Red, Blue" value={form.colors} onChange={e => setForm(f => ({ ...f, colors: e.target.value }))} />
             </div>
             <div>
               <label className="text-sm font-medium text-slate-700 block mb-1.5">Description</label>

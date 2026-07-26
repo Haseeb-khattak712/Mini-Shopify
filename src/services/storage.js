@@ -1,75 +1,88 @@
-import { PRODUCTS, ORDERS } from '../data'
-
-const STORAGE_KEYS = {
-  PRODUCTS: 'storekit_products',
-  ORDERS: 'storekit_orders',
-  AUTH: 'storekit_admin_auth',
-  REVIEWS: 'storekit_reviews',
-}
-
-const INITIAL_REVIEWS = [
-  { id: 'r1', productId: 'p1', author: 'Sarah J.', rating: 5, text: 'Absolutely love this shirt! The fabric is so soft and it fits perfectly.', date: '2026-06-15' },
-  { id: 'r2', productId: 'p1', author: 'Mike T.', rating: 4, text: 'Great quality, but runs slightly small.', date: '2026-06-10' },
-  { id: 'r3', productId: 'p3', author: 'Emily R.', rating: 5, text: 'Beautiful mug, holds heat really well.', date: '2026-06-02' }
-]
-
-// Initialize LocalStorage with default data if empty
-export function initStorage() {
-  if (!localStorage.getItem(STORAGE_KEYS.PRODUCTS)) {
-    localStorage.setItem(STORAGE_KEYS.PRODUCTS, JSON.stringify(PRODUCTS))
-  }
-  if (!localStorage.getItem(STORAGE_KEYS.ORDERS)) {
-    localStorage.setItem(STORAGE_KEYS.ORDERS, JSON.stringify(ORDERS))
-  }
-  if (!localStorage.getItem(STORAGE_KEYS.REVIEWS)) {
-    localStorage.setItem(STORAGE_KEYS.REVIEWS, JSON.stringify(INITIAL_REVIEWS))
-  }
-}
+const API_URL = 'http://localhost:8000/api'
 
 // Reviews API
-export function getStoredReviews() {
-  initStorage()
-  return JSON.parse(localStorage.getItem(STORAGE_KEYS.REVIEWS) || '[]')
+export async function getStoredReviews() {
+  const res = await fetch(`${API_URL}/reviews.php`)
+  return await res.json()
 }
 
-export function saveStoredReviews(reviews) {
-  localStorage.setItem(STORAGE_KEYS.REVIEWS, JSON.stringify(reviews))
+export async function addReview(review) {
+  const res = await fetch(`${API_URL}/reviews.php`, {
+    method: 'POST',
+    body: JSON.stringify(review),
+    headers: { 'Content-Type': 'application/json' }
+  })
+  return await res.json()
 }
 
 // Products API
-export function getStoredProducts() {
-  initStorage()
-  return JSON.parse(localStorage.getItem(STORAGE_KEYS.PRODUCTS) || '[]')
+export async function getStoredProducts() {
+  const res = await fetch(`${API_URL}/products.php`)
+  return await res.json()
 }
 
-export function saveStoredProducts(products) {
-  localStorage.setItem(STORAGE_KEYS.PRODUCTS, JSON.stringify(products))
+export async function addProduct(product) {
+  const res = await fetch(`${API_URL}/products.php`, {
+    method: 'POST',
+    body: JSON.stringify(product),
+    headers: { 'Content-Type': 'application/json' }
+  })
+  return await res.json()
+}
+
+export async function updateProduct(product) {
+  const res = await fetch(`${API_URL}/products.php`, {
+    method: 'PUT',
+    body: JSON.stringify(product),
+    headers: { 'Content-Type': 'application/json' }
+  })
+  return await res.json()
+}
+
+export async function deleteProduct(id) {
+  const res = await fetch(`${API_URL}/products.php?id=${id}`, {
+    method: 'DELETE'
+  })
+  return await res.json()
 }
 
 // Orders API
-export function getStoredOrders() {
-  initStorage()
-  return JSON.parse(localStorage.getItem(STORAGE_KEYS.ORDERS) || '[]')
+export async function getStoredOrders() {
+  const res = await fetch(`${API_URL}/orders.php`)
+  return await res.json()
 }
 
-export function saveStoredOrders(orders) {
-  localStorage.setItem(STORAGE_KEYS.ORDERS, JSON.stringify(orders))
+export async function addOrder(order) {
+  const res = await fetch(`${API_URL}/orders.php`, {
+    method: 'POST',
+    body: JSON.stringify(order),
+    headers: { 'Content-Type': 'application/json' }
+  })
+  return await res.json()
+}
+
+export async function updateOrder(order) {
+  const res = await fetch(`${API_URL}/orders.php`, {
+    method: 'PUT',
+    body: JSON.stringify(order),
+    headers: { 'Content-Type': 'application/json' }
+  })
+  return await res.json()
 }
 
 // Auth API
 export function isAuthenticated() {
-  return localStorage.getItem(STORAGE_KEYS.AUTH) === 'true'
+  return localStorage.getItem('storekit_admin_auth') === 'true'
 }
 
 export function loginAdmin(username, password) {
-  // Demo authentication check
   if (username === 'admin' && password === 'admin123') {
-    localStorage.setItem(STORAGE_KEYS.AUTH, 'true')
+    localStorage.setItem('storekit_admin_auth', 'true')
     return { success: true }
   }
   return { success: false, error: 'Invalid username or password' }
 }
 
 export function logoutAdmin() {
-  localStorage.removeItem(STORAGE_KEYS.AUTH)
+  localStorage.removeItem('storekit_admin_auth')
 }

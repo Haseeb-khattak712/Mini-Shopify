@@ -41,12 +41,15 @@ function StorefrontMiniScene() {
 // ── Store Nav ─────────────────────────────────────────────────────────────────
 
 import { useNavigate, useOutletContext, useParams } from 'react-router-dom'
+import { addReview, addOrder } from '../services/storage'
 
 function StoreNav({ cartCount }) {
   const navigate = useNavigate()
+  const { setIsCartOpen } = useOutletContext()
   const [isDark, setIsDark] = useState(false)
 
   useEffect(() => {
+    setIsCartOpen(false) // Close cart on route changes if necessary, or just rely on context
     setIsDark(document.documentElement.classList.contains('dark'))
   }, [])
 
@@ -72,7 +75,7 @@ function StoreNav({ cartCount }) {
             {isDark ? '🌙' : '☀️'}
           </button>
           <button
-            onClick={() => navigate('/store/cart')}
+            onClick={() => setIsCartOpen(true)}
             className="relative flex items-center gap-2 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 rounded-[10px] px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-200 cursor-pointer transition-colors"
           >
             🛒 Cart
@@ -277,7 +280,7 @@ export function StoreHome() {
 export function ProductDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { cart, handleAddToCart, products, reviews, setReviews } = useOutletContext();
+  const { cart, handleAddToCart, products, reviews, setReviews, addReview } = useOutletContext();
   const product = (products || []).find(p => p.id === id);
 
   const productReviews = (reviews || []).filter(r => r.productId === id);
@@ -287,12 +290,21 @@ export function ProductDetail() {
 
   const [toast, setToast] = useState('');
   const [qty, setQty] = useState(1);
+  const [selectedSize, setSelectedSize] = useState('');
+  const [selectedColor, setSelectedColor] = useState('');
   const tilt = useTilt(7);
   const cartCount = cart.reduce((s, i) => s + i.quantity, 0);
 
+  useEffect(() => {
+    if (product) {
+      if (product.sizes?.length > 0) setSelectedSize(product.sizes[0]);
+      if (product.colors?.length > 0) setSelectedColor(product.colors[0]);
+    }
+  }, [product]);
+
   const [reviewForm, setReviewForm] = useState({ rating: 5, author: '', text: '' });
 
-  const submitReview = () => {
+  const submitReview = async () => {
     if (!reviewForm.author.trim() || !reviewForm.text.trim()) {
       setToast('Please fill out your name and review.')
       setTimeout(() => setToast(''), 2500)
@@ -311,8 +323,10 @@ export function ProductDetail() {
   }
 
   const add = () => {
-    handleAddToCart(product, qty)
-    setToast(`Added ${qty}× ${product.name} to cart`)
+    handleAddToCart(product, qty, selectedSize, selectedColor)
+    let msg = `Added ${qty}× ${product.name}`
+    if (selectedSize || selectedColor) msg += ` (${[selectedSize, selectedColor].filter(Boolean).join(', ')})`
+    setToast(msg + ' to cart')
     setTimeout(() => setToast(''), 2500)
   }
 
@@ -359,6 +373,32 @@ export function ProductDetail() {
                 {product.stock > 10 ? '✓ In stock' : product.stock > 0 ? `⚠ Only ${product.stock} left` : '✕ Out of stock'}
               </span>
             </div>
+
+            {product.sizes?.length > 0 && (
+              <div className="mb-4">
+                <label className="text-sm font-medium text-slate-700 dark:text-slate-300 block mb-2">Size</label>
+                <div className="flex gap-2">
+                  {product.sizes.map(s => (
+                    <button key={s} onClick={() => setSelectedSize(s)} className={`px-3 py-1 border rounded text-sm transition-colors ${selectedSize === s ? 'border-indigo-600 bg-indigo-50 text-indigo-700 dark:bg-indigo-900/50 dark:text-indigo-300' : 'border-slate-200 text-slate-600 hover:border-slate-300 dark:border-slate-700 dark:text-slate-400'}`}>
+                      {s}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {product.colors?.length > 0 && (
+              <div className="mb-6">
+                <label className="text-sm font-medium text-slate-700 dark:text-slate-300 block mb-2">Color</label>
+                <div className="flex gap-2">
+                  {product.colors.map(c => (
+                    <button key={c} onClick={() => setSelectedColor(c)} className={`px-3 py-1 border rounded text-sm transition-colors ${selectedColor === c ? 'border-indigo-600 bg-indigo-50 text-indigo-700 dark:bg-indigo-900/50 dark:text-indigo-300' : 'border-slate-200 text-slate-600 hover:border-slate-300 dark:border-slate-700 dark:text-slate-400'}`}>
+                      {c}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
 
             <div className="flex items-center gap-4 mb-6 mt-2">
               <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Quantity</label>
@@ -478,10 +518,11 @@ export function CartCheckout() {
   const total = subtotal + shipping
 
   const updateQty = (idx, qty) => {
+    const item = cart[idx]
     if (qty === 0) {
-      handleUpdateCart(cart[idx].product.id, 0)
+      handleUpdateCart(item.product.id, 0, item.size, item.color)
     } else {
-      handleUpdateCart(cart[idx].product.id, qty)
+      handleUpdateCart(item.product.id, qty, item.size, item.color)
     }
   }
 
@@ -509,9 +550,20 @@ export function CartCheckout() {
     setStep('payment')
   }
 
-  const handlePlaceOrder = () => {
+  const handlePlaceOrder = async () => {
     if (!validatePayment()) return
-    onConfirm(`ORD-${Math.floor(7900 + Math.random() * 100)}`)
+    
+    const newOrder = {
+      customer: form.name,
+      total: total,
+      date: new Date().toISOString().split('T')[0],
+      status: 'processing',
+      items: cart.map(i => ({ product_id: i.product.id, quantity: i.quantity, price: i.product.price, size: i.size, color: i.color }))
+    }
+    const res = await addOrder(newOrder)
+    
+    setCart([])
+    navigate('/store/confirmation', { state: { orderId: res.id } })
   }
 
   return (
@@ -542,7 +594,12 @@ export function CartCheckout() {
                     <img src={item.product.image} alt={item.product.name} className="w-16 h-16 rounded-lg object-cover border border-slate-100" />
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-semibold text-slate-900">{item.product.name}</p>
-                      <p className="text-xs text-slate-400">${item.product.price} each</p>
+                      {(item.size || item.color) && (
+                        <p className="text-xs text-slate-500 mt-0.5">
+                          {[item.size, item.color].filter(Boolean).join(' · ')}
+                        </p>
+                      )}
+                      <p className="text-xs text-slate-400 mt-0.5">${item.product.price} each</p>
                     </div>
                     <div className="flex items-center border border-slate-200 rounded-lg overflow-hidden">
                       <button onClick={() => updateQty(idx, item.quantity - 1)} className="w-8 h-8 flex items-center justify-center text-slate-500 hover:bg-slate-50 cursor-pointer text-sm">−</button>
@@ -737,5 +794,93 @@ export function OrderConfirmation() {
         @keyframes bounceIn { from { opacity:0; transform:translateZ(24px) scale(0.3); } to { opacity:1; transform:translateZ(24px) scale(1); } }
       `}</style>
     </div>
+  )
+}
+
+// ── Slide-Out Cart Sidebar ───────────────────────────────────────────────────
+
+export function CartSidebar({ isOpen, onClose, cart, handleUpdateCart }) {
+  const navigate = useNavigate();
+  const cartCount = cart.reduce((s, i) => s + i.quantity, 0)
+  const subtotal = cart.reduce((s, i) => s + i.product.price * i.quantity, 0)
+
+  const updateQty = (idx, qty) => {
+    const item = cart[idx]
+    if (qty === 0) {
+      handleUpdateCart(item.product.id, 0, item.size, item.color)
+    } else {
+      handleUpdateCart(item.product.id, qty, item.size, item.color)
+    }
+  }
+
+  return (
+    <AnimatePresence>
+      {isOpen && (
+        <>
+          <motion.div 
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} 
+            onClick={onClose}
+            className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-40 transition-colors"
+          />
+          <motion.div
+            initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }} transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+            className="fixed top-0 right-0 h-full w-full max-w-md bg-white dark:bg-slate-900 shadow-2xl z-50 flex flex-col border-l border-slate-200 dark:border-slate-800 transition-colors"
+          >
+            <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between transition-colors">
+              <h2 className="text-xl font-bold font-display text-slate-900 dark:text-white transition-colors">Your Cart ({cartCount})</h2>
+              <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 transition-colors cursor-pointer">✕</button>
+            </div>
+            
+            <div className="flex-1 overflow-y-auto p-6">
+              {cart.length === 0 ? (
+                <div className="h-full flex flex-col items-center justify-center text-center text-slate-500">
+                  <p className="text-4xl mb-3">🛒</p>
+                  <p>Your cart is empty.</p>
+                </div>
+              ) : (
+                <div className="flex flex-col gap-6">
+                  {cart.map((item, idx) => (
+                    <div key={`${item.product.id}-${item.size}-${item.color}`} className="flex gap-4">
+                      <img src={item.product.image} alt={item.product.name} className="w-20 h-20 rounded-[10px] object-cover border border-slate-100 dark:border-slate-800 transition-colors" />
+                      <div className="flex-1 flex flex-col">
+                        <div className="flex justify-between items-start mb-1">
+                          <p className="text-sm font-semibold text-slate-900 dark:text-white transition-colors">{item.product.name}</p>
+                          <p className="text-sm font-bold text-slate-900 dark:text-white transition-colors">${item.product.price * item.quantity}</p>
+                        </div>
+                        {(item.size || item.color) && (
+                          <p className="text-xs text-slate-500 dark:text-slate-400 mb-2 transition-colors">
+                            {[item.size, item.color].filter(Boolean).join(' · ')}
+                          </p>
+                        )}
+                        <div className="mt-auto flex items-center justify-between">
+                          <div className="flex items-center border border-slate-200 dark:border-slate-700 rounded-lg overflow-hidden transition-colors">
+                            <button onClick={() => updateQty(idx, item.quantity - 1)} className="w-7 h-7 flex items-center justify-center text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer text-xs transition-colors">−</button>
+                            <span className="w-7 text-center text-xs font-mono font-semibold text-slate-900 dark:text-white transition-colors">{item.quantity}</span>
+                            <button onClick={() => updateQty(idx, item.quantity + 1)} className="w-7 h-7 flex items-center justify-center text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer text-xs transition-colors">+</button>
+                          </div>
+                          <button onClick={() => updateQty(idx, 0)} className="text-xs text-slate-400 hover:text-red-500 underline transition-colors cursor-pointer">Remove</button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+            
+            {cart.length > 0 && (
+              <div className="p-6 border-t border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 transition-colors">
+                <div className="flex justify-between items-center mb-4 text-slate-900 dark:text-white font-semibold transition-colors">
+                  <span>Subtotal</span>
+                  <span>${subtotal}</span>
+                </div>
+                <Button className="w-full" size="lg" onClick={() => { onClose(); navigate('/store/cart'); }}>
+                  Proceed to Checkout →
+                </Button>
+              </div>
+            )}
+          </motion.div>
+        </>
+      )}
+    </AnimatePresence>
   )
 }

@@ -1,6 +1,5 @@
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import { Card, StatusBadge } from './ui'
-import { SALES_DATA } from '../data'
 import { useTilt } from '../hooks/useTilt'
 import { useOutletContext } from 'react-router-dom'
 
@@ -29,10 +28,21 @@ function Stat3DCard({ label, value, change, positive, icon, color }) {
 }
 
 export function AdminDashboard() {
-  const { orders } = useOutletContext();
+  const { orders, products } = useOutletContext();
   const totalRevenue = orders.filter(o => o.status !== 'cancelled').reduce((sum, o) => sum + o.total, 0)
-  const ordersToday = orders.filter(o => o.date === '2026-07-23').length
-  const lowStock = [{ name: 'Leather Wallet', stock: 7 }, { name: 'Desk Lamp', stock: 3 }]
+  const today = new Date().toISOString().split('T')[0]
+  const ordersToday = orders.filter(o => o.date === today).length
+  const lowStock = (products || []).filter(p => p.stock <= 5)
+
+  // Generate 7-day sales data dynamically
+  const salesData = [...Array(7)].map((_, i) => {
+    const d = new Date()
+    d.setDate(d.getDate() - (6 - i))
+    const dateStr = d.toISOString().split('T')[0]
+    const shortLabel = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+    const dayRevenue = orders.filter(o => o.date === dateStr && o.status !== 'cancelled').reduce((sum, o) => sum + o.total, 0)
+    return { day: shortLabel, revenue: dayRevenue }
+  })
 
   return (
     <div className="p-8" style={{ perspective: '1200px' }}>
@@ -56,12 +66,12 @@ export function AdminDashboard() {
           <div className="flex items-center justify-between mb-6">
             <div>
               <h2 className="font-semibold text-slate-900 font-display">Revenue trend</h2>
-              <p className="text-xs text-slate-400 mt-0.5 font-mono">Jul 16 – Jul 23, 2026</p>
+              <p className="text-xs text-slate-400 mt-0.5 font-mono">Last 7 Days</p>
             </div>
-            <span className="text-sm font-semibold text-green-600 bg-green-50 px-2.5 py-1 rounded-full font-mono">↑ 18.4%</span>
+            <span className="text-sm font-semibold text-green-600 bg-green-50 px-2.5 py-1 rounded-full font-mono">Live Data</span>
           </div>
           <ResponsiveContainer width="100%" height={200}>
-            <AreaChart data={SALES_DATA} margin={{ top: 0, right: 0, bottom: 0, left: -10 }}>
+            <AreaChart data={salesData} margin={{ top: 0, right: 0, bottom: 0, left: -10 }}>
               <defs>
                 <linearGradient id="revGrad" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="5%" stopColor="#4f46e5" stopOpacity={0.15} />

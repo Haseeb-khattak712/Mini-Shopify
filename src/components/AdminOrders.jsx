@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { StatusBadge, Card, Button, Toast } from './ui'
 import { useOutletContext } from 'react-router-dom'
+import { updateOrder } from '../services/storage'
 
 const STATUS_FLOW = ['pending', 'processing', 'shipped', 'delivered']
 
@@ -12,17 +13,14 @@ export function AdminOrders() {
 
   const filtered = filterStatus === 'all' ? orders : orders.filter(o => o.status === filterStatus)
 
-  const advanceStatus = (orderId) => {
-    setOrders(os => os.map(o => {
-      if (o.id !== orderId) return o
-      const idx = STATUS_FLOW.indexOf(o.status)
-      if (idx === -1 || idx >= STATUS_FLOW.length - 1) return o
-      return { ...o, status: STATUS_FLOW[idx + 1] }
-    }))
-    const updated = orders.find(o => o.id === orderId)
-    if (updated) {
-      const idx = STATUS_FLOW.indexOf(updated.status)
+  const advanceStatus = async (orderId) => {
+    const order = orders.find(o => o.id === orderId)
+    if (!order) return
+    const idx = STATUS_FLOW.indexOf(order.status)
+    if (idx >= 0 && idx < STATUS_FLOW.length - 1) {
       const next = STATUS_FLOW[idx + 1]
+      await updateOrder({ id: orderId, status: next })
+      setOrders(os => os.map(o => o.id === orderId ? { ...o, status: next } : o))
       setToast(`Order ${orderId} marked as ${next}`)
       setTimeout(() => setToast(''), 3000)
       if (selected?.id === orderId) {
@@ -31,11 +29,14 @@ export function AdminOrders() {
     }
   }
 
-  const cancelOrder = (orderId) => {
+  const cancelOrder = async (orderId) => {
+    await updateOrder({ id: orderId, status: 'cancelled' })
     setOrders(os => os.map(o => o.id === orderId ? { ...o, status: 'cancelled' } : o))
     setToast(`Order ${orderId} cancelled`)
     setTimeout(() => setToast(''), 3000)
-    if (selected?.id === orderId) setSelected(prev => prev ? { ...prev, status: 'cancelled' } : null)
+    if (selected?.id === orderId) {
+      setSelected(prev => prev ? { ...prev, status: 'cancelled' } : null)
+    }
   }
 
   const statusOptions = ['all', 'pending', 'processing', 'shipped', 'delivered', 'cancelled']
