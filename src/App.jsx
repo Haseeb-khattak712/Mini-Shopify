@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
-import { BrowserRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom'
-import { getStoredOrders, saveStoredOrders, isAuthenticated } from './services/storage'
+import { BrowserRouter, Routes, Route, Navigate, Outlet, useOutletContext } from 'react-router-dom'
+import { getStoredOrders, saveStoredOrders, isAuthenticated, getStoredProducts, saveStoredProducts, getStoredReviews, saveStoredReviews } from './services/storage'
 
 import { LandingPage, SignupFlow } from './components/Marketing'
 import { AdminLayout } from './components/AdminLayout'
@@ -17,28 +17,12 @@ function ProtectedAdminRoute() {
   if (!isAuthenticated()) {
     return <Navigate to="/admin/login" replace />
   }
-  return <AdminWrapper />
-}
-
-// Wrapper for AdminLayout to render children via Outlet
-function AdminWrapper() {
-  const [orders, setOrdersState] = useState(() => getStoredOrders())
-
-  const setOrders = (newOrders) => {
-    const updated = typeof newOrders === 'function' ? newOrders(orders) : newOrders
-    setOrdersState(updated)
-    saveStoredOrders(updated)
-  }
-
-  return (
-    <AdminLayout>
-      <Outlet context={{ orders, setOrders }} />
-    </AdminLayout>
-  )
+  return <AdminLayout><Outlet /></AdminLayout>
 }
 
 // Wrapper for Storefront to hold cart state
 function StoreWrapper() {
+  const dataContext = useOutletContext()
   const [cart, setCart] = React.useState([])
   
   const handleAddToCart = (product, quantity = 1) => {
@@ -58,13 +42,43 @@ function StoreWrapper() {
     })
   }
 
-  return <Outlet context={{ cart, handleAddToCart, handleUpdateCart, setCart }} />
+  return <Outlet context={{ ...dataContext, cart, handleAddToCart, handleUpdateCart, setCart }} />
+}
+
+// Global Data Wrapper for Shared State
+function DataWrapper({ children }) {
+  const [orders, setOrdersState] = useState(() => getStoredOrders())
+  const [products, setProductsState] = useState(() => getStoredProducts())
+  const [reviews, setReviewsState] = useState(() => getStoredReviews())
+
+  const setOrders = (newOrders) => {
+    const updated = typeof newOrders === 'function' ? newOrders(orders) : newOrders
+    setOrdersState(updated)
+    saveStoredOrders(updated)
+  }
+
+  const setProducts = (newProducts) => {
+    const updated = typeof newProducts === 'function' ? newProducts(products) : newProducts
+    setProductsState(updated)
+    saveStoredProducts(updated)
+  }
+
+  const setReviews = (newReviews) => {
+    const updated = typeof newReviews === 'function' ? newReviews(reviews) : newReviews
+    setReviewsState(updated)
+    saveStoredReviews(updated)
+  }
+
+  return (
+    <Outlet context={{ orders, setOrders, products, setProducts, reviews, setReviews }} />
+  )
 }
 
 export default function App() {
   return (
     <BrowserRouter>
       <Routes>
+        <Route element={<DataWrapper />}>
         {/* Marketing & Signup */}
         <Route path="/" element={<LandingPage />} />
         <Route path="/signup" element={<SignupFlow />} />
@@ -96,6 +110,7 @@ export default function App() {
 
         {/* Fallback */}
         <Route path="*" element={<Navigate to="/" replace />} />
+        </Route>
       </Routes>
     </BrowserRouter>
   )

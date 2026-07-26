@@ -1,9 +1,9 @@
 import { useState } from 'react'
 import { Button, Input, Modal, Toast, Card } from './ui'
-import { PRODUCTS } from '../data'
+import { useOutletContext } from 'react-router-dom'
 
 export function AdminProducts() {
-  const [products, setProducts] = useState(PRODUCTS)
+  const { products, setProducts } = useOutletContext()
   const [search, setSearch] = useState('')
   const [category, setCategory] = useState('All')
   const [showModal, setShowModal] = useState(false)
@@ -12,7 +12,7 @@ export function AdminProducts() {
   const [form, setForm] = useState({ name: '', price: '', stock: '', category: 'Apparel', description: '' })
   const [formErrors, setFormErrors] = useState({})
 
-  const categories = ['All', ...Array.from(new Set(PRODUCTS.map(p => p.category)))]
+  const categories = ['All', ...Array.from(new Set(products.map(p => p.category)))]
 
   const filtered = products.filter(p => {
     const matchSearch = p.name.toLowerCase().includes(search.toLowerCase())

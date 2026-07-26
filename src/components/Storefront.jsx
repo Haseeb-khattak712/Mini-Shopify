@@ -4,7 +4,7 @@ import { Float, MeshDistortMaterial } from '@react-three/drei'
 import * as THREE from 'three'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Button, Toast } from './ui'
-import { PRODUCTS } from '../data'
+import { PRODUCTS } from '../data' // fallback if needed
 import { useTilt } from '../hooks/useTilt'
 import { Link } from 'react-router-dom'
 
@@ -156,13 +156,13 @@ function ProductCard3D({ product, onAddToCart }) {
 
 export function StoreHome() {
   const navigate = useNavigate();
-  const { cart, handleAddToCart } = useOutletContext();
+  const { cart, handleAddToCart, products } = useOutletContext();
   const [toast, setToast] = useState('')
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState('All')
   const cartCount = cart.reduce((s, i) => s + i.quantity, 0)
 
-  const filteredProducts = PRODUCTS.filter(p => {
+  const filteredProducts = (products || PRODUCTS).filter(p => {
     const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase())
     const matchesCategory = selectedCategory === 'All' || p.category === selectedCategory
     return matchesSearch && matchesCategory
@@ -277,12 +277,38 @@ export function StoreHome() {
 export function ProductDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { cart, handleAddToCart } = useOutletContext();
-  const product = PRODUCTS.find(p => p.id === id) || PRODUCTS[0];
-  const [qty, setQty] = useState(1)
-  const [toast, setToast] = useState('')
-  const tilt = useTilt(7)
-  const cartCount = cart.reduce((s, i) => s + i.quantity, 0)
+  const { cart, handleAddToCart, products, reviews, setReviews } = useOutletContext();
+  const product = (products || []).find(p => p.id === id);
+
+  const productReviews = (reviews || []).filter(r => r.productId === id);
+  const averageRating = productReviews.length 
+    ? (productReviews.reduce((sum, r) => sum + r.rating, 0) / productReviews.length).toFixed(1)
+    : 0;
+
+  const [toast, setToast] = useState('');
+  const [qty, setQty] = useState(1);
+  const tilt = useTilt(7);
+  const cartCount = cart.reduce((s, i) => s + i.quantity, 0);
+
+  const [reviewForm, setReviewForm] = useState({ rating: 5, author: '', text: '' });
+
+  const submitReview = () => {
+    if (!reviewForm.author.trim() || !reviewForm.text.trim()) {
+      setToast('Please fill out your name and review.')
+      setTimeout(() => setToast(''), 2500)
+      return
+    }
+    const newReview = {
+      id: `r${Date.now()}`,
+      productId: product.id,
+      ...reviewForm,
+      date: new Date().toISOString().split('T')[0]
+    }
+    setReviews(prev => [newReview, ...prev])
+    setReviewForm({ rating: 5, author: '', text: '' })
+    setToast('Review submitted successfully!')
+    setTimeout(() => setToast(''), 2500)
+  }
 
   const add = () => {
     handleAddToCart(product, qty)
@@ -290,7 +316,9 @@ export function ProductDetail() {
     setTimeout(() => setToast(''), 2500)
   }
 
-  const related = PRODUCTS.filter(p => p.id !== product.id && p.category === product.category).slice(0, 3)
+  if (!product) return null;
+
+  const related = (products || []).filter(p => p.category === product.category && p.id !== product.id).slice(0, 3);
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 transition-colors">
@@ -315,6 +343,14 @@ export function ProductDetail() {
           <div className="flex flex-col">
             <span className="text-xs font-mono font-medium text-slate-400 dark:text-slate-500 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded w-fit mb-3 transition-colors">{product.category}</span>
             <h1 className="text-3xl font-bold font-display text-slate-900 dark:text-white mb-2 transition-colors">{product.name}</h1>
+            
+            {productReviews.length > 0 && (
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-yellow-400 text-sm">{'★'.repeat(Math.round(averageRating))}{'☆'.repeat(5 - Math.round(averageRating))}</span>
+                <span className="text-xs text-slate-500">({productReviews.length} reviews)</span>
+              </div>
+            )}
+
             <p className="text-2xl font-bold text-indigo-600 dark:text-indigo-400 mb-4 transition-colors">${product.price}</p>
             <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed mb-6 transition-colors">{product.description}</p>
 
@@ -349,6 +385,62 @@ export function ProductDetail() {
           </div>
         </div>
 
+        {/* Reviews Section */}
+        <div className="mt-10 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-[10px] p-8 transition-colors">
+          <h2 className="font-bold font-display text-slate-900 dark:text-white mb-6 text-xl transition-colors">Customer Reviews</h2>
+          
+          <div className="grid md:grid-cols-2 gap-10">
+            <div>
+              {productReviews.length === 0 ? (
+                <p className="text-sm text-slate-500 dark:text-slate-400">No reviews yet. Be the first to review!</p>
+              ) : (
+                <div className="space-y-6">
+                  {productReviews.map(r => (
+                    <div key={r.id} className="border-b border-slate-100 dark:border-slate-800 pb-4 last:border-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="text-yellow-400 text-sm">{'★'.repeat(r.rating)}{'☆'.repeat(5 - r.rating)}</span>
+                        <span className="text-sm font-semibold text-slate-900 dark:text-white">{r.author}</span>
+                        <span className="text-xs text-slate-400">{r.date}</span>
+                      </div>
+                      <p className="text-sm text-slate-600 dark:text-slate-400">{r.text}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="bg-slate-50 dark:bg-slate-950 p-6 rounded-[10px] border border-slate-200 dark:border-slate-800">
+              <h3 className="font-semibold text-slate-900 dark:text-white mb-4 text-sm">Write a review</h3>
+              <div className="flex flex-col gap-3">
+                <div className="flex items-center gap-2">
+                  <label className="text-sm text-slate-600 dark:text-slate-400">Rating:</label>
+                  <select 
+                    value={reviewForm.rating} 
+                    onChange={e => setReviewForm(f => ({ ...f, rating: +e.target.value }))}
+                    className="px-2 py-1 rounded border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm outline-none dark:text-white"
+                  >
+                    {[5,4,3,2,1].map(num => <option key={num} value={num}>{num} Stars</option>)}
+                  </select>
+                </div>
+                <input 
+                  placeholder="Your Name" 
+                  value={reviewForm.author}
+                  onChange={e => setReviewForm(f => ({ ...f, author: e.target.value }))}
+                  className="w-full px-3 py-2 text-sm rounded border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white outline-none focus:border-indigo-500"
+                />
+                <textarea 
+                  placeholder="What did you think about this product?" 
+                  rows={3}
+                  value={reviewForm.text}
+                  onChange={e => setReviewForm(f => ({ ...f, text: e.target.value }))}
+                  className="w-full px-3 py-2 text-sm rounded border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white outline-none focus:border-indigo-500 resize-none"
+                />
+                <Button onClick={submitReview}>Submit Review</Button>
+              </div>
+            </div>
+          </div>
+        </div>
+
         {related.length > 0 && (
           <div className="mt-10">
             <h2 className="font-bold font-display text-slate-900 dark:text-white mb-4 transition-colors">You might also like</h2>
@@ -376,8 +468,9 @@ export function CartCheckout() {
     navigate('/store/confirmation')
   };
   const [form, setForm] = useState({ name: '', address: '', phone: '' })
+  const [paymentForm, setPaymentForm] = useState({ cardName: '', cardNumber: '', expiry: '', cvc: '' })
   const [errors, setErrors] = useState({})
-  const [step, setStep] = useState('cart')
+  const [step, setStep] = useState('cart') // 'cart', 'checkout', 'payment'
 
   const cartCount = cart.reduce((s, i) => s + i.quantity, 0)
   const subtotal = cart.reduce((s, i) => s + i.product.price * i.quantity, 0)
@@ -392,7 +485,7 @@ export function CartCheckout() {
     }
   }
 
-  const validate = () => {
+  const validateCheckout = () => {
     const e = {}
     if (!form.name.trim()) e.name = 'Full name is required'
     if (!form.address.trim()) e.address = 'Delivery address is required'
@@ -401,8 +494,23 @@ export function CartCheckout() {
     return Object.keys(e).length === 0
   }
 
+  const validatePayment = () => {
+    const e = {}
+    if (!paymentForm.cardName.trim()) e.cardName = 'Required'
+    if (!paymentForm.cardNumber.trim()) e.cardNumber = 'Required'
+    if (!paymentForm.expiry.trim()) e.expiry = 'Required'
+    if (!paymentForm.cvc.trim()) e.cvc = 'Required'
+    setErrors(e)
+    return Object.keys(e).length === 0
+  }
+
+  const handleContinueToPayment = () => {
+    if (!validateCheckout()) return
+    setStep('payment')
+  }
+
   const handlePlaceOrder = () => {
-    if (!validate()) return
+    if (!validatePayment()) return
     onConfirm(`ORD-${Math.floor(7900 + Math.random() * 100)}`)
   }
 
@@ -415,7 +523,7 @@ export function CartCheckout() {
           ← Continue shopping
         </button>
         <h1 className="text-2xl font-bold font-display text-slate-900 dark:text-white mb-6 transition-colors">
-          {step === 'cart' ? 'Your cart' : 'Checkout'}
+          {step === 'cart' ? 'Your cart' : step === 'checkout' ? 'Delivery Details' : 'Payment Details'}
         </h1>
 
         {cart.length === 0 ? (
@@ -465,11 +573,53 @@ export function CartCheckout() {
                         {errors[key] && <p className="text-xs text-red-500 mt-1">⚠ {errors[key]}</p>}
                       </div>
                     ))}
-                    <div className="bg-slate-50 border border-slate-200 rounded-[10px] p-4 flex items-start gap-3">
-                      <span className="text-xl mt-0.5">💵</span>
+                  </div>
+                </div>
+              )}
+
+              {step === 'payment' && (
+                <div className="bg-white border border-slate-200 rounded-[10px] p-6" style={{ animation: 'cardFadeIn 0.18s ease-out' }}>
+                  <div className="flex justify-between items-center mb-4">
+                    <h2 className="font-semibold text-slate-900 font-display">Payment details</h2>
+                    <span className="text-xs text-slate-500 bg-slate-100 px-2 py-1 rounded font-mono">Mock Checkout</span>
+                  </div>
+                  <div className="flex flex-col gap-4">
+                    <div>
+                      <input
+                        placeholder="Name on card"
+                        value={paymentForm.cardName}
+                        onChange={e => { setPaymentForm(f => ({ ...f, cardName: e.target.value })); setErrors(er => ({ ...er, cardName: '' })) }}
+                        className={`w-full px-3.5 py-2.5 rounded-[10px] border text-sm outline-none ${errors.cardName ? 'border-red-400 bg-red-50/20' : 'border-slate-200 focus:border-indigo-500'}`}
+                      />
+                      {errors.cardName && <p className="text-xs text-red-500 mt-1">⚠ {errors.cardName}</p>}
+                    </div>
+                    <div>
+                      <input
+                        placeholder="Card number (e.g. 4242 4242 4242 4242)"
+                        value={paymentForm.cardNumber}
+                        onChange={e => { setPaymentForm(f => ({ ...f, cardNumber: e.target.value })); setErrors(er => ({ ...er, cardNumber: '' })) }}
+                        className={`w-full px-3.5 py-2.5 rounded-[10px] border font-mono text-sm outline-none ${errors.cardNumber ? 'border-red-400 bg-red-50/20' : 'border-slate-200 focus:border-indigo-500'}`}
+                      />
+                      {errors.cardNumber && <p className="text-xs text-red-500 mt-1">⚠ {errors.cardNumber}</p>}
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <p className="text-sm font-semibold text-slate-900">Cash on delivery</p>
-                        <p className="text-xs text-slate-500 mt-0.5">Pay when your order arrives. No online payment needed.</p>
+                        <input
+                          placeholder="MM/YY"
+                          value={paymentForm.expiry}
+                          onChange={e => { setPaymentForm(f => ({ ...f, expiry: e.target.value })); setErrors(er => ({ ...er, expiry: '' })) }}
+                          className={`w-full px-3.5 py-2.5 rounded-[10px] border text-sm outline-none ${errors.expiry ? 'border-red-400 bg-red-50/20' : 'border-slate-200 focus:border-indigo-500'}`}
+                        />
+                        {errors.expiry && <p className="text-xs text-red-500 mt-1">⚠ {errors.expiry}</p>}
+                      </div>
+                      <div>
+                        <input
+                          placeholder="CVC"
+                          value={paymentForm.cvc}
+                          onChange={e => { setPaymentForm(f => ({ ...f, cvc: e.target.value })); setErrors(er => ({ ...er, cvc: '' })) }}
+                          className={`w-full px-3.5 py-2.5 rounded-[10px] border text-sm outline-none ${errors.cvc ? 'border-red-400 bg-red-50/20' : 'border-slate-200 focus:border-indigo-500'}`}
+                        />
+                        {errors.cvc && <p className="text-xs text-red-500 mt-1">⚠ {errors.cvc}</p>}
                       </div>
                     </div>
                   </div>
@@ -493,6 +643,8 @@ export function CartCheckout() {
                 </div>
                 {step === 'cart' ? (
                   <Button className="w-full" onClick={() => setStep('checkout')}>Proceed to checkout →</Button>
+                ) : step === 'checkout' ? (
+                  <Button className="w-full" onClick={handleContinueToPayment}>Continue to payment →</Button>
                 ) : (
                   <Button className="w-full" onClick={handlePlaceOrder}>Place order →</Button>
                 )}
