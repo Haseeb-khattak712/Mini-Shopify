@@ -19,6 +19,31 @@ try {
     $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     // Fetch assoc array by default
     $db->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
+
+    function getUserId($db) {
+        // 1. If admin is logged in, they will send X-User-Id header
+        $headers = getallheaders();
+        if (isset($headers['X-User-Id'])) {
+            return $headers['X-User-Id'];
+        }
+        if (isset($_SERVER['HTTP_X_USER_ID'])) {
+            return $_SERVER['HTTP_X_USER_ID'];
+        }
+
+        // 2. If it's the storefront, they will send ?subdomain=...
+        $subdomain = $_GET['subdomain'] ?? '';
+        if ($subdomain) {
+            $stmt = $db->prepare("SELECT id FROM users WHERE subdomain = ?");
+            $stmt->execute([$subdomain]);
+            $user = $stmt->fetch();
+            if ($user) {
+                return $user['id'];
+            }
+        }
+
+        // If neither is provided or valid, return null
+        return null;
+    }
 } catch (PDOException $e) {
     http_response_code(500);
     echo json_encode(["error" => "Database connection failed: " . $e->getMessage()]);

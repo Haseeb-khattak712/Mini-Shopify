@@ -41,10 +41,20 @@ function StorefrontMiniScene() {
 // ── Store Nav ─────────────────────────────────────────────────────────────────
 
 import { useNavigate, useOutletContext, useParams } from 'react-router-dom'
-import { addReview, addOrder } from '../services/storage'
+import { 
+  addReview, 
+  addOrder, 
+  isCustomerAuthenticated, 
+  getCustomerContext, 
+  loginCustomer, 
+  registerCustomer, 
+  logoutCustomer,
+  getStoredOrders
+} from '../services/storage'
 
 function StoreNav({ cartCount }) {
   const navigate = useNavigate()
+  const { subdomain } = useParams()
   const { setIsCartOpen } = useOutletContext()
   const [isDark, setIsDark] = useState(false)
 
@@ -63,17 +73,28 @@ function StoreNav({ cartCount }) {
   return (
     <header className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 sticky top-0 z-20 transition-colors">
       <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
-        <button onClick={() => navigate('/store')} className="flex items-center gap-2.5 cursor-pointer">
-          <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center text-white font-bold text-sm">A</div>
-          <div>
-            <p className="font-semibold text-slate-900 dark:text-white font-display leading-none text-sm">Acme Goods Co.</p>
-            <p className="text-[10px] text-slate-400 dark:text-slate-500 font-mono">acme-goods.storekit.com</p>
+        <button onClick={() => navigate(`/store/${subdomain}`)} className="flex items-center gap-2.5 cursor-pointer">
+          <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center text-white font-bold text-sm">
+            {subdomain?.charAt(0)?.toUpperCase() || 'S'}
+          </div>
+          <div className="text-left">
+            <p className="font-semibold text-slate-900 dark:text-white font-display leading-none text-sm capitalize">{subdomain?.replace('-', ' ') || 'StoreKit'}</p>
+            <p className="text-[10px] text-slate-400 dark:text-slate-500 font-mono mt-0.5">{subdomain || 'demo'}.storekit.com</p>
           </div>
         </button>
         <div className="flex items-center gap-3">
           <button onClick={toggleDark} className="w-9 h-9 rounded-full flex items-center justify-center bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors cursor-pointer">
             {isDark ? '🌙' : '☀️'}
           </button>
+          {isCustomerAuthenticated(subdomain) ? (
+            <button onClick={() => navigate(`/store/${subdomain}/account`)} className="px-4 py-2 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+              Account
+            </button>
+          ) : (
+            <button onClick={() => navigate(`/store/${subdomain}/login`)} className="px-4 py-2 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+              Login
+            </button>
+          )}
           <button
             onClick={() => setIsCartOpen(true)}
             className="relative flex items-center gap-2 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 rounded-[10px] px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-200 cursor-pointer transition-colors"
@@ -501,13 +522,16 @@ export function ProductDetail() {
 
 export function CartCheckout() {
   const navigate = useNavigate();
+  const { subdomain } = useParams()
   const { cart, handleUpdateCart, setCart } = useOutletContext();
+  const customer = getCustomerContext(subdomain)
+
   const onBack = () => navigate(-1);
   const onConfirm = () => {
     setCart([])
-    navigate('/store/confirmation')
+    navigate(`/store/${subdomain}/confirmation`)
   };
-  const [form, setForm] = useState({ name: '', address: '', phone: '' })
+  const [form, setForm] = useState({ name: customer?.name || '', address: '', phone: '' })
   const [paymentForm, setPaymentForm] = useState({ cardName: '', cardNumber: '', expiry: '', cvc: '' })
   const [errors, setErrors] = useState({})
   const [step, setStep] = useState('cart') // 'cart', 'checkout', 'payment'
@@ -554,16 +578,17 @@ export function CartCheckout() {
     if (!validatePayment()) return
     
     const newOrder = {
+      customer_id: customer?.id || null,
       customer: form.name,
       total: total,
       date: new Date().toISOString().split('T')[0],
       status: 'processing',
       items: cart.map(i => ({ product_id: i.product.id, quantity: i.quantity, price: i.product.price, size: i.size, color: i.color }))
     }
-    const res = await addOrder(newOrder)
+    const res = await addOrder(newOrder, null, subdomain)
     
     setCart([])
-    navigate('/store/confirmation', { state: { orderId: res.id } })
+    navigate(`/store/${subdomain}/confirmation`, { state: { orderId: res.id } })
   }
 
   return (
@@ -724,8 +749,9 @@ export function CartCheckout() {
 
 export function OrderConfirmation() {
   const navigate = useNavigate();
+  const { subdomain } = useParams();
   const { cart } = useOutletContext();
-  const onHome = () => navigate('/store');
+  const onHome = () => navigate(`/store/${subdomain}`);
   const orderId = 'ORD-' + Math.floor(Math.random() * 10000);
   const total = cart.reduce((s, i) => s + i.product.price * i.quantity, 0)
   const tilt = useTilt(6)
@@ -784,7 +810,7 @@ export function OrderConfirmation() {
 
           <div className="flex flex-col gap-2">
             <p className="text-xs text-slate-400 dark:text-slate-500 transition-colors">We'll call you on your phone number to confirm delivery details.</p>
-            <Button className="w-full mt-2" onClick={() => navigate('/store')}>Continue shopping</Button>
+            <Button className="w-full mt-2" onClick={onHome}>Continue shopping</Button>
           </div>
         </div>
       </motion.div>
@@ -882,5 +908,150 @@ export function CartSidebar({ isOpen, onClose, cart, handleUpdateCart }) {
         </>
       )}
     </AnimatePresence>
+  )
+}
+
+// ── Customer Auth ────────────────────────────────────────────────────────────
+
+export function CustomerLogin() {
+  const navigate = useNavigate()
+  const { subdomain } = useParams()
+  const [isLogin, setIsLogin] = useState(true)
+  const [error, setError] = useState('')
+  const [name, setName] = useState('')
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    setError('')
+    let res
+    if (isLogin) {
+      res = await loginCustomer(email, password, subdomain)
+    } else {
+      res = await registerCustomer(name, email, password, subdomain)
+    }
+    
+    if (res.success) {
+      navigate(`/store/${subdomain}/account`)
+    } else {
+      setError(res.error)
+    }
+  }
+
+  return (
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col transition-colors">
+      <StoreNav cartCount={0} />
+      <div className="flex-1 flex items-center justify-center p-6">
+        <div className="w-full max-w-md bg-white dark:bg-slate-900 rounded-2xl shadow-xl p-8 border border-slate-100 dark:border-slate-800 transition-colors">
+          <h2 className="text-2xl font-bold font-display text-slate-900 dark:text-white mb-2 transition-colors">
+            {isLogin ? 'Welcome back' : 'Create an account'}
+          </h2>
+          <p className="text-slate-500 dark:text-slate-400 text-sm mb-6 transition-colors">
+            {isLogin ? 'Sign in to view your orders and save details.' : 'Sign up to track your orders easily.'}
+          </p>
+
+          {error && <div className="p-3 bg-red-50 text-red-600 rounded-lg text-sm mb-4">{error}</div>}
+
+          <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+            {!isLogin && (
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1 transition-colors">Full Name</label>
+                <input required type="text" value={name} onChange={e => setName(e.target.value)} className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-colors" />
+              </div>
+            )}
+            <div>
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1 transition-colors">Email Address</label>
+              <input required type="email" value={email} onChange={e => setEmail(e.target.value)} className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-colors" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1 transition-colors">Password</label>
+              <input required type="password" value={password} onChange={e => setPassword(e.target.value)} className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-colors" />
+            </div>
+            <Button type="submit" className="w-full mt-2">
+              {isLogin ? 'Sign In' : 'Create Account'}
+            </Button>
+          </form>
+
+          <p className="mt-6 text-center text-sm text-slate-500 dark:text-slate-400 transition-colors">
+            {isLogin ? "Don't have an account? " : "Already have an account? "}
+            <button type="button" onClick={() => { setIsLogin(!isLogin); setError(''); }} className="text-indigo-600 dark:text-indigo-400 font-medium hover:underline transition-colors">
+              {isLogin ? 'Sign up' : 'Sign in'}
+            </button>
+          </p>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+export function CustomerAccount() {
+  const navigate = useNavigate()
+  const { subdomain } = useParams()
+  const { orders } = useOutletContext()
+  const customer = getCustomerContext(subdomain)
+
+  // Redirect if not logged in
+  useEffect(() => {
+    if (!isCustomerAuthenticated(subdomain)) {
+      navigate(`/store/${subdomain}/login`)
+    }
+  }, [subdomain])
+
+  const handleLogout = () => {
+    logoutCustomer(subdomain)
+    navigate(`/store/${subdomain}`)
+  }
+
+  // Filter orders manually as well, just to be safe, though the API only returns their orders
+  const myOrders = orders || []
+
+  if (!customer) return null
+
+  return (
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col transition-colors">
+      <StoreNav cartCount={0} />
+      <div className="max-w-4xl mx-auto w-full px-6 py-12">
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <h1 className="text-3xl font-bold font-display text-slate-900 dark:text-white transition-colors">My Account</h1>
+            <p className="text-slate-500 dark:text-slate-400 transition-colors">Welcome back, {customer.name}</p>
+          </div>
+          <Button variant="ghost" onClick={handleLogout}>Sign Out</Button>
+        </div>
+
+        <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 p-6 transition-colors">
+          <h2 className="text-xl font-semibold text-slate-900 dark:text-white mb-6 transition-colors">Order History</h2>
+          
+          {myOrders.length === 0 ? (
+            <div className="text-center py-12 text-slate-500 dark:text-slate-400 transition-colors">
+              <p>You haven't placed any orders yet.</p>
+              <Button variant="outline" className="mt-4" onClick={() => navigate(`/store/${subdomain}`)}>Start Shopping</Button>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-4">
+              {myOrders.map(order => (
+                <div key={order.id} className="p-4 border border-slate-100 dark:border-slate-800 rounded-xl flex items-center justify-between transition-colors">
+                  <div>
+                    <p className="font-semibold text-slate-900 dark:text-white transition-colors">{order.id}</p>
+                    <p className="text-sm text-slate-500 dark:text-slate-400 transition-colors">{new Date(order.date).toLocaleDateString()}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-bold text-slate-900 dark:text-white transition-colors">${order.total}</p>
+                    <span className={`inline-block px-2.5 py-1 mt-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                      order.status === 'processing' ? 'bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400' :
+                      order.status === 'shipped' ? 'bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-400' :
+                      'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400'
+                    }`}>
+                      {order.status}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
   )
 }

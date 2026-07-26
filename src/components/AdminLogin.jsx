@@ -6,26 +6,24 @@ import { loginAdmin } from '../services/storage'
 
 export function AdminLogin({ onLoginSuccess }) {
   const navigate = useNavigate()
-  const [username, setUsername] = useState('')
+  const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
     setError('')
     setLoading(true)
 
-    setTimeout(() => {
-      const res = loginAdmin(username, password)
-      setLoading(false)
-      if (res.success) {
-        if (onLoginSuccess) onLoginSuccess()
-        navigate('/admin')
-      } else {
-        setError(res.error)
-      }
-    }, 400)
+    const res = await loginAdmin(email, password)
+    setLoading(false)
+    if (res.success) {
+      if (onLoginSuccess) onLoginSuccess()
+      navigate('/admin')
+    } else {
+      setError(res.error)
+    }
   }
 
   return (
@@ -52,31 +50,20 @@ export function AdminLogin({ onLoginSuccess }) {
               </div>
             </div>
             <button
-              onClick={() => navigate('/store')}
+              onClick={() => navigate('/')}
               className="text-xs text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 transition-colors cursor-pointer"
             >
-              ← Back to store
+              ← Back to website
             </button>
-          </div>
-
-          {/* Demo Login Credentials Helper */}
-          <div className="bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-100 dark:border-indigo-500/20 rounded-xl p-3.5 mb-6 text-xs text-indigo-900 dark:text-indigo-300">
-            <p className="font-semibold mb-1 flex items-center gap-1.5">
-              <span>💡</span> Demo Admin Credentials:
-            </p>
-            <div className="font-mono text-[11px] space-y-0.5 opacity-90">
-              <p>Username: <span className="font-bold underline">admin</span></p>
-              <p>Password: <span className="font-bold underline">admin123</span></p>
-            </div>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <Input
-              label="Username"
-              type="text"
-              placeholder="Enter username"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
+              label="Email Address"
+              type="email"
+              placeholder="Enter your email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               required
             />
 

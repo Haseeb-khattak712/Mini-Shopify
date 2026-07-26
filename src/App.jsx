@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
-import { BrowserRouter, Routes, Route, Navigate, Outlet, useOutletContext } from 'react-router-dom'
-import { getStoredOrders, isAuthenticated, getStoredProducts, getStoredReviews } from './services/storage'
+import { BrowserRouter, Routes, Route, Navigate, Outlet, useOutletContext, useParams } from 'react-router-dom'
+import { getStoredOrders, isAuthenticated, getUserContext, getStoredProducts, getStoredReviews } from './services/storage'
 
 import { LandingPage, SignupFlow } from './components/Marketing'
 import { AdminLayout } from './components/AdminLayout'
@@ -9,16 +9,15 @@ import { AdminProducts } from './components/AdminProducts'
 import { AdminOrders } from './components/AdminOrders'
 import { AdminEmpty } from './components/AdminEmpty'
 import { AdminLogin } from './components/AdminLogin'
-import { StoreHome, ProductDetail, CartCheckout, OrderConfirmation, CartSidebar } from './components/Storefront'
+import { StoreHome, ProductDetail, CartCheckout, OrderConfirmation, CartSidebar, CustomerLogin, CustomerAccount } from './components/Storefront'
 import { PrivacyPolicy, ReturnsRefunds, ContactUs } from './components/PolicyPages'
 
 // Guard for Admin Routes
 function ProtectedAdminRoute() {
-  const context = useOutletContext()
   if (!isAuthenticated()) {
     return <Navigate to="/admin/login" replace />
   }
-  return <AdminLayout><Outlet context={context} /></AdminLayout>
+  return <AdminLayout><Outlet /></AdminLayout>
 }
 
 // Wrapper for Storefront to hold cart state
@@ -35,7 +34,7 @@ function StoreWrapper() {
       }
       return [...prev, { product, quantity, size, color }]
     })
-    setIsCartOpen(true) // Automatically open cart when adding
+    setIsCartOpen(true)
   }
 
   const handleUpdateCart = (productId, qty, size = null, color = null) => {
@@ -58,18 +57,28 @@ function StoreWrapper() {
   )
 }
 
-// Global Data Wrapper for Shared State
-function DataWrapper({ children }) {
+function LoadingSpinner() {
+  return (
+    <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center font-display">
+      <div className="w-12 h-12 rounded-full border-4 border-indigo-200 border-t-indigo-600 animate-spin mb-4"></div>
+      <p className="text-slate-500 font-medium">Loading StoreKit Data...</p>
+    </div>
+  )
+}
+
+function AdminDataWrapper() {
   const [orders, setOrders] = useState([])
   const [products, setProducts] = useState([])
   const [reviews, setReviews] = useState([])
   const [loading, setLoading] = useState(true)
+  const user = getUserContext()
 
   useEffect(() => {
+    if (!user) return
     Promise.all([
-      getStoredOrders(),
-      getStoredProducts(),
-      getStoredReviews()
+      getStoredOrders(user.id),
+      getStoredProducts(user.id),
+      getStoredReviews(user.id)
     ]).then(([o, p, r]) => {
       setOrders(o || [])
       setProducts(p || [])
@@ -79,27 +88,44 @@ function DataWrapper({ children }) {
       console.error('Failed to load data:', err)
       setLoading(false)
     })
-  }, [])
+  }, [user?.id])
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center font-display">
-        <div className="w-12 h-12 rounded-full border-4 border-indigo-200 border-t-indigo-600 animate-spin mb-4"></div>
-        <p className="text-slate-500 font-medium">Loading StoreKit Data...</p>
-      </div>
-    )
-  }
+  if (loading) return <LoadingSpinner />
+  return <Outlet context={{ orders, setOrders, products, setProducts, reviews, setReviews }} />
+}
 
-  return (
-    <Outlet context={{ orders, setOrders, products, setProducts, reviews, setReviews }} />
-  )
+function StoreDataWrapper() {
+  const { subdomain } = useParams()
+  const [orders, setOrders] = useState([])
+  const [products, setProducts] = useState([])
+  const [reviews, setReviews] = useState([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    if (!subdomain) return
+    Promise.all([
+      getStoredOrders(null, subdomain),
+      getStoredProducts(null, subdomain),
+      getStoredReviews(null, subdomain)
+    ]).then(([o, p, r]) => {
+      setOrders(o || [])
+      setProducts(p || [])
+      setReviews(r || [])
+      setLoading(false)
+    }).catch(err => {
+      console.error('Failed to load data:', err)
+      setLoading(false)
+    })
+  }, [subdomain])
+
+  if (loading) return <LoadingSpinner />
+  return <Outlet context={{ orders, setOrders, products, setProducts, reviews, setReviews, subdomain }} />
 }
 
 export default function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route element={<DataWrapper />}>
         {/* Marketing & Signup */}
         <Route path="/" element={<LandingPage />} />
         <Route path="/signup" element={<SignupFlow />} />
@@ -109,29 +135,38 @@ export default function App() {
 
         {/* Protected Admin Dashboard */}
         <Route path="/admin" element={<ProtectedAdminRoute />}>
-          <Route index element={<Navigate to="/admin/dashboard" replace />} />
-          <Route path="dashboard" element={<AdminDashboard />} />
-          <Route path="products" element={<AdminProducts />} />
-          <Route path="orders" element={<AdminOrders />} />
-          <Route path="empty" element={<AdminEmpty />} />
+          <Route element={<AdminDataWrapper />}>
+            <Route index element={<Navigate to="/admin/dashboard" replace />} />
+            <Route path="dashboard" element={<AdminDashboard />} />
+            <Route path="products" element={<AdminProducts />} />
+            <Route path="orders" element={<AdminOrders />} />
+            <Route path="empty" element={<AdminEmpty />} />
+          </Route>
         </Route>
 
         {/* Storefront */}
-        <Route path="/store" element={<StoreWrapper />}>
-          <Route index element={<StoreHome />} />
-          <Route path="product/:id" element={<ProductDetail />} />
-          <Route path="cart" element={<CartCheckout />} />
-          <Route path="confirmation" element={<OrderConfirmation />} />
-        </Route>
+        <Route path="/store/:subdomain" element={<StoreDataWrapper />}>
+          <Route element={<StoreWrapper />}>
+            <Route index element={<StoreHome />} />
+            <Route path="product/:id" element={<ProductDetail />} />
+            <Route path="cart" element={<CartCheckout />} />
+            <Route path="confirmation" element={<OrderConfirmation />} />
+          </Route>
 
-        {/* Policy Pages (outside StoreWrapper — no cart needed) */}
-        <Route path="/store/privacy" element={<PrivacyPolicy />} />
-        <Route path="/store/returns" element={<ReturnsRefunds />} />
-        <Route path="/store/contact" element={<ContactUs />} />
+          {/* Customer Auth & Account (No cart wrapper needed here if we don't want cart sidebar, but they use StoreNav which expects it. Let's wrap them in StoreWrapper or let StoreNav handle missing cart context. Wait, StoreNav requires setIsCartOpen. We should put them inside StoreWrapper) */}
+          <Route element={<StoreWrapper />}>
+            <Route path="login" element={<CustomerLogin />} />
+            <Route path="account" element={<CustomerAccount />} />
+          </Route>
+
+          {/* Policy Pages (outside StoreWrapper — no cart needed) */}
+          <Route path="privacy" element={<PrivacyPolicy />} />
+          <Route path="returns" element={<ReturnsRefunds />} />
+          <Route path="contact" element={<ContactUs />} />
+        </Route>
 
         {/* Fallback */}
         <Route path="*" element={<Navigate to="/" replace />} />
-        </Route>
       </Routes>
     </BrowserRouter>
   )

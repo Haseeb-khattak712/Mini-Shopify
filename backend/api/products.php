@@ -2,10 +2,18 @@
 require_once __DIR__ . '/../db.php';
 
 $method = $_SERVER['REQUEST_METHOD'];
+$user_id = getUserId($db);
+
+if (!$user_id) {
+    http_response_code(401);
+    echo json_encode(['error' => 'Unauthorized or missing subdomain']);
+    exit;
+}
 
 switch ($method) {
     case 'GET':
-        $stmt = $db->query("SELECT * FROM products ORDER BY id DESC");
+        $stmt = $db->prepare("SELECT * FROM products WHERE user_id = ? ORDER BY id DESC");
+        $stmt->execute([$user_id]);
         $products = $stmt->fetchAll();
         // Decode JSON fields
         foreach ($products as &$p) {
@@ -27,9 +35,10 @@ switch ($method) {
         $sizes = json_encode($data['sizes'] ?? []);
         $colors = json_encode($data['colors'] ?? []);
 
-        $stmt = $db->prepare("INSERT INTO products (id, name, price, stock, category, description, image, sizes, colors) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+        $stmt = $db->prepare("INSERT INTO products (id, user_id, name, price, stock, category, description, image, sizes, colors) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
         $stmt->execute([
             $id,
+            $user_id,
             $data['name'],
             $data['price'],
             $data['stock'],
@@ -54,7 +63,7 @@ switch ($method) {
         $sizes = json_encode($data['sizes'] ?? []);
         $colors = json_encode($data['colors'] ?? []);
 
-        $stmt = $db->prepare("UPDATE products SET name=?, price=?, stock=?, category=?, description=?, image=?, sizes=?, colors=? WHERE id=?");
+        $stmt = $db->prepare("UPDATE products SET name=?, price=?, stock=?, category=?, description=?, image=?, sizes=?, colors=? WHERE id=? AND user_id=?");
         $stmt->execute([
             $data['name'],
             $data['price'],
@@ -64,7 +73,8 @@ switch ($method) {
             $data['image'],
             $sizes,
             $colors,
-            $data['id']
+            $data['id'],
+            $user_id
         ]);
         
         echo json_encode(['success' => true]);
@@ -78,8 +88,8 @@ switch ($method) {
             exit;
         }
         
-        $stmt = $db->prepare("DELETE FROM products WHERE id=?");
-        $stmt->execute([$id]);
+        $stmt = $db->prepare("DELETE FROM products WHERE id=? AND user_id=?");
+        $stmt->execute([$id, $user_id]);
         echo json_encode(['success' => true]);
         break;
 }

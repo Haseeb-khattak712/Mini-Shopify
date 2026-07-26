@@ -2,6 +2,8 @@ import { useState, Suspense } from 'react'
 import { Button, Input } from './ui'
 import { HeroScene } from './HeroScene'
 import { useTilt } from '../hooks/useTilt'
+import { useNavigate } from 'react-router-dom'
+import { isAuthenticated, registerAdmin, getUserContext } from '../services/storage'
 
 // ── Landing Page ──────────────────────────────────────────────────────────────
 
@@ -22,8 +24,6 @@ function FeatureCard({ icon, title, body }) {
   )
 }
 
-import { useNavigate } from 'react-router-dom'
-
 export function LandingPage() {
   const navigate = useNavigate()
   return (
@@ -40,8 +40,14 @@ export function LandingPage() {
           <a href="#docs" className="hover:text-slate-900">Docs</a>
         </div>
         <div className="flex items-center gap-3">
-          <Button variant="ghost" size="sm" onClick={() => navigate('/admin')}>Sign in</Button>
-          <Button size="sm" onClick={() => navigate('/signup')}>Create your store</Button>
+          {isAuthenticated() ? (
+            <Button size="sm" onClick={() => navigate('/admin')}>Dashboard</Button>
+          ) : (
+            <>
+              <Button variant="ghost" size="sm" onClick={() => navigate('/admin/login')}>Login</Button>
+              <Button size="sm" onClick={() => navigate('/signup')}>Sign up</Button>
+            </>
+          )}
         </div>
       </nav>
 
@@ -73,7 +79,7 @@ export function LandingPage() {
           </p>
           <div className="flex flex-wrap gap-3">
             <Button size="lg" onClick={() => navigate('/signup')}>Create your store →</Button>
-            <Button variant="secondary" size="lg" onClick={() => navigate('/store')}>See a live store</Button>
+            <Button variant="secondary" size="lg" onClick={() => navigate('/store/demo')}>See a live store</Button>
           </div>
           <p className="text-xs text-slate-400 mt-4">Free for 14 days · No credit card required</p>
 
@@ -155,26 +161,33 @@ export function SignupFlow() {
   const [step, setStep] = useState(1)
   const [biz, setBiz] = useState('')
   const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
   const [subdomain, setSubdomain] = useState('')
   const [errors, setErrors] = useState({})
+  const [loading, setLoading] = useState(false)
 
   const slugify = (val) => val.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '')
 
-  const validateStep1 = () => {
-    const e = {}
-    if (!biz.trim()) e.biz = 'Business name is required'
-    if (!email.includes('@')) e.email = 'Enter a valid email address'
-    setErrors(e)
-    return Object.keys(e).length === 0
-  }
-
-  const handleNext = () => {
-    if (step === 1 && !validateStep1()) return
-    if (step === 2 && !subdomain.trim()) {
-      setErrors({ subdomain: 'Choose a subdomain' })
-      return
+  const handleNext = async () => {
+    if (step === 1) {
+      const err = {}
+      if (!biz) err.biz = 'Required'
+      if (!email || !email.includes('@')) err.email = 'Valid email required'
+      if (!password || password.length < 6) err.password = 'Min 6 characters'
+      if (Object.keys(err).length > 0) return setErrors(err)
+      setErrors({})
+      setStep(2)
+    } else if (step === 2) {
+      if (!subdomain) return setErrors({ subdomain: 'Required' })
+      setLoading(true)
+      const res = await registerAdmin(email, password, biz, subdomain)
+      setLoading(false)
+      if (res.success) {
+        setStep(3)
+      } else {
+        setErrors({ subdomain: res.error })
+      }
     }
-    setStep(s => s + 1)
   }
 
   const steps = ['Business info', 'Choose subdomain', 'Done']
@@ -222,6 +235,8 @@ export function SignupFlow() {
                   onChange={e => { setBiz(e.target.value); setSubdomain(slugify(e.target.value)) }} error={errors.biz} />
                 <Input label="Email address" type="email" placeholder="you@yourbusiness.com" value={email}
                   onChange={e => setEmail(e.target.value)} error={errors.email} />
+                <Input label="Password" type="password" placeholder="Create a password" value={password}
+                  onChange={e => setPassword(e.target.value)} error={errors.password} />
                 <Button className="w-full mt-2" onClick={handleNext}>Continue →</Button>
               </div>
             </>
@@ -252,8 +267,8 @@ export function SignupFlow() {
                   </div>
                 )}
                 <div className="flex gap-3 mt-2">
-                  <Button variant="secondary" className="flex-1" onClick={() => setStep(1)}>← Back</Button>
-                  <Button className="flex-1" onClick={handleNext}>Create store →</Button>
+                  <Button variant="secondary" className="flex-1" onClick={() => setStep(1)} disabled={loading}>← Back</Button>
+                  <Button className="flex-1" onClick={handleNext} disabled={loading}>{loading ? 'Creating...' : 'Create store →'}</Button>
                 </div>
               </div>
             </>
@@ -268,7 +283,9 @@ export function SignupFlow() {
               <p className="text-sm font-mono text-indigo-700 bg-indigo-50 rounded-lg px-3 py-2 inline-block mb-6">{subdomain}.storekit.com</p>
               <div className="flex flex-col gap-3">
                 <Button className="w-full" onClick={() => navigate('/admin')}>Go to your dashboard →</Button>
-                <Button variant="ghost" className="w-full" onClick={() => navigate('/store')}>View your store</Button>
+                <div className="pt-2">
+                  <Button variant="ghost" className="w-full" onClick={() => navigate(getUserContext() ? `/store/${getUserContext()?.subdomain || 'demo'}` : '/store/demo')}>View your store</Button>
+                </div>
               </div>
             </div>
           )}

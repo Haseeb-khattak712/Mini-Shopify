@@ -2,6 +2,7 @@ import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { Card, StatusBadge } from './ui'
 import { useTilt } from '../hooks/useTilt'
 import { useOutletContext } from 'react-router-dom'
+import { getUserContext } from '../services/storage'
 
 function Stat3DCard({ label, value, change, positive, icon, color }) {
   const tilt = useTilt(10)
@@ -29,6 +30,7 @@ function Stat3DCard({ label, value, change, positive, icon, color }) {
 
 export function AdminDashboard() {
   const { orders, products } = useOutletContext();
+  const user = getUserContext();
   const totalRevenue = orders.filter(o => o.status !== 'cancelled').reduce((sum, o) => sum + o.total, 0)
   const today = new Date().toISOString().split('T')[0]
   const ordersToday = orders.filter(o => o.date === today).length
@@ -48,8 +50,8 @@ export function AdminDashboard() {
     <div className="p-8" style={{ perspective: '1200px' }}>
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-2xl font-bold font-display text-slate-900">Dashboard</h1>
-        <p className="text-sm text-slate-500 mt-0.5">Wednesday, July 23, 2026</p>
+        <h1 className="text-2xl font-bold font-display text-slate-900 dark:text-white transition-colors">{user?.business_name || 'Dashboard'}</h1>
+        <p className="text-sm text-slate-500 mt-0.5 transition-colors">Welcome back, {user?.email}</p>
       </div>
 
       {/* Stats — 3D tilt cards */}

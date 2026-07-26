@@ -1,5 +1,6 @@
 import { Button } from './ui'
 import { useTilt } from '../hooks/useTilt'
+import { getUserContext } from '../services/storage'
 
 function TiltCard({ children }) {
   const tilt = useTilt(9)
@@ -48,8 +49,10 @@ import { useNavigate } from 'react-router-dom'
 
 export function AdminEmpty() {
   const navigate = useNavigate()
+  const user = getUserContext()
+
   return (
-    <div className="p-8">
+    <div className="p-8 max-w-5xl">
       <div className="mb-8">
         <h1 className="text-2xl font-bold font-display text-slate-900">Empty states</h1>
         <p className="text-sm text-slate-500 mt-0.5">Shown to new merchants before they add products or receive orders.</p>
@@ -73,7 +76,7 @@ export function AdminEmpty() {
           <p className="text-sm text-slate-400 leading-relaxed mb-6 max-w-52">
             Your orders will appear here once customers start buying from your store.
           </p>
-          <Button variant="secondary" onClick={() => navigate('/store')}>
+          <Button variant="secondary" onClick={() => navigate(`/store/${user?.subdomain || 'demo'}`)}>
             View your storefront →
           </Button>
         </TiltCard>

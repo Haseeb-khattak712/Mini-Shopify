@@ -1,6 +1,6 @@
 import { Fragment } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { logoutAdmin } from '../services/storage'
+import { logoutAdmin, getUserContext } from '../services/storage'
 
 const NAV = [
   { id: '/admin/dashboard', label: 'Dashboard', icon: '⬡' },
@@ -12,6 +12,7 @@ const NAV = [
 export function AdminLayout({ children }) {
   const location = useLocation()
   const navigate = useNavigate()
+  const user = getUserContext()
 
   const handleLogout = () => {
     logoutAdmin()
@@ -25,10 +26,12 @@ export function AdminLayout({ children }) {
         {/* Brand */}
         <div className="px-5 py-4 border-b border-slate-100 dark:border-slate-800 transition-colors">
           <div className="flex items-center gap-2.5">
-            <div className="w-7 h-7 rounded-lg bg-indigo-600 flex items-center justify-center text-white text-sm font-bold">S</div>
-            <div>
-              <p className="text-sm font-semibold text-slate-900 dark:text-white font-display leading-none transition-colors">Acme Goods Co.</p>
-              <p className="text-[11px] text-slate-400 dark:text-slate-500 font-mono mt-0.5 transition-colors">acme-goods.storekit.com</p>
+            <div className="w-7 h-7 rounded-lg bg-indigo-600 flex items-center justify-center text-white text-sm font-bold">
+              {user?.business_name?.charAt(0)?.toUpperCase() || 'S'}
+            </div>
+            <div className="min-w-0">
+              <p className="text-sm font-semibold text-slate-900 dark:text-white font-display leading-none truncate transition-colors">{user?.business_name || 'StoreKit'}</p>
+              <p className="text-[11px] text-slate-400 dark:text-slate-500 font-mono mt-0.5 truncate transition-colors">{user?.subdomain || 'demo'}.storekit.com</p>
             </div>
           </div>
         </div>
@@ -60,18 +63,20 @@ export function AdminLayout({ children }) {
           <Link to="/" className="block w-full text-left text-xs text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 px-3 py-1.5 rounded hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
             ← Marketing site
           </Link>
-          <Link to="/store" className="block w-full text-left text-xs text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 px-3 py-1.5 rounded hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
+          <a href={`/store/${user?.subdomain || 'demo'}`} target="_blank" rel="noreferrer" className="block w-full text-left text-xs text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 px-3 py-1.5 rounded hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors">
             ↗ Customer storefront
-          </Link>
+          </a>
         </div>
 
         {/* User */}
         <div className="p-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between gap-2 transition-colors">
           <div className="flex items-center gap-2.5 min-w-0">
-            <div className="w-7 h-7 rounded-full bg-indigo-100 dark:bg-indigo-900/50 flex items-center justify-center text-xs font-semibold text-indigo-700 dark:text-indigo-300 transition-colors">AG</div>
+            <div className="w-7 h-7 rounded-full bg-indigo-100 dark:bg-indigo-900/50 flex items-center justify-center text-xs font-semibold text-indigo-700 dark:text-indigo-300 transition-colors">
+              {user?.business_name?.charAt(0)?.toUpperCase() || 'A'}
+            </div>
             <div className="min-w-0">
-              <p className="text-xs font-medium text-slate-900 dark:text-white truncate transition-colors">Admin User</p>
-              <p className="text-[10px] text-slate-400 dark:text-slate-500 truncate transition-colors">admin@acme-goods.com</p>
+              <p className="text-xs font-medium text-slate-900 dark:text-white truncate transition-colors">{user?.business_name || 'Admin User'}</p>
+              <p className="text-[10px] text-slate-400 dark:text-slate-500 truncate transition-colors">{user?.email || 'admin@storekit.com'}</p>
             </div>
           </div>
           <button
