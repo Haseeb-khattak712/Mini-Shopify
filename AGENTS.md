@@ -33,3 +33,15 @@ This is the canonical project structure. Start with task-relevant files below. O
 This project uses **Tailwind CSS v4** through the `@tailwindcss/vite` plugin configured in `vite.config.ts`. `src/index.css` imports Tailwind with `@import 'tailwindcss';`. Use Tailwind utility classes directly in JSX and put global CSS or Tailwind v4 theme customization in `src/index.css`. This scaffold does not need a Tailwind config file or PostCSS config.
 
 `src/main.tsx` imports `src/index.css`, so global font wiring belongs in `src/index.css`. Keep CSS `@import` statements first, then add any `@font-face` rules and font-family defaults there.
+
+## Backend Execution
+
+When asked to run the backend for this project, the backend is a PHP SQLite application located in the `backend` directory.
+
+PHP is installed on this system at: `D:\xampp\php\php.exe`.
+
+To run the backend, execute the following command:
+```powershell
+D:\xampp\php\php.exe -S 0.0.0.0:8000
+```
+Run this command from the `backend` directory.

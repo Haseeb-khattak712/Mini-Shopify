@@ -1,49 +1,76 @@
-@import 'https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;450;500;600&family=JetBrains+Mono:wght@400;500&display=swap';
+@import 'https://fonts.googleapis.com/css2?family=Outfit:wght@700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;450;500;600&family=JetBrains+Mono:wght@400;500&display=swap';
 @import 'tailwindcss';
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme inline {
-  --font-display: 'Plus Jakarta Sans', system-ui, sans-serif;
+  --font-display: 'Inter', system-ui, sans-serif;
+  --font-logo: 'Outfit', sans-serif;
   --font-body: 'Inter', system-ui, sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
 
-  --color-indigo-50: #eef2ff;
-  --color-indigo-100: #e0e7ff;
-  --color-indigo-200: #c7d2fe;
-  --color-indigo-500: #6366f1;
-  --color-indigo-600: #4f46e5;
-  --color-indigo-700: #4338ca;
-  --color-indigo-800: #3730a3;
-  --color-indigo-900: #312e81;
+  --color-shop-primary: #042F26;
+  --color-shop-secondary: #008060;
+  --color-shop-accent: #95BF47;
+  --color-shop-lightbg: #F6F7F8;
+  --color-shop-card: #FFFFFF;
+  --color-shop-text: #111827;
+  --color-shop-muted: #6B7280;
+  --color-shop-grad-start: #E8F5E9;
+  --color-shop-grad-end: #FFFFFF;
 
   --radius-card: 10px;
 }
 
 * {
   box-sizing: border-box;
-}
-
-html {
-  font-family: 'Inter', system-ui, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  font-family: var(--font-body);
 }
 
 body {
   margin: 0;
-  background: #f8fafc;
-  color: #0f172a;
-}
-html.dark body {
-  background: #0f172a;
-  color: #f8fafc;
+  padding: 0;
+  background-color: #000806;
+  color: white;
 }
 
-/* Hide scrollbars by default, show on hover/scroll */
-::-webkit-scrollbar { width: 6px; height: 6px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+#root {
+  min-height: 100vh;
+  background-color: #000806;
+  color: white;
+}
 
-/* Smooth transitions */
-* { transition: color 0.12s, background-color 0.12s, border-color 0.12s, box-shadow 0.12s, opacity 0.12s; }
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-display);
+}
+
+.font-logo {
+  font-family: var(--font-logo);
+}
+
+/* Base scrollbar styling for the app */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(149, 191, 71, 0.5); /* shop-accent with opacity */
+}
+
+/* Hide scrollbar class for horizontal scrolling components */
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.hide-scrollbar {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}

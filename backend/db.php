@@ -11,7 +11,7 @@ if (isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] === 'OPTIONS
     exit();
 }
 
-$db_file = __DIR__ . '/storekit.sqlite';
+$db_file = __DIR__ . '/ownstore.sqlite';
 
 try {
     $db = new PDO("sqlite:" . $db_file);

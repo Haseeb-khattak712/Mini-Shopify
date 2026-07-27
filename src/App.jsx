@@ -1,23 +1,33 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, Suspense, lazy } from 'react'
 import { BrowserRouter, Routes, Route, Navigate, Outlet, useOutletContext, useParams } from 'react-router-dom'
-import { getStoredOrders, isAuthenticated, getUserContext, getStoredProducts, getStoredReviews } from './services/storage'
+import { getStoredOrders, isAdmin, getUserContext, getStoredProducts, getStoredReviews } from '@/services/storage'
 
-import { LandingPage, SignupFlow } from './components/Marketing'
-import { AdminLayout } from './components/AdminLayout'
-import { AdminDashboard } from './components/AdminDashboard'
-import { AdminProducts } from './components/AdminProducts'
-import { AdminOrders } from './components/AdminOrders'
-import { AdminEmpty } from './components/AdminEmpty'
-import { AdminLogin } from './components/AdminLogin'
-import { StoreHome, ProductDetail, CartCheckout, OrderConfirmation, CartSidebar, CustomerLogin, CustomerAccount } from './components/Storefront'
-import { PrivacyPolicy, ReturnsRefunds, ContactUs } from './components/PolicyPages'
+// Code Splitting with React.lazy
+const LandingPage = lazy(() => import('@/pages/Marketing').then(m => ({ default: m.LandingPage })))
+const SignupFlow = lazy(() => import('@/pages/Marketing').then(m => ({ default: m.SignupFlow })))
+const Pricing = lazy(() => import('@/pages/Pricing').then(m => ({ default: m.Pricing })))
+const AdminLayout = lazy(() => import('@/layouts/AdminLayout').then(m => ({ default: m.AdminLayout })))
+const AdminDashboard = lazy(() => import('@/pages/AdminDashboard').then(m => ({ default: m.AdminDashboard })))
+const AdminProducts = lazy(() => import('@/pages/AdminProducts').then(m => ({ default: m.AdminProducts })))
+const AdminOrders = lazy(() => import('@/pages/AdminOrders').then(m => ({ default: m.AdminOrders })))
+const AdminEmpty = lazy(() => import('@/pages/AdminEmpty').then(m => ({ default: m.AdminEmpty })))
+const AdminLogin = lazy(() => import('@/pages/AdminLogin').then(m => ({ default: m.AdminLogin })))
+const StoreHome = lazy(() => import('@/pages/Storefront').then(m => ({ default: m.StoreHome })))
+const ProductDetail = lazy(() => import('@/pages/Storefront').then(m => ({ default: m.ProductDetail })))
+const CartCheckout = lazy(() => import('@/pages/Storefront').then(m => ({ default: m.CartCheckout })))
+const OrderConfirmation = lazy(() => import('@/pages/Storefront').then(m => ({ default: m.OrderConfirmation })))
+const CartSidebar = lazy(() => import('@/pages/Storefront').then(m => ({ default: m.CartSidebar })))
+const PrivacyPolicy = lazy(() => import('@/pages/PolicyPages').then(m => ({ default: m.PrivacyPolicy })))
+const ReturnsRefunds = lazy(() => import('@/pages/PolicyPages').then(m => ({ default: m.ReturnsRefunds })))
+const ContactUs = lazy(() => import('@/pages/PolicyPages').then(m => ({ default: m.ContactUs })))
+const AccountPage = lazy(() => import('@/pages/AccountPage').then(m => ({ default: m.AccountPage })))
 
 // Guard for Admin Routes
 function ProtectedAdminRoute() {
-  if (!isAuthenticated()) {
-    return <Navigate to="/admin/login" replace />
+  if (!isAdmin()) {
+    return <Navigate to="/login" replace />
   }
-  return <AdminLayout><Outlet /></AdminLayout>
+  return <AdminLayout><Suspense fallback={<LoadingSpinner />}><Outlet /></Suspense></AdminLayout>
 }
 
 // Wrapper for Storefront to hold cart state
@@ -25,7 +35,7 @@ function StoreWrapper() {
   const dataContext = useOutletContext()
   const [cart, setCart] = React.useState([])
   const [isCartOpen, setIsCartOpen] = React.useState(false)
-  
+
   const handleAddToCart = (product, quantity = 1, size = null, color = null) => {
     setCart(prev => {
       const exists = prev.find(i => i.product.id === product.id && i.size === size && i.color === color)
@@ -46,12 +56,14 @@ function StoreWrapper() {
 
   return (
     <>
-      <Outlet context={{ ...dataContext, cart, handleAddToCart, handleUpdateCart, setCart, isCartOpen, setIsCartOpen }} />
-      <CartSidebar 
-        isOpen={isCartOpen} 
-        onClose={() => setIsCartOpen(false)} 
-        cart={cart} 
-        handleUpdateCart={handleUpdateCart} 
+      <Suspense fallback={<LoadingSpinner />}>
+        <Outlet context={{ ...dataContext, cart, handleAddToCart, handleUpdateCart, setCart, isCartOpen, setIsCartOpen }} />
+      </Suspense>
+      <CartSidebar
+        isOpen={isCartOpen}
+        onClose={() => setIsCartOpen(false)}
+        cart={cart}
+        handleUpdateCart={handleUpdateCart}
       />
     </>
   )
@@ -59,9 +71,9 @@ function StoreWrapper() {
 
 function LoadingSpinner() {
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center font-display">
-      <div className="w-12 h-12 rounded-full border-4 border-indigo-200 border-t-indigo-600 animate-spin mb-4"></div>
-      <p className="text-slate-500 font-medium">Loading StoreKit Data...</p>
+    <div className="min-h-screen bg-[#000806] flex flex-col items-center justify-center font-display">
+      <div className="w-12 h-12 rounded-full border-4 border-white/10 border-t-[#5E8224] animate-spin mb-4"></div>
+      <p className="text-white/60 font-medium">Loading...</p>
     </div>
   )
 }
@@ -91,7 +103,7 @@ function AdminDataWrapper() {
   }, [user?.id])
 
   if (loading) return <LoadingSpinner />
-  return <Outlet context={{ orders, setOrders, products, setProducts, reviews, setReviews }} />
+  return <Suspense fallback={<LoadingSpinner />}><Outlet context={{ orders, setOrders, products, setProducts, reviews, setReviews }} /></Suspense>
 }
 
 function StoreDataWrapper() {
@@ -119,55 +131,51 @@ function StoreDataWrapper() {
   }, [subdomain])
 
   if (loading) return <LoadingSpinner />
-  return <Outlet context={{ orders, setOrders, products, setProducts, reviews, setReviews, subdomain }} />
+  return <Suspense fallback={<LoadingSpinner />}><Outlet context={{ orders, setOrders, products, setProducts, reviews, setReviews, subdomain }} /></Suspense>
 }
 
 export default function App() {
   return (
     <BrowserRouter>
-      <Routes>
-        {/* Marketing & Signup */}
-        <Route path="/" element={<LandingPage />} />
-        <Route path="/signup" element={<SignupFlow />} />
+      <Suspense fallback={<LoadingSpinner />}>
+        <Routes>
+          {/* Marketing & Signup */}
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/signup" element={<SignupFlow />} />
+          <Route path="/pricing" element={<Pricing />} />
+          <Route path="/login" element={<AdminLogin />} />
+          <Route path="/account" element={<AccountPage />} />
 
-        {/* Admin Login */}
-        <Route path="/admin/login" element={<AdminLogin />} />
-
-        {/* Protected Admin Dashboard */}
-        <Route path="/admin" element={<ProtectedAdminRoute />}>
-          <Route element={<AdminDataWrapper />}>
-            <Route index element={<Navigate to="/admin/dashboard" replace />} />
-            <Route path="dashboard" element={<AdminDashboard />} />
-            <Route path="products" element={<AdminProducts />} />
-            <Route path="orders" element={<AdminOrders />} />
-            <Route path="empty" element={<AdminEmpty />} />
-          </Route>
-        </Route>
-
-        {/* Storefront */}
-        <Route path="/store/:subdomain" element={<StoreDataWrapper />}>
-          <Route element={<StoreWrapper />}>
-            <Route index element={<StoreHome />} />
-            <Route path="product/:id" element={<ProductDetail />} />
-            <Route path="cart" element={<CartCheckout />} />
-            <Route path="confirmation" element={<OrderConfirmation />} />
+          {/* Protected Admin Dashboard */}
+          <Route path="/admin" element={<ProtectedAdminRoute />}>
+            <Route element={<AdminDataWrapper />}>
+              <Route index element={<Navigate to="/admin/dashboard" replace />} />
+              <Route path="dashboard" element={<AdminDashboard />} />
+              <Route path="products" element={<AdminProducts />} />
+              <Route path="orders" element={<AdminOrders />} />
+              <Route path="empty" element={<AdminEmpty />} />
+            </Route>
           </Route>
 
-          {/* Customer Auth & Account (No cart wrapper needed here if we don't want cart sidebar, but they use StoreNav which expects it. Let's wrap them in StoreWrapper or let StoreNav handle missing cart context. Wait, StoreNav requires setIsCartOpen. We should put them inside StoreWrapper) */}
-          <Route element={<StoreWrapper />}>
-            <Route path="login" element={<CustomerLogin />} />
-            <Route path="account" element={<CustomerAccount />} />
+          {/* Storefront */}
+          <Route path="/store/:subdomain" element={<StoreDataWrapper />}>
+            <Route element={<StoreWrapper />}>
+              <Route index element={<StoreHome />} />
+              <Route path="product/:id" element={<ProductDetail />} />
+              <Route path="cart" element={<CartCheckout />} />
+              <Route path="confirmation" element={<OrderConfirmation />} />
+            </Route>
+
+            {/* Policy Pages (outside StoreWrapper — no cart needed) */}
+            <Route path="privacy" element={<PrivacyPolicy />} />
+            <Route path="returns" element={<ReturnsRefunds />} />
+            <Route path="contact" element={<ContactUs />} />
           </Route>
 
-          {/* Policy Pages (outside StoreWrapper — no cart needed) */}
-          <Route path="privacy" element={<PrivacyPolicy />} />
-          <Route path="returns" element={<ReturnsRefunds />} />
-          <Route path="contact" element={<ContactUs />} />
-        </Route>
-
-        {/* Fallback */}
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
+          {/* Fallback */}
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </Suspense>
     </BrowserRouter>
   )
 }

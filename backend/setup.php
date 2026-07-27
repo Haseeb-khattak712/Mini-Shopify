@@ -1,32 +1,25 @@
 <?php
 require_once __DIR__ . '/db.php';
 
+// Drop existing tables
 $db->exec("DROP TABLE IF EXISTS products");
 $db->exec("DROP TABLE IF EXISTS orders");
 $db->exec("DROP TABLE IF EXISTS reviews");
 $db->exec("DROP TABLE IF EXISTS users");
-$db->exec("DROP TABLE IF EXISTS customers");
+$db->exec("DROP TABLE IF EXISTS customers"); // no longer needed
 
-// Create Users Table
+// Create unified Users table
 $db->exec("CREATE TABLE IF NOT EXISTS users (
     id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
     email TEXT UNIQUE NOT NULL,
     password_hash TEXT NOT NULL,
-    business_name TEXT NOT NULL,
-    subdomain TEXT UNIQUE NOT NULL
+    role TEXT NOT NULL DEFAULT 'customer',
+    business_name TEXT,
+    subdomain TEXT UNIQUE
 )");
 
-// Create Customers Table
-$db->exec("CREATE TABLE IF NOT EXISTS customers (
-    id TEXT PRIMARY KEY,
-    user_id TEXT NOT NULL,
-    name TEXT NOT NULL,
-    email TEXT NOT NULL,
-    password_hash TEXT NOT NULL,
-    UNIQUE(user_id, email)
-)");
-
-// Create Products Table
+// Create Products table
 $db->exec("CREATE TABLE IF NOT EXISTS products (
     id TEXT PRIMARY KEY,
     user_id TEXT NOT NULL,
@@ -40,7 +33,7 @@ $db->exec("CREATE TABLE IF NOT EXISTS products (
     colors TEXT
 )");
 
-// Create Orders Table
+// Create Orders table
 $db->exec("CREATE TABLE IF NOT EXISTS orders (
     id TEXT PRIMARY KEY,
     user_id TEXT NOT NULL,
@@ -52,7 +45,7 @@ $db->exec("CREATE TABLE IF NOT EXISTS orders (
     items TEXT
 )");
 
-// Create Reviews Table
+// Create Reviews table
 $db->exec("CREATE TABLE IF NOT EXISTS reviews (
     id TEXT PRIMARY KEY,
     user_id TEXT NOT NULL,
@@ -63,22 +56,41 @@ $db->exec("CREATE TABLE IF NOT EXISTS reviews (
     date TEXT NOT NULL
 )");
 
-// Seed Demo User
-$demoUserId = 'usr_demo';
-$demoHash = password_hash('admin123', PASSWORD_DEFAULT);
-$db->exec("INSERT INTO users (id, email, password_hash, business_name, subdomain) VALUES ('$demoUserId', 'admin@storekit.com', '$demoHash', 'Demo Store', 'demo')");
+// Seed demo admin user
+$adminId = 'usr_demo';
+$adminHash = password_hash('admin123', PASSWORD_DEFAULT);
+$db->exec("INSERT INTO users (id, name, email, password_hash, role, business_name, subdomain) VALUES ('$adminId', 'Demo Admin', 'admin@ownstore.com', '$adminHash', 'admin', 'Demo Store', 'demo')");
+
+// Seed demo customer user
+$customerId = 'usr_customer_demo';
+$custHash = password_hash('customer123', PASSWORD_DEFAULT);
+$db->exec("INSERT INTO users (id, name, email, password_hash, role) VALUES ('$customerId', 'Demo Customer', 'customer@ownstore.com', '$custHash', 'customer')");
 
 echo "Seeding products...\n";
 $products = [
     [
-        'id' => 'p1', 'user_id' => $demoUserId, 'name' => 'Cotton Oxford Shirt', 'price' => 45, 'stock' => 12, 'category' => 'Apparel',
-        'description' => 'A breathable, lightweight cotton shirt perfect for any occasion.', 'image' => 'https://images.unsplash.com/photo-1596755094514-f87e32f85e2c?w=600&h=600&fit=crop&auto=format',
-        'sizes' => json_encode(['S', 'M', 'L', 'XL']), 'colors' => json_encode(['White', 'Light Blue'])
+        'id' => 'p1',
+        'user_id' => $adminId,
+        'name' => 'Cotton Oxford Shirt',
+        'price' => 45,
+        'stock' => 12,
+        'category' => 'Apparel',
+        'description' => 'A breathable, lightweight cotton shirt perfect for any occasion.',
+        'image' => 'https://images.unsplash.com/photo-1596755094514-f87e32f85e2c?w=600&h=600&fit=crop&auto=format',
+        'sizes' => json_encode(['S', 'M', 'L', 'XL']),
+        'colors' => json_encode(['White', 'Light Blue'])
     ],
     [
-        'id' => 'p2', 'user_id' => $demoUserId, 'name' => 'Leather Wallet', 'price' => 35, 'stock' => 4, 'category' => 'Accessories',
-        'description' => 'Slim bifold wallet made from premium full-grain leather.', 'image' => 'https://images.unsplash.com/photo-1627123424574-724758594e93?w=600&h=600&fit=crop&auto=format',
-        'sizes' => json_encode([]), 'colors' => json_encode(['Brown', 'Black'])
+        'id' => 'p2',
+        'user_id' => $adminId,
+        'name' => 'Leather Wallet',
+        'price' => 35,
+        'stock' => 4,
+        'category' => 'Accessories',
+        'description' => 'Slim bifold wallet made from premium full-grain leather.',
+        'image' => 'https://images.unsplash.com/photo-1627123424574-724758594e93?w=600&h=600&fit=crop&auto=format',
+        'sizes' => json_encode([]),
+        'colors' => json_encode(['Brown', 'Black'])
     ]
 ];
 $insertP = $db->prepare("INSERT INTO products (id, user_id, name, price, stock, category, description, image, sizes, colors) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
@@ -88,13 +100,13 @@ foreach ($products as $p) {
 
 echo "Seeding orders...\n";
 $orders = [
-    ['id' => 'ORD-7829', 'user_id' => $demoUserId, 'customer_id' => null, 'customer' => 'Alice Smith', 'total' => 125, 'date' => date('Y-m-d'), 'status' => 'processing', 'items' => '[]'],
-    ['id' => 'ORD-7828', 'user_id' => $demoUserId, 'customer_id' => null, 'customer' => 'Bob Jones', 'total' => 45, 'date' => date('Y-m-d', strtotime('-1 day')), 'status' => 'shipped', 'items' => '[]']
+    ['id' => 'ORD-7829', 'user_id' => $adminId, 'customer_id' => null, 'customer' => 'Alice Smith', 'total' => 125, 'date' => date('Y-m-d'), 'status' => 'processing', 'items' => '[]'],
+    ['id' => 'ORD-7828', 'user_id' => $adminId, 'customer_id' => null, 'customer' => 'Bob Jones', 'total' => 45, 'date' => date('Y-m-d', strtotime('-1 day')), 'status' => 'shipped', 'items' => '[]']
 ];
 $insertO = $db->prepare("INSERT INTO orders (id, user_id, customer_id, customer, total, date, status, items) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
 foreach ($orders as $o) {
     $insertO->execute([$o['id'], $o['user_id'], $o['customer_id'], $o['customer'], $o['total'], $o['date'], $o['status'], $o['items']]);
 }
 
-echo "Database setup complete! SQLite database created at: " . __DIR__ . "/storekit.sqlite\n";
+echo "Database setup complete! SQLite database created at: " . __DIR__ . "/ownstore.sqlite\n";
 ?>

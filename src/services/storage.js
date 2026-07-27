@@ -85,15 +85,40 @@ export async function updateOrder(order, adminId = null) {
 
 // Auth API
 export function isAuthenticated() {
-  return localStorage.getItem('storekit_admin_auth') === 'true'
+  return localStorage.getItem('ownstore_auth') === 'true'
 }
 
 export function getUserContext() {
-  const data = localStorage.getItem('storekit_user_context')
+  const data = localStorage.getItem('ownstore_user_context')
   return data ? JSON.parse(data) : null
 }
 
-export async function loginAdmin(email, password) {
+export function isAdmin() {
+  const user = getUserContext()
+  return user?.role === 'admin'
+}
+
+// Multi-user account chooser functions
+export function getSavedAccounts() {
+  const accounts = localStorage.getItem('ownstore_saved_accounts')
+  return accounts ? JSON.parse(accounts) : []
+}
+
+function saveAccountToHistory(userObj) {
+  let accounts = getSavedAccounts()
+  // Remove if exists to update with fresh data and put at front
+  accounts = accounts.filter(a => a.email !== userObj.email)
+  accounts.unshift(userObj)
+  localStorage.setItem('ownstore_saved_accounts', JSON.stringify(accounts))
+}
+
+export function switchAccount(userObj) {
+  localStorage.setItem('ownstore_auth', 'true')
+  localStorage.setItem('ownstore_user_context', JSON.stringify(userObj))
+  saveAccountToHistory(userObj)
+}
+
+export async function login(email, password) {
   try {
     const res = await fetch(`${API_URL}/auth.php?action=login`, {
       method: 'POST',
@@ -101,10 +126,11 @@ export async function loginAdmin(email, password) {
       headers: { 'Content-Type': 'application/json' }
     })
     const data = await res.json()
-    
+
     if (res.ok && data.success) {
-      localStorage.setItem('storekit_admin_auth', 'true')
-      localStorage.setItem('storekit_user_context', JSON.stringify(data.user))
+      localStorage.setItem('ownstore_auth', 'true')
+      localStorage.setItem('ownstore_user_context', JSON.stringify(data.user))
+      saveAccountToHistory(data.user)
       return { success: true }
     }
     return { success: false, error: data.error || 'Login failed' }
@@ -113,18 +139,24 @@ export async function loginAdmin(email, password) {
   }
 }
 
-export async function registerAdmin(email, password, biz, subdomain) {
+export async function register(name, email, password, role = 'customer', business_name = '', subdomain = '') {
   try {
     const res = await fetch(`${API_URL}/auth.php?action=register`, {
       method: 'POST',
-      body: JSON.stringify({ email, password, biz, subdomain }),
+      body: JSON.stringify({ name, email, password, role, business_name, subdomain }),
       headers: { 'Content-Type': 'application/json' }
     })
     const data = await res.json()
-    
+
     if (res.ok && data.success) {
-      localStorage.setItem('storekit_admin_auth', 'true')
-      localStorage.setItem('storekit_user_context', JSON.stringify({ id: data.id, email, business_name: biz, subdomain }))
+      localStorage.setItem('ownstore_auth', 'true')
+      const userObj = { id: data.id, name, email, role }
+      if (role === 'admin') {
+        userObj.business_name = business_name
+        userObj.subdomain = subdomain
+      }
+      localStorage.setItem('ownstore_user_context', JSON.stringify(userObj))
+      saveAccountToHistory(userObj)
       return { success: true }
     }
     return { success: false, error: data.error || 'Registration failed' }
@@ -133,62 +165,7 @@ export async function registerAdmin(email, password, biz, subdomain) {
   }
 }
 
-export function logoutAdmin() {
-  localStorage.removeItem('storekit_admin_auth')
-  localStorage.removeItem('storekit_user_context')
-}
-
-// Customer Auth API
-export function isCustomerAuthenticated(subdomain) {
-  return localStorage.getItem(`storekit_customer_auth_${subdomain}`) === 'true'
-}
-
-export function getCustomerContext(subdomain) {
-  const data = localStorage.getItem(`storekit_customer_context_${subdomain}`)
-  return data ? JSON.parse(data) : null
-}
-
-export async function loginCustomer(email, password, subdomain) {
-  try {
-    const res = await fetch(`${API_URL}/customer_auth.php?action=login`, {
-      method: 'POST',
-      body: JSON.stringify({ email, password, subdomain }),
-      headers: { 'Content-Type': 'application/json' }
-    })
-    const data = await res.json()
-    
-    if (res.ok && data.success) {
-      localStorage.setItem(`storekit_customer_auth_${subdomain}`, 'true')
-      localStorage.setItem(`storekit_customer_context_${subdomain}`, JSON.stringify(data.customer))
-      return { success: true }
-    }
-    return { success: false, error: data.error || 'Login failed' }
-  } catch (err) {
-    return { success: false, error: 'Network error' }
-  }
-}
-
-export async function registerCustomer(name, email, password, subdomain) {
-  try {
-    const res = await fetch(`${API_URL}/customer_auth.php?action=register`, {
-      method: 'POST',
-      body: JSON.stringify({ name, email, password, subdomain }),
-      headers: { 'Content-Type': 'application/json' }
-    })
-    const data = await res.json()
-    
-    if (res.ok && data.success) {
-      localStorage.setItem(`storekit_customer_auth_${subdomain}`, 'true')
-      localStorage.setItem(`storekit_customer_context_${subdomain}`, JSON.stringify(data.customer))
-      return { success: true }
-    }
-    return { success: false, error: data.error || 'Registration failed' }
-  } catch (err) {
-    return { success: false, error: 'Network error' }
-  }
-}
-
-export function logoutCustomer(subdomain) {
-  localStorage.removeItem(`storekit_customer_auth_${subdomain}`)
-  localStorage.removeItem(`storekit_customer_context_${subdomain}`)
+export function logout() {
+  localStorage.removeItem('ownstore_auth')
+  localStorage.removeItem('ownstore_user_context')
 }
