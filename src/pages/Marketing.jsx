@@ -1,13 +1,13 @@
 import { useState, Suspense, useEffect, useRef, lazy } from 'react'
-import { motion, useScroll, useTransform, AnimatePresence, useMotionValueEvent } from 'framer-motion'
+import { motion, useScroll, useTransform, AnimatePresence, useMotionValueEvent, useSpring } from 'framer-motion'
 import { Button, Input } from '@/components/ui/ui'
 import { HeroScene } from '@/components/shared/HeroScene'
 import { useTilt } from '@/hooks/useTilt'
 
 const GlobeScene = lazy(() => import('@/components/shared/GlobeScene').then(module => ({ default: module.GlobeScene })));
 import ScrollSequenceBackground from '@/components/shared/ScrollSequenceBackground'
-import { useNavigate } from 'react-router-dom'
-import { isAuthenticated, register, getUserContext } from '@/services/storage'
+import { useNavigate, Link } from 'react-router-dom'
+import { isAuthenticated, register, getUserContext, isAdmin } from '@/services/storage'
 
 // Helper for changing words
 function AnimatedHeadline() {
@@ -57,10 +57,17 @@ export function LandingPage() {
   const navigate = useNavigate()
   const heroRef = useRef(null)
   const { scrollYProgress: pageScrollProgress } = useScroll()
-  const { scrollYProgress: heroScrollProgress } = useScroll({
+  const { scrollYProgress: rawHeroScrollProgress } = useScroll({
     target: heroRef,
     offset: ["start start", "end end"]
   })
+  
+  const heroScrollProgress = useSpring(rawHeroScrollProgress, {
+    stiffness: 100,
+    damping: 30,
+    restDelta: 0.001
+  });
+
   const scale = useTransform(pageScrollProgress, [0, 1], [1, 1.2])
 
   const [navVisible, setNavVisible] = useState(false)
@@ -77,7 +84,7 @@ export function LandingPage() {
       {/* Nav */}
       <nav className={`fixed top-0 left-0 right-0 z-[100] bg-[#000000]/80 backdrop-blur-xl border-b border-white/5 py-4 transition-all duration-700 ${navVisible ? 'translate-y-0 opacity-100' : '-translate-y-full opacity-0 pointer-events-none'}`}>
         <div className="mx-auto max-w-[1728px] px-6 md:px-10 lg:px-16 xl:px-20 2xl:px-24 w-full flex items-center justify-between">
-          <div className="flex items-center gap-3 cursor-pointer group" onClick={() => window.location.href = '/'} style={{ perspective: '1000px' }}>
+          <div className="flex items-center gap-3 cursor-pointer group" onClick={() => navigate('/')} style={{ perspective: '1000px' }}>
             <img src="/logo.png" alt="OwnStore Logo" className="w-10 h-10 object-contain drop-shadow-md opacity-80 mix-blend-luminosity group-hover:mix-blend-normal group-hover:opacity-100 transition-all duration-500" style={{ transition: 'transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)', transformStyle: 'preserve-3d' }} onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.15) rotateY(15deg) rotateX(10deg) translateZ(10px)'} onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1) rotateY(0deg) rotateX(0deg) translateZ(0px)'} />
             <span className="font-black text-shop-accent font-logo text-2xl tracking-tighter transition-colors duration-300">OwnStore</span>
           </div>
@@ -85,11 +92,15 @@ export function LandingPage() {
             <a href="#platform" className="hover:text-white transition-colors">Platform</a>
             <a href="#customization" className="hover:text-white transition-colors">Customization</a>
             <a href="#checkout" className="hover:text-white transition-colors">Checkout</a>
-            <a href="/pricing" className="hover:text-white transition-colors">Pricing</a>
+            <Link to="/pricing" className="hover:text-white transition-colors">Pricing</Link>
+            <Link to="/marketplace" className="hover:text-white text-shop-accent font-semibold transition-colors">Marketplace</Link>
           </div>
           <div className="flex items-center gap-3">
             {isAuthenticated() ? (
-              <Button size="sm" onClick={() => navigate('/admin')} className="!bg-[#5E8224] hover:!bg-[#5E8224]/90 text-white hover:scale-105 transition-all">Dashboard</Button>
+              <div className="flex items-center gap-3">
+                <Button variant="ghost" size="sm" onClick={() => navigate('/login')} className="hover:!bg-white/10 font-medium text-white">Switch Account</Button>
+                <Button size="sm" onClick={() => navigate(isAdmin() ? '/admin' : '/account')} className="!bg-zinc-100 hover:!bg-white !text-zinc-900 hover:scale-105 transition-all">{isAdmin() ? 'Dashboard' : 'Account'}</Button>
+              </div>
             ) : (
               <>
                 <Button variant="ghost" size="sm" onClick={() => navigate('/login')} className="hover:!bg-white/10 font-medium text-white">Log in</Button>
@@ -101,7 +112,7 @@ export function LandingPage() {
       </nav>
 
       {/* SECTION 1: HERO (Scroll Sequence Stage) */}
-      <section ref={heroRef} className="relative h-[550vh] bg-[#021612]">
+      <section ref={heroRef} className="relative h-[550vh] bg-zinc-900/50">
         {/* Sticky wrapper */}
         <div className="sticky top-0 h-screen overflow-hidden flex items-center">
 
@@ -119,7 +130,7 @@ export function LandingPage() {
                 The premier platform for ambitious brands to create, manage, and scale their online business globally.
               </p>
               <div className="flex flex-wrap gap-5">
-                <Button size="lg" onClick={() => navigate('/signup')} className="bg-white !text-[#021612] hover:bg-white/10 hover:!text-white hover:scale-[1.02] transition-all text-lg lg:text-xl px-10 h-14 lg:h-16 rounded-full border-none font-semibold shadow-[0_0_40px_rgba(255,255,255,0.15)]">
+                <Button size="lg" onClick={() => navigate('/signup')} className="bg-white !text-zinc-950 hover:bg-white/10 hover:!text-white hover:scale-[1.02] transition-all text-lg lg:text-xl px-10 h-14 lg:h-16 rounded-full border-none font-semibold shadow-[0_0_40px_rgba(255,255,255,0.15)]">
                   Start free trial
                 </Button>
                 <Button variant="outline" size="lg" onClick={() => navigate('/store/demo')} className="hover:scale-[1.02] transition-all bg-gradient-to-br from-white/[0.08] to-transparent border border-white/10 shadow-[0_30px_60px_rgba(0,0,0,0.6)] backdrop-blur-md hover:bg-black/40 backdrop-blur-md border border-white/20 text-white text-lg lg:text-xl px-10 h-14 lg:h-16 rounded-full font-medium">
@@ -255,7 +266,7 @@ export function LandingPage() {
                <p className="text-xl md:text-2xl text-white/80 leading-relaxed mb-10 font-medium mx-auto max-w-3xl">
                     Use our drag-and-drop theme editor or dive into the code. The power is entirely in your hands to build the exact brand experience you envision.
                </p>
-               <Button variant="default" size="lg" className="bg-gradient-to-br from-shop-accent/10 to-transparent border border-shop-accent/20 shadow-[0_30px_60px_rgba(149,191,71,0.15)] backdrop-blur-md hover:bg-shop-secondary text-white rounded-full px-8 h-14 text-lg font-semibold shadow-lg shadow-shop-primary/20 hover:scale-105 transition-transform">
+               <Button variant="default" size="lg" className="bg-gradient-to-br from-shop-accent/10 to-transparent border border-shop-accent/20 shadow-[0_30px_60px_rgba(149,191,71,0.15)] backdrop-blur-md hover:bg-shop-secondary text-white hover:text-zinc-900 rounded-full px-8 h-14 text-lg font-semibold shadow-lg shadow-shop-primary/20 hover:scale-105 transition-transform">
                     Explore developer tools
                </Button>
              </motion.div>
@@ -325,7 +336,7 @@ export function LandingPage() {
               initial={{ opacity: 0, x: 40 }}
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
-              className="bg-gradient-to-br from-[#021612]/90 to-[#000806]/90 relative overflow-hidden backdrop-blur-xl text-white rounded-[32px] p-8 shadow-[0_30px_80px_rgba(0,0,0,0.8)] border border-white/5 pointer-events-auto group ring-1 ring-white/10"
+              className="bg-gradient-to-br from-zinc-900/90 to-zinc-950/90 relative overflow-hidden backdrop-blur-xl text-white rounded-[32px] p-8 shadow-[0_30px_80px_rgba(0,0,0,0.8)] border border-white/5 pointer-events-auto group ring-1 ring-white/10"
             >
               <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[80%] h-[1px] bg-gradient-to-r from-transparent via-shop-accent/80 to-transparent"></div>
               
@@ -417,9 +428,40 @@ export function LandingPage() {
         </div>
       </section>
 
-      {/* SECTION 6: STATS */}
-      <section className="bg-[#000504] py-32 border-t border-white/15 relative z-[50] -mt-20 rounded-t-[80px] shadow-[0_-20px_60px_rgba(0,0,0,0.8)] overflow-hidden">
-        <div className="max-w-[1200px] mx-auto px-6 grid grid-cols-2 md:grid-cols-4 gap-12 mt-10">
+      {/* SECTION 7: TESTIMONIALS & STATS */}
+      <section className="bg-[#000302] py-32 relative z-[60] -mt-20 rounded-t-[80px] border-t border-white/15 shadow-[0_-20px_60px_rgba(0,0,0,0.8)] overflow-hidden">
+        <div className="mx-auto max-w-[1728px] px-6 md:px-10 lg:px-16 xl:px-20 2xl:px-24 mb-16 mt-10 text-center">
+          <h2 className="text-4xl md:text-5xl font-light font-display text-white cursor-default">
+            Empowering independent <br /> business owners <br /> everywhere.
+          </h2>
+        </div>
+
+        {/* Animated Marquee */}
+        <div className="flex gap-8 overflow-hidden relative w-full h-[300px] items-center">
+          <motion.div
+            animate={{ x: [0, -1000] }}
+            transition={{ repeat: Infinity, duration: 20, ease: "linear" }}
+            className="flex gap-8 whitespace-nowrap px-8 absolute left-0"
+          >
+            {[1, 2, 3, 4, 5, 6].map(i => (
+              <div key={i} className="w-[400px] h-[220px] bg-zinc-900/50/40 border border-white/5 p-8 flex flex-col shrink-0 hover:-translate-y-2 hover:bg-zinc-900/50/60 hover:border-white/30 transition-all cursor-grab rounded-3xl shadow-xl">
+                <div className="flex items-center gap-4 mb-6">
+                  <div className="w-12 h-12 bg-white/10 rounded-full flex items-center justify-center font-bold text-white/50">{i}</div>
+                  <div>
+                    <div className="font-bold text-white">Store Owner {i}</div>
+                    <div className="text-sm text-zinc-100">Verified Merchant</div>
+                  </div>
+                </div>
+                <p className="text-white/80 whitespace-normal leading-relaxed">
+                  "OwnStore transformed how we sell online. It's incredibly intuitive and scales effortlessly with our massive traffic spikes."
+                </p>
+              </div>
+            ))}
+          </motion.div>
+        </div>
+
+        {/* Global Stats */}
+        <div className="max-w-[1200px] mx-auto px-6 grid grid-cols-2 md:grid-cols-4 gap-12 mt-32 mb-10">
           <div>
             <StatsCounter target="10" suffix="M+" />
             <p className="text-center font-medium text-white/60 uppercase tracking-widest text-sm">Merchants</p>
@@ -436,39 +478,6 @@ export function LandingPage() {
             <StatsCounter target="99.9" suffix="%" />
             <p className="text-center font-medium text-white/60 uppercase tracking-widest text-sm">Uptime</p>
           </div>
-        </div>
-      </section>
-
-      {/* SECTION 7: TESTIMONIALS */}
-      <section className="bg-[#000302] py-32 relative z-[60] -mt-20 rounded-t-[80px] border-t border-white/15 shadow-[0_-20px_60px_rgba(0,0,0,0.8)] overflow-hidden">
-        <div className="mx-auto max-w-[1728px] px-6 md:px-10 lg:px-16 xl:px-20 2xl:px-24 mb-16 mt-10 text-center">
-          <h2 className="text-4xl md:text-5xl font-light font-display text-white cursor-default">
-            Empowering independent <br /> business owners <br /> everywhere.
-          </h2>
-        </div>
-
-        {/* Animated Marquee */}
-        <div className="flex gap-8 overflow-hidden relative w-full h-[300px] items-center">
-          <motion.div
-            animate={{ x: [0, -1000] }}
-            transition={{ repeat: Infinity, duration: 20, ease: "linear" }}
-            className="flex gap-8 whitespace-nowrap px-8 absolute left-0"
-          >
-            {[1, 2, 3, 4, 5, 6].map(i => (
-              <div key={i} className="w-[400px] h-[220px] bg-[#021612]/40 border border-white/5 p-8 flex flex-col shrink-0 hover:-translate-y-2 hover:bg-[#021612]/60 hover:border-[#5E8224]/30 transition-all cursor-grab rounded-3xl shadow-xl">
-                <div className="flex items-center gap-4 mb-6">
-                  <div className="w-12 h-12 bg-white/10 rounded-full flex items-center justify-center font-bold text-white/50">{i}</div>
-                  <div>
-                    <div className="font-bold text-white">Store Owner {i}</div>
-                    <div className="text-sm text-[#5E8224]">Verified Merchant</div>
-                  </div>
-                </div>
-                <p className="text-white/80 whitespace-normal leading-relaxed">
-                  "OwnStore transformed how we sell online. It's incredibly intuitive and scales effortlessly with our massive traffic spikes."
-                </p>
-              </div>
-            ))}
-          </motion.div>
         </div>
       </section>
 
@@ -572,7 +581,7 @@ export function SignupFlow() {
 
         {/* Card */}
         <div
-          className="bg-[#021612]/90 backdrop-blur border border-white/10 rounded-[12px] shadow-sm w-full max-w-md p-8"
+          className="bg-zinc-900/50/90 backdrop-blur border border-white/10 rounded-[12px] shadow-sm w-full max-w-md p-8"
           style={{ animation: 'cardIn 0.3s cubic-bezier(0.34,1.56,0.64,1)' }}
         >
           <h1 className="text-2xl font-bold font-display text-white mb-1">Create an account</h1>
@@ -580,13 +589,13 @@ export function SignupFlow() {
 
           <div className="flex p-1 bg-gradient-to-br from-white/[0.08] to-transparent border border-white/10 shadow-[0_30px_60px_rgba(0,0,0,0.6)] backdrop-blur-md rounded-lg mb-6">
             <button
-              className={`flex-1 text-sm font-medium py-1.5 rounded-md transition-colors ${role === 'customer' ? 'bg-[#5E8224] text-white shadow-sm' : 'text-white/60 hover:text-white/80'}`}
+              className={`flex-1 text-sm font-medium py-1.5 rounded-md transition-colors ${role === 'customer' ? 'bg-zinc-100 text-zinc-900 shadow-sm' : 'text-white/60 hover:text-white/80'}`}
               onClick={() => { setRole('customer'); setErrors({}); }}
             >
               Customer
             </button>
             <button
-              className={`flex-1 text-sm font-medium py-1.5 rounded-md transition-colors ${role === 'admin' ? 'bg-[#5E8224] text-white shadow-sm' : 'text-white/60 hover:text-white/80'}`}
+              className={`flex-1 text-sm font-medium py-1.5 rounded-md transition-colors ${role === 'admin' ? 'bg-zinc-100 text-zinc-900 shadow-sm' : 'text-white/60 hover:text-white/80'}`}
               onClick={() => { setRole('admin'); setErrors({}); }}
             >
               Seller
@@ -609,7 +618,7 @@ export function SignupFlow() {
                 <div>
                   <label className="text-sm font-medium text-white/80 block mb-1.5">Subdomain</label>
                   <div className="flex rounded-[10px] border border-white/10 overflow-hidden focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-500/20">
-                    <input className="flex-1 px-3.5 py-2.5 text-sm outline-none bg-[#021612] text-white" placeholder="yourstore"
+                    <input className="flex-1 px-3.5 py-2.5 text-sm outline-none bg-zinc-900/50 text-white" placeholder="yourstore"
                       value={subdomain} onChange={e => { setSubdomain(slugify(e.target.value)) }} />
                     <span className="px-3 flex items-center text-sm text-white/50 bg-transparent border-l border-white/10 font-mono">.ownstore.com</span>
                   </div>

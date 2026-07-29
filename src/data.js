@@ -7,6 +7,7 @@ export const PRODUCTS = [
     image: 'https://images.unsplash.com/photo-1578587018452-892bacefd3f2?w=600&h=600&fit=crop&auto=format',
     category: 'Apparel',
     description: 'Luxuriously soft 100% merino wool crewneck sweater. Naturally temperature-regulating, odor-resistant, and machine washable. Available in a range of contemporary colorways.',
+    badge: 'Bestseller'
   },
   {
     id: 'p2',
@@ -16,6 +17,7 @@ export const PRODUCTS = [
     image: 'https://images.unsplash.com/photo-1473966968600-fa801b869a1a?w=600&h=600&fit=crop&auto=format',
     category: 'Apparel',
     description: 'Tailored slim-fit chinos crafted from a stretch cotton blend. Wrinkle-resistant fabric keeps you looking sharp from morning to evening.',
+    badge: 'Sale'
   },
   {
     id: 'p3',
@@ -25,6 +27,7 @@ export const PRODUCTS = [
     image: 'https://images.unsplash.com/photo-1627123424574-724758594e93?w=600&h=600&fit=crop&auto=format',
     category: 'Accessories',
     description: 'Hand-stitched full-grain leather card wallet with RFID blocking. Holds up to 8 cards and has a center slot for bills. Gets better with age.',
+    badge: 'New'
   },
   {
     id: 'p4',

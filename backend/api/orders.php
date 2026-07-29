@@ -3,13 +3,13 @@ require_once __DIR__ . '/../db.php';
 
 $method = $_SERVER['REQUEST_METHOD'];
 
-// Get the user ID from headers (authenticated user)
 $auth_user_id = null;
-$headers = getallheaders();
-if (isset($headers['X-User-Id'])) {
-    $auth_user_id = $headers['X-User-Id'];
-} elseif (isset($_SERVER['HTTP_X_USER_ID'])) {
-    $auth_user_id = $_SERVER['HTTP_X_USER_ID'];
+$token = get_bearer_token();
+if ($token) {
+    $payload = verify_jwt($token);
+    if ($payload && isset($payload['id'])) {
+        $auth_user_id = $payload['id'];
+    }
 }
 
 // Get store owner ID from subdomain
@@ -37,25 +37,20 @@ if ($auth_user_id) {
 
 switch ($method) {
     case 'GET':
-        if (!$auth_user_id && !$store_owner_id) {
+        if (!$auth_user_id) {
             http_response_code(401);
             echo json_encode(['error' => 'Unauthorized']);
             exit;
         }
 
-        if ($role === 'admin' && $auth_user_id) {
+        if ($role === 'admin') {
             // Admin fetching their store's orders
             $stmt = $db->prepare("SELECT * FROM orders WHERE user_id = ? ORDER BY date DESC, id DESC");
             $stmt->execute([$auth_user_id]);
-        } else if ($auth_user_id) {
+        } else {
             // Customer fetching their personal orders across all stores
             $stmt = $db->prepare("SELECT * FROM orders WHERE customer_id = ? ORDER BY date DESC, id DESC");
             $stmt->execute([$auth_user_id]);
-        } else {
-            // Unauthenticated GET for a store (e.g. storefront demo)
-            // Ideally this shouldn't happen or should be restricted, but preserving original logic
-            $stmt = $db->prepare("SELECT * FROM orders WHERE user_id = ? ORDER BY date DESC, id DESC");
-            $stmt->execute([$store_owner_id]);
         }
         
         $orders = $stmt->fetchAll();

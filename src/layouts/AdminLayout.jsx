@@ -6,6 +6,7 @@ const NAV = [
   { id: '/admin/dashboard', label: 'Dashboard', icon: '⬡' },
   { id: '/admin/products', label: 'Products', icon: '□' },
   { id: '/admin/orders', label: 'Orders', icon: '◫' },
+  { id: '/admin/theme', label: 'Online Store', icon: '✦' },
   { id: '/admin/empty', label: 'Empty States', icon: '◻' },
 ]
 
@@ -20,69 +21,74 @@ export function AdminLayout({ children }) {
   }
 
   return (
-    <div className="flex h-screen bg-[#000504]  transition-colors">
+    <div className="flex h-screen bg-transparent transition-colors">
       {/* Sidebar */}
-      <aside className="w-60 bg-[#021612]  border-r border-white/10  flex flex-col shrink-0 transition-colors">
+      <aside className="w-64 bg-[#18181b]/40 backdrop-blur-xl border-r border-zinc-800/60 flex flex-col shrink-0 transition-colors">
         {/* Brand */}
-        <div className="px-5 py-4 border-b border-white/5  transition-colors">
-          <div className="flex items-center gap-2.5">
-            <div className="w-7 h-7 rounded-lg bg-shop-primary flex items-center justify-center text-white text-sm font-bold">
+        <div className="px-6 py-5 border-b border-zinc-800/60 transition-colors">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-[10px] bg-zinc-100 flex items-center justify-center text-zinc-950 text-sm font-bold shadow-[0_0_15px_rgba(255,255,255,0.1)] border border-zinc-200/50">
               {user?.business_name?.charAt(0)?.toUpperCase() || 'S'}
             </div>
             <div className="min-w-0">
-              <p className="text-sm font-semibold text-white  font-display leading-none truncate transition-colors">{user?.business_name || 'OwnStore'}</p>
-              <p className="text-[11px] text-white/50  font-mono mt-0.5 truncate transition-colors">{user?.subdomain || 'demo'}.ownstore.com</p>
+              <p className="text-sm font-semibold text-zinc-100 font-display leading-none truncate tracking-tight">{user?.business_name || 'OwnStore'}</p>
+              <p className="text-[11px] text-zinc-500 font-mono mt-1 truncate">{user?.subdomain || 'demo'}.ownstore.com</p>
             </div>
           </div>
         </div>
 
         {/* Nav */}
-        <nav className="flex-1 px-3 py-4 flex flex-col gap-0.5">
-          <p className="text-[10px] font-mono font-medium text-white/50  uppercase tracking-widest px-2 mb-2 transition-colors">Management</p>
-          {NAV.map(item => (
-            <Link
-              key={item.id}
-              to={item.id}
-              className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-left cursor-pointer transition-colors
-                ${location.pathname === item.id
-                  ? 'bg-white/5  text-shop-primary '
-                  : 'text-white/70  hover:bg-[#000504]  hover:text-white '}`}
-            >
-              <span className="text-base leading-none opacity-70">{item.icon}</span>
-              {item.label}
-              {item.id === '/admin/orders' && (
-                <span className="ml-auto bg-amber-100  text-amber-700  text-xs font-mono rounded-full px-1.5 py-0.5 leading-none transition-colors">1</span>
-              )}
-            </Link>
-          ))}
+        <nav className="flex-1 px-4 py-6 flex flex-col gap-1">
+          <p className="text-[10px] font-mono font-medium text-zinc-500 uppercase tracking-widest px-2 mb-3">Management</p>
+          {NAV.map(item => {
+            const isActive = location.pathname === item.id
+            return (
+              <Link
+                key={item.id}
+                to={item.id}
+                className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium text-left cursor-pointer transition-all duration-300
+                  ${isActive
+                    ? 'bg-zinc-800 text-zinc-100 border border-zinc-700 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]'
+                    : 'text-zinc-400 hover:bg-zinc-800/50 hover:text-zinc-200 border border-transparent'}`}
+              >
+                <span className={`text-base leading-none transition-colors ${isActive ? 'text-zinc-100' : 'opacity-70'}`}>{item.icon}</span>
+                {item.label}
+                {item.id === '/admin/orders' && (
+                  <span className="ml-auto bg-zinc-100 text-zinc-900 text-[10px] font-mono rounded-full px-2 py-0.5 leading-none shadow-[0_0_10px_rgba(255,255,255,0.1)]">1</span>
+                )}
+              </Link>
+            )
+          })}
         </nav>
 
         {/* Mode switcher */}
-        <div className="p-3 border-t border-white/5  transition-colors">
-          <p className="text-[10px] font-mono text-white/50  uppercase tracking-widest px-2 mb-2 transition-colors">Switch view</p>
-          <Link to="/" className="block w-full text-left text-xs text-white/60  hover:text-white/90  px-3 py-1.5 rounded hover:bg-[#000504]  transition-colors">
-            ← Marketing site
-          </Link>
-          <a href={`/store/${user?.subdomain || 'demo'}`} target="_blank" rel="noreferrer" className="block w-full text-left text-xs text-white/60  hover:text-white/90  px-3 py-1.5 rounded hover:bg-[#000504]  transition-colors">
-            ↗ Customer storefront
-          </a>
+        <div className="p-4 border-t border-zinc-800/60 transition-colors">
+          <p className="text-[10px] font-mono font-medium text-zinc-500 uppercase tracking-widest px-2 mb-3">Switch view</p>
+          <div className="space-y-1">
+            <Link to="/" className="block w-full text-left text-xs text-zinc-400 hover:text-zinc-200 px-3 py-2 rounded-xl hover:bg-zinc-800/50 transition-all">
+              ← Marketing site
+            </Link>
+            <a href={`/store/${user?.subdomain || 'demo'}`} target="_blank" rel="noreferrer" className="block w-full text-left text-xs text-zinc-400 hover:text-zinc-200 px-3 py-2 rounded-xl hover:bg-zinc-800/50 transition-all">
+              ↗ Customer storefront
+            </a>
+          </div>
         </div>
 
         {/* User */}
-        <div className="p-4 border-t border-white/5  flex items-center justify-between gap-2 transition-colors">
-          <div className="flex items-center gap-2.5 min-w-0">
-            <div className="w-7 h-7 rounded-full bg-white/10  flex items-center justify-center text-xs font-semibold text-shop-primary  transition-colors">
+        <div className="p-5 border-t border-zinc-800/60 flex items-center justify-between gap-2 transition-colors bg-zinc-900/20">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="w-8 h-8 rounded-full bg-zinc-800 flex items-center justify-center text-xs font-semibold text-zinc-100 border border-zinc-700">
               {user?.business_name?.charAt(0)?.toUpperCase() || 'A'}
             </div>
             <div className="min-w-0">
-              <p className="text-xs font-medium text-white  truncate transition-colors">{user?.business_name || 'Admin User'}</p>
-              <p className="text-[10px] text-white/50  truncate transition-colors">{user?.email || 'admin@ownstore.com'}</p>
+              <p className="text-xs font-medium text-zinc-200 truncate">{user?.business_name || 'Admin User'}</p>
+              <p className="text-[10px] text-zinc-500 truncate mt-0.5">{user?.email || 'admin@ownstore.com'}</p>
             </div>
           </div>
           <button
             onClick={handleLogout}
             title="Sign out"
-            className="p-1.5 rounded-lg text-white/50 hover:text-red-600 hover:bg-red-50  transition-colors cursor-pointer text-xs"
+            className="p-2 rounded-xl text-zinc-500 hover:text-red-400 hover:bg-red-500/10 transition-all cursor-pointer text-sm"
           >
             🚪
           </button>

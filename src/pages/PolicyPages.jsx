@@ -3,9 +3,9 @@ import { Button } from '@/components/ui/ui'
 
 function PolicyLayout({ title, children }) {
   return (
-    <div className="min-h-screen bg-[#000504]">
+    <div className="min-h-screen bg-zinc-950">
       {/* Nav */}
-      <header className="bg-[#021612] border-b border-white/10 sticky top-0 z-20">
+      <header className="bg-zinc-900/50 border-b border-white/10 sticky top-0 z-20">
         <div className="max-w-4xl mx-auto px-6 py-4 flex items-center justify-between">
           <Link to="/store" className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-lg bg-shop-primary flex items-center justify-center text-white font-bold text-sm">A</div>
@@ -23,7 +23,7 @@ function PolicyLayout({ title, children }) {
       {/* Content */}
       <main className="max-w-4xl mx-auto px-6 py-12">
         <h1 className="text-3xl font-bold font-display text-white mb-8">{title}</h1>
-        <div className="bg-[#021612] border border-white/10 rounded-[12px] p-8 md:p-10 prose prose-slate prose-sm max-w-none">
+        <div className="bg-zinc-900/50 border border-white/10 rounded-[12px] p-8 md:p-10 prose prose-slate prose-sm max-w-none">
           {children}
         </div>
       </main>
@@ -98,7 +98,7 @@ export function ReturnsRefunds() {
           { icon: '💰', title: 'Full Refund', desc: 'Get your money back, no questions asked' },
           { icon: '🚚', title: 'Free Return Shipping', desc: 'We cover return shipping on all orders' },
         ].map(item => (
-          <div key={item.title} className="bg-[#000504] rounded-[10px] p-5 text-center border border-white/5">
+          <div key={item.title} className="bg-zinc-950 rounded-[10px] p-5 text-center border border-white/5">
             <div className="text-2xl mb-2">{item.icon}</div>
             <h3 className="text-sm font-bold font-display text-white mb-1">{item.title}</h3>
             <p className="text-xs text-white/60">{item.desc}</p>
@@ -165,7 +165,7 @@ export function ContactUs() {
           { icon: '📞', title: 'Phone', detail: '+1 (555) 123-4567', sub: 'Mon–Fri, 9am–6pm EST' },
           { icon: '💬', title: 'Live Chat', detail: 'Start a conversation', sub: 'Available during business hours' },
         ].map(item => (
-          <div key={item.title} className="bg-[#000504] rounded-[10px] p-6 border border-white/5 text-center hover:border-indigo-200 hover:bg-white/5/30 transition-colors cursor-default">
+          <div key={item.title} className="bg-zinc-950 rounded-[10px] p-6 border border-white/5 text-center hover:border-indigo-200 hover:bg-white/5/30 transition-colors cursor-default">
             <div className="text-3xl mb-3">{item.icon}</div>
             <h3 className="text-sm font-bold font-display text-white mb-1">{item.title}</h3>
             <p className="text-sm text-shop-primary font-medium mb-1">{item.detail}</p>
@@ -213,7 +213,7 @@ export function ContactUs() {
         <Button className="w-full md:w-auto">Send message →</Button>
       </div>
 
-      <div className="mt-10 p-5 bg-[#000504] rounded-[10px] border border-white/5">
+      <div className="mt-10 p-5 bg-zinc-950 rounded-[10px] border border-white/5">
         <h3 className="text-sm font-bold font-display text-white mb-2">📍 Visit us</h3>
         <p className="text-sm text-white/70 leading-relaxed">
           Acme Goods Co.<br />

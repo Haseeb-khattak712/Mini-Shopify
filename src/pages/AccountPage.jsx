@@ -19,7 +19,7 @@ export function AccountPage() {
     // Fetch personal orders
     getStoredOrders(user.id)
       .then(data => {
-        setOrders(data || [])
+        setOrders(Array.isArray(data) ? data : [])
         setLoading(false)
       })
       .catch(err => {
@@ -36,7 +36,7 @@ export function AccountPage() {
 
   if (loading || !user) {
     return (
-      <div className="min-h-screen bg-[#000504]  flex flex-col items-center justify-center transition-colors">
+      <div className="min-h-screen bg-zinc-950  flex flex-col items-center justify-center transition-colors">
         <div className="w-8 h-8 rounded-full border-4 border-indigo-200 border-t-shop-primary animate-spin mb-4"></div>
         <p className="text-white/60 font-medium">Loading your account...</p>
       </div>
@@ -44,8 +44,8 @@ export function AccountPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#000504]  flex flex-col transition-colors">
-      <header className="bg-[#021612]  border-b border-white/10  py-4 px-6 sticky top-0 z-20">
+    <div className="min-h-screen bg-zinc-950  flex flex-col transition-colors">
+      <header className="bg-zinc-900/50  border-b border-white/10  py-4 px-6 sticky top-0 z-20">
         <div className="max-w-4xl mx-auto flex items-center justify-between">
           <button onClick={() => navigate('/')} className="flex items-center gap-3 cursor-pointer group" style={{ perspective: '1000px' }}>
             <img src="/logo.png" alt="OwnStore Logo" className="w-8 h-8 object-contain drop-shadow-md opacity-80 mix-blend-luminosity group-hover:mix-blend-normal group-hover:opacity-100 transition-all duration-500" style={{ transition: 'transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)', transformStyle: 'preserve-3d' }} onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.15) rotateY(15deg) rotateX(10deg) translateZ(10px)'} onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1) rotateY(0deg) rotateX(0deg) translateZ(0px)'} />
@@ -63,7 +63,7 @@ export function AccountPage() {
 
         <div className="grid md:grid-cols-3 gap-8">
           <div className="md:col-span-2 space-y-8">
-            <div className="bg-[#021612]  rounded-2xl shadow-sm border border-white/10  p-6 transition-colors">
+            <div className="bg-zinc-900/50  rounded-2xl shadow-sm border border-white/10  p-6 transition-colors">
               <h2 className="text-xl font-semibold text-white  mb-6 transition-colors">Order History</h2>
               
               {orders.length === 0 ? (
@@ -97,7 +97,7 @@ export function AccountPage() {
           </div>
 
           <div className="md:col-span-1 space-y-6">
-            <div className="bg-[#021612]  rounded-2xl shadow-sm border border-white/10  p-6 transition-colors">
+            <div className="bg-zinc-900/50  rounded-2xl shadow-sm border border-white/10  p-6 transition-colors">
               <h3 className="font-semibold text-white  mb-4">Profile</h3>
               <div className="space-y-3 text-sm text-white/70 ">
                 <p><strong>Name:</strong> {user.name || 'N/A'}</p>

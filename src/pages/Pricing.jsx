@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import { Button } from '@/components/ui/ui'
-import { isAuthenticated } from '@/services/storage'
+import { isAuthenticated, isAdmin } from '@/services/storage'
 
 const StackingWrapper = ({ children, className, zIndex }) => {
   const ref = useRef(null);
@@ -119,7 +119,7 @@ export function Pricing() {
   }
 
   return (
-    <div className="bg-[#000504] font-body text-white selection:bg-shop-accent selection:text-shop-primary">
+    <div className="bg-zinc-950 font-body text-white selection:bg-shop-accent selection:text-shop-primary">
       {/* Shared Nav */}
       <nav className={`sticky top-0 left-0 right-0 z-[100] bg-[#000000]/90 backdrop-blur-xl border-b border-white/5 py-4 transition-all duration-700 ${navVisible ? 'translate-y-0 opacity-100' : '-translate-y-full opacity-0 pointer-events-none'}`}>
         <div className="mx-auto max-w-[1728px] px-6 md:px-10 lg:px-16 xl:px-20 2xl:px-24 w-full flex items-center justify-between">
@@ -128,16 +128,16 @@ export function Pricing() {
             <span className="font-black text-shop-accent font-logo text-2xl tracking-tighter transition-colors duration-300">OwnStore</span>
           </div>
           <div className="hidden md:flex items-center gap-8 font-medium text-white/80 text-sm">
-            <a href="/" className="hover:text-white transition-colors">Home</a>
-            <a href="/pricing" className="text-white transition-colors">Pricing</a>
+            <Link to="/" className="hover:text-white transition-colors">Home</Link>
+            <Link to="/pricing" className="text-white transition-colors">Pricing</Link>
           </div>
           <div className="flex items-center gap-3">
             {isAuthenticated() ? (
-              <Button size="sm" onClick={() => navigate('/admin')} className="!bg-[#5E8224] hover:!bg-[#5E8224]/90 text-white hover:scale-105 transition-all">Dashboard</Button>
+              <Button size="sm" onClick={() => navigate(isAdmin() ? '/admin' : '/account')} className="!bg-zinc-100 hover:!bg-white !text-zinc-900 hover:scale-105 transition-all">{isAdmin() ? 'Dashboard' : 'Account'}</Button>
             ) : (
               <>
                 <Button variant="ghost" size="sm" onClick={() => navigate('/login')} className="hover:!bg-white/10 font-medium text-white">Log in</Button>
-                <Button size="sm" onClick={() => navigate('/signup')} className="!bg-gradient-to-br from-shop-accent/10 to-transparent border border-shop-accent/20 shadow-[0_30px_60px_rgba(149,191,71,0.15)] backdrop-blur-md hover:!bg-gradient-to-br from-shop-accent/10 to-transparent border border-shop-accent/20 shadow-[0_30px_60px_rgba(149,191,71,0.15)] backdrop-blur-md/90 text-white hover:scale-105 transition-all shadow-md shadow-shop-primary/20">Start Free</Button>
+                <Button size="sm" onClick={() => navigate('/signup')} className="!bg-gradient-to-br from-shop-accent/10 to-transparent border border-shop-accent/20 shadow-[0_30px_60px_rgba(255,255,255,0.15)] backdrop-blur-md hover:!bg-gradient-to-br from-shop-accent/10 to-transparent border border-shop-accent/20 shadow-[0_30px_60px_rgba(255,255,255,0.15)] backdrop-blur-md/90 text-white hover:scale-105 transition-all shadow-md shadow-shop-primary/20">Start Free</Button>
               </>
             )}
           </div>
@@ -145,7 +145,7 @@ export function Pricing() {
       </nav>
 
       {/* WRAPPER 1: Hero & Cards */}
-      <StackingWrapper zIndex={10} className="md:min-h-[calc(100vh-72px)] bg-[#000504] pt-8 pb-32">
+      <StackingWrapper zIndex={10} className="md:min-h-[calc(100vh-72px)] bg-zinc-950 pt-8 pb-32">
         <div className="flex-1 w-full max-w-[1400px] mx-auto px-6">
           
           {/* Hero Section */}
@@ -177,10 +177,10 @@ export function Pricing() {
                 <motion.div 
                   key={plan.name}
                   variants={flipCard}
-                  className={`relative shrink-0 w-[85vw] sm:w-[320px] md:w-[340px] lg:flex-1 snap-center bg-[#021612] border ${plan.popular ? 'border-shop-accent shadow-[0_0_30px_rgba(149,191,71,0.15)]' : 'border-white/10'} rounded-3xl p-8 text-left flex flex-col hover:-translate-y-2 transition-transform duration-300`}
+                  className={`relative shrink-0 w-[85vw] sm:w-[320px] md:w-[340px] lg:flex-1 snap-center bg-zinc-900/50 border ${plan.popular ? 'border-shop-accent shadow-[0_0_30px_rgba(255,255,255,0.15)]' : 'border-white/10'} rounded-3xl p-8 text-left flex flex-col hover:-translate-y-2 transition-transform duration-300`}
                 >
                   {plan.popular && (
-                    <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-shop-accent text-[#000504] px-4 py-1 rounded-full text-xs font-bold tracking-widest uppercase">
+                    <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-shop-accent text-zinc-950 px-4 py-1 rounded-full text-xs font-bold tracking-widest uppercase">
                       Most Popular
                     </div>
                   )}
@@ -191,7 +191,7 @@ export function Pricing() {
                     {plan.price !== 'Custom' && <span className="text-white/50">/mo</span>}
                   </div>
                   <Button 
-                    className={`w-full mb-8 ${plan.popular ? '!bg-shop-accent !text-[#000504] hover:!bg-shop-accent/90' : '!bg-white/10 hover:!bg-white/20'}`}
+                    className={`w-full mb-8 ${plan.popular ? '!bg-shop-accent !text-zinc-950 hover:!bg-shop-accent/90' : '!bg-white/10 hover:!bg-white/20'}`}
                     onClick={() => navigate('/signup')}
                   >
                     Start Free Trial
@@ -217,7 +217,7 @@ export function Pricing() {
       </StackingWrapper>
 
       {/* WRAPPER 2: Always Included & POS Pack (Slides over Wrapper 1) */}
-      <StackingWrapper zIndex={20} className="md:min-h-[calc(100vh-72px)] bg-[#000504] rounded-t-[3rem] shadow-[0_-30px_60px_rgba(0,0,0,0.8)] border-t border-white/5 pt-20 pb-32">
+      <StackingWrapper zIndex={20} className="md:min-h-[calc(100vh-72px)] bg-zinc-950 rounded-t-[3rem] shadow-[0_-30px_60px_rgba(0,0,0,0.8)] border-t border-white/5 pt-20 pb-32">
         <div className="flex-1 w-full max-w-[1400px] mx-auto px-6">
           <motion.div 
             initial="hidden"
@@ -232,7 +232,7 @@ export function Pricing() {
             
             <div className="grid md:grid-cols-3 gap-12 text-center mb-32">
               <div className="flex flex-col items-center">
-                <div className="w-32 h-32 mb-8 relative rounded-full bg-shop-accent/5 flex items-center justify-center p-4 border border-shop-accent/20 shadow-[0_0_40px_rgba(149,191,71,0.1)]">
+                <div className="w-32 h-32 mb-8 relative rounded-full bg-shop-accent/5 flex items-center justify-center p-4 border border-shop-accent/20 shadow-[0_0_40px_rgba(255,255,255,0.1)]">
                   <img src="/assets/support_icon.png" alt="24/7 Support" className="w-full h-full object-contain mix-blend-screen" />
                 </div>
                 <h3 className="text-xl font-bold mb-3">24/7 Global Support</h3>
@@ -240,7 +240,7 @@ export function Pricing() {
               </div>
               
               <div className="flex flex-col items-center">
-                <div className="w-32 h-32 mb-8 relative rounded-full bg-shop-accent/5 flex items-center justify-center p-4 border border-shop-accent/20 shadow-[0_0_40px_rgba(149,191,71,0.1)]">
+                <div className="w-32 h-32 mb-8 relative rounded-full bg-shop-accent/5 flex items-center justify-center p-4 border border-shop-accent/20 shadow-[0_0_40px_rgba(255,255,255,0.1)]">
                   <img src="/assets/checkout_icon.png" alt="World's Best Checkout" className="w-full h-full object-contain mix-blend-screen" />
                 </div>
                 <h3 className="text-xl font-bold mb-3">World's Best Checkout</h3>
@@ -248,7 +248,7 @@ export function Pricing() {
               </div>
 
               <div className="flex flex-col items-center">
-                <div className="w-32 h-32 mb-8 relative rounded-full bg-shop-accent/5 flex items-center justify-center p-4 border border-shop-accent/20 shadow-[0_0_40px_rgba(149,191,71,0.1)]">
+                <div className="w-32 h-32 mb-8 relative rounded-full bg-shop-accent/5 flex items-center justify-center p-4 border border-shop-accent/20 shadow-[0_0_40px_rgba(255,255,255,0.1)]">
                   <img src="/assets/global_icon.png" alt="Global Reach" className="w-full h-full object-contain mix-blend-screen" />
                 </div>
                 <h3 className="text-xl font-bold mb-3">Global Infrastructure</h3>
@@ -260,7 +260,7 @@ export function Pricing() {
               <span className="bg-shop-accent/10 text-shop-accent px-4 py-1.5 rounded-full text-sm font-bold tracking-widest uppercase mb-6 inline-block border border-shop-accent/20">Omnichannel Bundle</span>
               <h2 className="text-4xl md:text-6xl font-bold font-display tracking-tight mb-16">But wait, <span className="text-shop-accent">there is more!</span></h2>
               
-              <div className="max-w-4xl mx-auto bg-[#021612] border border-shop-accent/30 rounded-3xl p-8 md:p-12 text-left flex flex-col md:flex-row items-center gap-12 shadow-[0_30px_60px_rgba(149,191,71,0.1)]">
+              <div className="max-w-4xl mx-auto bg-zinc-900/50 border border-shop-accent/30 rounded-3xl p-8 md:p-12 text-left flex flex-col md:flex-row items-center gap-12 shadow-[0_30px_60px_rgba(255,255,255,0.1)]">
                 <div className="flex-1">
                   <h3 className="text-3xl font-bold font-display mb-4 text-white">Special POS Pack</h3>
                   <p className="text-white/70 text-lg mb-6 leading-relaxed">Bridge the gap between online and in-person sales. Get our flagship Point of Sale software included free with the Pro and Plus plans.</p>
@@ -278,7 +278,7 @@ export function Pricing() {
                       Advanced staff permission controls
                     </li>
                   </ul>
-                  <Button className="!bg-shop-accent !text-[#000504] hover:!bg-shop-accent/90" onClick={() => navigate('/signup')}>Add to Plan</Button>
+                  <Button className="!bg-shop-accent !text-zinc-950 hover:!bg-shop-accent/90" onClick={() => navigate('/signup')}>Add to Plan</Button>
                 </div>
                 <div className="w-full md:w-1/2 flex justify-center relative">
                   <div className="absolute inset-0 bg-shop-accent/20 blur-[100px] rounded-full"></div>
@@ -291,7 +291,7 @@ export function Pricing() {
       </StackingWrapper>
 
       {/* WRAPPER 3: Feature Matrix */}
-      <StackingWrapper zIndex={30} className="md:min-h-[calc(100vh-72px)] bg-[#f4f6f8] text-shop-text rounded-t-[3rem] shadow-[0_-30px_60px_rgba(0,0,0,0.8)] border-t border-black/5 py-20">
+      <StackingWrapper zIndex={30} className="md:min-h-[calc(100vh-72px)] bg-[#f4f6f8] text-zinc-900 rounded-t-[3rem] shadow-[0_-30px_60px_rgba(0,0,0,0.8)] border-t border-black/5 py-20">
         <motion.div 
           initial="hidden"
           whileInView="show"
@@ -300,7 +300,7 @@ export function Pricing() {
           className="w-full max-w-[1200px] mx-auto px-6 flex-1"
         >
           <div className="text-center mb-16">
-            <span className="bg-shop-accent/10 text-shop-accent px-4 py-1.5 rounded-full text-sm font-bold tracking-widest uppercase mb-6 inline-block border border-shop-accent/20">Detailed Comparison</span>
+            <span className="bg-zinc-900/10 text-zinc-900 px-4 py-1.5 rounded-full text-sm font-bold tracking-widest uppercase mb-6 inline-block border border-zinc-900/20">Detailed Comparison</span>
             <h2 className="text-4xl md:text-5xl font-bold font-display tracking-tight">Feature Matrix</h2>
           </div>
 
@@ -310,11 +310,11 @@ export function Pricing() {
                 <tr className="sticky top-[72px] z-[90] bg-[#f4f6f8]/80 backdrop-blur-md shadow-sm border-b border-black/10">
                   <th className="p-6 w-1/3"></th>
                   <th className="p-6 text-xl font-bold font-display">Basic</th>
-                  <th className="p-6 text-xl font-bold font-display text-shop-accent">Pro</th>
+                  <th className="p-6 text-xl font-bold font-display text-zinc-900">Pro</th>
                   <th className="p-6 text-xl font-bold font-display">Plus</th>
                 </tr>
               </thead>
-              <tbody className="text-shop-text/80">
+              <tbody className="text-zinc-800">
                 <tr className="hover:bg-black/5 transition-colors">
                   <td className="p-6 border-b border-black/10 font-medium">Online Store</td>
                   <td className="p-6 border-b border-black/10">✓</td>
@@ -336,8 +336,8 @@ export function Pricing() {
                 <tr className="hover:bg-black/5 transition-colors">
                   <td className="p-6 border-b border-black/10 font-medium">Transaction fees</td>
                   <td className="p-6 border-b border-black/10">2.0%</td>
-                  <td className="p-6 border-b border-black/10 text-shop-accent font-bold">1.0%</td>
-                  <td className="p-6 border-b border-black/10 text-shop-accent font-bold">0.5%</td>
+                  <td className="p-6 border-b border-black/10 text-zinc-900 font-bold">1.0%</td>
+                  <td className="p-6 border-b border-black/10 text-zinc-900 font-bold">0.5%</td>
                 </tr>
                 <tr className="hover:bg-black/5 transition-colors">
                   <td className="p-6 border-b border-black/10 font-medium">Advanced reporting</td>
@@ -354,8 +354,8 @@ export function Pricing() {
                 <tr className="hover:bg-black/5 transition-colors">
                   <td className="p-6 border-b border-black/10 font-medium">POS Pack Included</td>
                   <td className="p-6 border-b border-black/10 text-black/30">—</td>
-                  <td className="p-6 border-b border-black/10 text-shop-accent font-bold">✓ Free</td>
-                  <td className="p-6 border-b border-black/10 text-shop-accent font-bold">✓ Free</td>
+                  <td className="p-6 border-b border-black/10 text-zinc-900 font-bold">✓ Free</td>
+                  <td className="p-6 border-b border-black/10 text-zinc-900 font-bold">✓ Free</td>
                 </tr>
               </tbody>
             </table>
@@ -364,7 +364,7 @@ export function Pricing() {
       </StackingWrapper>
 
       {/* WRAPPER 4: FAQ & Footer */}
-      <div className="relative z-40 w-full md:min-h-[calc(100vh-72px)] bg-[#000504] rounded-t-[3rem] shadow-[0_-30px_60px_rgba(0,0,0,0.8)] border-t border-white/5 flex flex-col pt-20">
+      <div className="relative z-40 w-full md:min-h-[calc(100vh-72px)] bg-zinc-950 rounded-t-[3rem] shadow-[0_-30px_60px_rgba(0,0,0,0.8)] border-t border-white/5 flex flex-col pt-20">
         <motion.div 
           initial="hidden"
           whileInView="show"
@@ -377,7 +377,7 @@ export function Pricing() {
             {faqs.map((faq, idx) => (
               <div 
                 key={idx} 
-                className="bg-[#021612] border border-white/10 rounded-2xl overflow-hidden transition-all duration-300"
+                className="bg-zinc-900/50 border border-white/10 rounded-2xl overflow-hidden transition-all duration-300"
               >
                 <button 
                   onClick={() => setOpenFaq(openFaq === idx ? null : idx)}
@@ -408,7 +408,7 @@ export function Pricing() {
         </motion.div>
 
         {/* Footer */}
-        <footer className="w-full bg-[#000504] py-12 border-t border-white/10 mt-auto">
+        <footer className="w-full bg-zinc-950 py-12 border-t border-white/10 mt-auto">
           <div className="max-w-[1728px] mx-auto px-6 text-center text-white/40 text-sm">
             <p>© 2026 OwnStore Inc. All rights reserved.</p>
           </div>

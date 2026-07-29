@@ -1,12 +1,13 @@
 import { useState } from 'react'
 import { StatusBadge, Card, Button, Toast } from '@/components/ui/ui'
 import { useOutletContext } from 'react-router-dom'
-import { updateOrder } from '@/services/storage'
+import { updateOrder, getUserContext } from '@/services/storage'
 
 const STATUS_FLOW = ['pending', 'processing', 'shipped', 'delivered']
 
 export function AdminOrders() {
   const { orders, setOrders } = useOutletContext();
+  const user = getUserContext();
   const [selected, setSelected] = useState(null)
   const [filterStatus, setFilterStatus] = useState('all')
   const [toast, setToast] = useState('')
@@ -19,7 +20,7 @@ export function AdminOrders() {
     const idx = STATUS_FLOW.indexOf(order.status)
     if (idx >= 0 && idx < STATUS_FLOW.length - 1) {
       const next = STATUS_FLOW[idx + 1]
-      await updateOrder({ id: orderId, status: next })
+      await updateOrder({ id: orderId, status: next }, user?.id)
       setOrders(os => os.map(o => o.id === orderId ? { ...o, status: next } : o))
       setToast(`Order ${orderId} marked as ${next}`)
       setTimeout(() => setToast(''), 3000)
@@ -30,7 +31,7 @@ export function AdminOrders() {
   }
 
   const cancelOrder = async (orderId) => {
-    await updateOrder({ id: orderId, status: 'cancelled' })
+    await updateOrder({ id: orderId, status: 'cancelled' }, user?.id)
     setOrders(os => os.map(o => o.id === orderId ? { ...o, status: 'cancelled' } : o))
     setToast(`Order ${orderId} cancelled`)
     setTimeout(() => setToast(''), 3000)
@@ -46,8 +47,8 @@ export function AdminOrders() {
       {/* List */}
       <div className="flex-1 min-w-0">
         <div className="mb-8">
-          <h1 className="text-2xl font-bold font-display text-white">Orders</h1>
-          <p className="text-sm text-white/60 mt-0.5">{orders.length} total orders</p>
+          <h1 className="text-3xl font-bold font-display text-zinc-100 tracking-tight">Orders</h1>
+          <p className="text-sm text-zinc-500 mt-1">{orders.length} total orders</p>
         </div>
 
         {/* Status filter tabs */}
@@ -59,10 +60,10 @@ export function AdminOrders() {
                 key={s}
                 onClick={() => setFilterStatus(s)}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium cursor-pointer whitespace-nowrap
-                  ${filterStatus === s ? 'bg-shop-primary text-white' : 'bg-[#021612] text-white/70 border border-white/10 hover:bg-[#000504]'}`}
+                  ${filterStatus === s ? 'bg-zinc-100 text-zinc-900 shadow-sm' : 'bg-zinc-900/50 text-zinc-400 border border-zinc-800 hover:bg-zinc-800/50 hover:text-zinc-200'}`}
               >
                 {s === 'all' ? 'All orders' : s.charAt(0).toUpperCase() + s.slice(1)}
-                <span className={`font-mono rounded-full px-1.5 py-0.5 leading-none text-[10px] ${filterStatus === s ? 'bg-shop-accent/30' : 'bg-white/10 text-white/60'}`}>
+                <span className={`font-mono rounded-full px-1.5 py-0.5 leading-none text-[10px] ${filterStatus === s ? 'bg-zinc-300/50 text-zinc-900' : 'bg-zinc-800 text-zinc-400'}`}>
                   {count}
                 </span>
               </button>
@@ -85,18 +86,18 @@ export function AdminOrders() {
                 {filtered.map(order => (
                   <tr
                     key={order.id}
-                    className={`border-b border-slate-50 cursor-pointer
-                      ${selected?.id === order.id ? 'bg-white/5/50' : 'hover:bg-[#000504]/50'}`}
+                    className={`border-b border-zinc-800/50 cursor-pointer transition-colors
+                      ${selected?.id === order.id ? 'bg-zinc-800/50' : 'hover:bg-zinc-800/30'}`}
                     onClick={() => setSelected(order)}
                   >
-                    <td className="px-5 py-3.5 text-sm font-mono font-medium text-shop-primary">{order.id}</td>
+                    <td className="px-5 py-3.5 text-sm font-mono font-medium text-zinc-100">{order.id}</td>
                     <td className="px-5 py-3.5">
-                      <p className="text-sm text-white">{order.customer}</p>
-                      <p className="text-xs text-white/50">{order.email}</p>
+                      <p className="text-sm text-zinc-100">{order.customer}</p>
+                      <p className="text-xs text-zinc-500">{order.email}</p>
                     </td>
-                    <td className="px-5 py-3.5 text-xs text-white/50 font-mono">{order.date}</td>
-                    <td className="px-5 py-3.5 text-sm text-white/70">{order.items.length} item{order.items.length !== 1 ? 's' : ''}</td>
-                    <td className="px-5 py-3.5 text-sm font-semibold text-white">${order.total}</td>
+                    <td className="px-5 py-3.5 text-xs text-zinc-500 font-mono">{order.date}</td>
+                    <td className="px-5 py-3.5 text-sm text-zinc-300">{order.items.length} item{order.items.length !== 1 ? 's' : ''}</td>
+                    <td className="px-5 py-3.5 text-sm font-semibold text-zinc-100">${order.total}</td>
                     <td className="px-5 py-3.5"><StatusBadge status={order.status} /></td>
                   </tr>
                 ))}
@@ -128,19 +129,19 @@ export function AdminOrders() {
                 <div className="flex justify-between mb-1">
                   {STATUS_FLOW.map((s, i) => (
                     <div key={s} className="flex flex-col items-center gap-1">
-                      <div className={`w-4 h-4 rounded-full border-2 ${STATUS_FLOW.indexOf(selected.status) >= i ? 'bg-shop-primary border-shop-primary' : 'bg-[#021612] border-slate-300'}`} />
+                      <div className={`w-4 h-4 rounded-full border-2 ${STATUS_FLOW.indexOf(selected.status) >= i ? 'bg-zinc-100 border-zinc-100' : 'bg-zinc-900/50 border-zinc-700'}`} />
                     </div>
                   ))}
                 </div>
-                <div className="relative h-1 bg-white/10 rounded-full mb-2">
+                <div className="relative h-1 bg-zinc-800 rounded-full mb-2">
                   <div
-                    className="absolute h-full bg-shop-primary rounded-full"
+                    className="absolute h-full bg-zinc-100 rounded-full"
                     style={{ width: `${(STATUS_FLOW.indexOf(selected.status) / (STATUS_FLOW.length - 1)) * 100}%` }}
                   />
                 </div>
                 <div className="flex justify-between">
                   {STATUS_FLOW.map(s => (
-                    <span key={s} className="text-[9px] font-mono text-white/50 capitalize">{s}</span>
+                    <span key={s} className="text-[9px] font-mono text-zinc-500 capitalize">{s}</span>
                   ))}
                 </div>
               </div>
@@ -160,10 +161,10 @@ export function AdminOrders() {
               <p className="text-xs font-mono text-white/50 uppercase tracking-wide mb-2">Items</p>
               {selected.items.map((item, i) => (
                 <div key={i} className="flex items-center gap-2.5 py-2 border-b border-slate-50 last:border-0">
-                  <img src={item.product.image} alt={item.product.name} className="w-8 h-8 rounded object-cover" />
+                  <img src={item.product?.image || ''} alt={item.product?.name || 'Product'} className="w-8 h-8 rounded object-cover bg-white/5" />
                   <div className="flex-1 min-w-0">
-                    <p className="text-xs font-medium text-white/90 truncate">{item.product.name}</p>
-                    <p className="text-[11px] text-white/50 font-mono">×{item.quantity} · ${item.product.price * item.quantity}</p>
+                    <p className="text-xs font-medium text-white/90 truncate">{item.product?.name || 'Unknown Product'}</p>
+                    <p className="text-[11px] text-white/50 font-mono">×{item.quantity} · ${item.product?.price ? item.product.price * item.quantity : 0}</p>
                   </div>
                 </div>
               ))}

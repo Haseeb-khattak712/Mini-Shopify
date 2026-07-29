@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/../db.php';
+require_once __DIR__ . '/../jwt.php';
 
 $method = $_SERVER['REQUEST_METHOD'];
 if ($method !== 'POST') {
@@ -67,7 +68,9 @@ if ($action === 'register') {
     $stmt = $db->prepare("INSERT INTO users (id, name, email, password_hash, role, business_name, subdomain) VALUES (?, ?, ?, ?, ?, ?, ?)");
     $stmt->execute([$id, $name, $email, $hash, $role, $business_name, $subdomain]);
     
-    echo json_encode(['success' => true, 'id' => $id]);
+    $token = generate_jwt(['id' => $id, 'role' => $role]);
+    
+    echo json_encode(['success' => true, 'id' => $id, 'token' => $token]);
 }
 elseif ($action === 'login') {
     $email = $data['email'] ?? '';
@@ -81,8 +84,11 @@ elseif ($action === 'login') {
     $stmt->execute([$email]);
     $user = $stmt->fetch();
     if ($user && password_verify($password, $user['password_hash'])) {
+        $token = generate_jwt(['id' => $user['id'], 'role' => $user['role']]);
+        
         echo json_encode([
             'success' => true,
+            'token' => $token,
             'user' => [
                 'id' => $user['id'],
                 'name' => $user['name'],
@@ -98,14 +104,20 @@ elseif ($action === 'login') {
     }
 }
 elseif ($action === 'upgrade') {
-    // Upgrade a logged‑in customer to admin (store owner)
-    // Expect user id via X-User-Id header for authentication
-    $adminId = $_SERVER['HTTP_X_USER_ID'] ?? '';
-    if (!$adminId) {
+    // Upgrade a logged-in customer to admin (store owner)
+    $token = get_bearer_token();
+    if (!$token) {
         http_response_code(401);
-        echo json_encode(['error' => 'Unauthorized']);
+        echo json_encode(['error' => 'Unauthorized: Missing token']);
         exit;
     }
+    $payload = verify_jwt($token);
+    if (!$payload || !isset($payload['id'])) {
+        http_response_code(401);
+        echo json_encode(['error' => 'Unauthorized: Invalid token']);
+        exit;
+    }
+    $adminId = $payload['id'];
     $business_name = $data['business_name'] ?? '';
     $subdomain = $data['subdomain'] ?? '';
     if (!$business_name || !$subdomain) {

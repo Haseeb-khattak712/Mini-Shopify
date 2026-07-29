@@ -1,6 +1,7 @@
 import React, { useState, useEffect, Suspense, lazy } from 'react'
-import { BrowserRouter, Routes, Route, Navigate, Outlet, useOutletContext, useParams } from 'react-router-dom'
-import { getStoredOrders, isAdmin, getUserContext, getStoredProducts, getStoredReviews } from '@/services/storage'
+import { BrowserRouter, Routes, Route, Navigate, Outlet, useOutletContext, useParams, useNavigate, useLocation } from 'react-router-dom'
+import { getStoredOrders, isAdmin, getUserContext, getStoredProducts, getStoredReviews, addOrder } from '@/services/storage'
+import { CheckoutModal } from '@/components/shared/CheckoutModal'
 
 // Code Splitting with React.lazy
 const LandingPage = lazy(() => import('@/pages/Marketing').then(m => ({ default: m.LandingPage })))
@@ -11,6 +12,7 @@ const AdminDashboard = lazy(() => import('@/pages/AdminDashboard').then(m => ({ 
 const AdminProducts = lazy(() => import('@/pages/AdminProducts').then(m => ({ default: m.AdminProducts })))
 const AdminOrders = lazy(() => import('@/pages/AdminOrders').then(m => ({ default: m.AdminOrders })))
 const AdminEmpty = lazy(() => import('@/pages/AdminEmpty').then(m => ({ default: m.AdminEmpty })))
+const AdminTheme = lazy(() => import('@/pages/AdminTheme'))
 const AdminLogin = lazy(() => import('@/pages/AdminLogin').then(m => ({ default: m.AdminLogin })))
 const StoreHome = lazy(() => import('@/pages/Storefront').then(m => ({ default: m.StoreHome })))
 const ProductDetail = lazy(() => import('@/pages/Storefront').then(m => ({ default: m.ProductDetail })))
@@ -21,6 +23,8 @@ const PrivacyPolicy = lazy(() => import('@/pages/PolicyPages').then(m => ({ defa
 const ReturnsRefunds = lazy(() => import('@/pages/PolicyPages').then(m => ({ default: m.ReturnsRefunds })))
 const ContactUs = lazy(() => import('@/pages/PolicyPages').then(m => ({ default: m.ContactUs })))
 const AccountPage = lazy(() => import('@/pages/AccountPage').then(m => ({ default: m.AccountPage })))
+const Marketplace = lazy(() => import('@/pages/Marketplace').then(m => ({ default: m.Marketplace })))
+const BrandProfile = lazy(() => import('@/pages/BrandProfile').then(m => ({ default: m.BrandProfile })))
 
 // Guard for Admin Routes
 function ProtectedAdminRoute() {
@@ -33,8 +37,22 @@ function ProtectedAdminRoute() {
 // Wrapper for Storefront to hold cart state
 function StoreWrapper() {
   const dataContext = useOutletContext()
-  const [cart, setCart] = React.useState([])
+  const [cart, setCart] = React.useState(() => {
+    try {
+      const saved = localStorage.getItem('ownstore_cart')
+      return saved ? JSON.parse(saved) : []
+    } catch (e) {
+      return []
+    }
+  })
+  
+  React.useEffect(() => {
+    localStorage.setItem('ownstore_cart', JSON.stringify(cart))
+  }, [cart])
   const [isCartOpen, setIsCartOpen] = React.useState(false)
+  const [isCheckoutModalOpen, setIsCheckoutModalOpen] = React.useState(false)
+  const { subdomain } = useParams()
+  const navigate = useNavigate()
 
   const handleAddToCart = (product, quantity = 1, size = null, color = null) => {
     setCart(prev => {
@@ -54,16 +72,48 @@ function StoreWrapper() {
     })
   }
 
+  const calculateTotal = () => {
+    const sub = cart.reduce((sum, item) => sum + (item.product.price * item.quantity), 0)
+    const shipping = (sub >= 100 || cart.length === 0) ? 0 : 8
+    return sub + shipping
+  }
+
   return (
     <>
       <Suspense fallback={<LoadingSpinner />}>
-        <Outlet context={{ ...dataContext, cart, handleAddToCart, handleUpdateCart, setCart, isCartOpen, setIsCartOpen }} />
+        <Outlet context={{ ...dataContext, cart, handleAddToCart, handleUpdateCart, setCart, isCartOpen, setIsCartOpen, setIsCheckoutModalOpen }} />
       </Suspense>
       <CartSidebar
         isOpen={isCartOpen}
         onClose={() => setIsCartOpen(false)}
         cart={cart}
         handleUpdateCart={handleUpdateCart}
+        onCheckout={() => {
+          setIsCartOpen(false)
+          setIsCheckoutModalOpen(true)
+        }}
+      />
+      <CheckoutModal
+        isOpen={isCheckoutModalOpen}
+        onClose={() => setIsCheckoutModalOpen(false)}
+        cart={cart}
+        total={calculateTotal()}
+        onCheckoutComplete={async (finalTotal, email, address) => {
+          const customer = await import('@/services/storage').then(m => m.getUserContext())
+          const newOrder = {
+            id: `ORD-${Date.now()}`,
+            customer_id: customer?.id || null,
+            customer: address ? address.split(',')[0] : (customer?.name || 'Guest User'),
+            email: email || customer?.email || 'guest@example.com',
+            total: finalTotal,
+            date: new Date().toISOString().split('T')[0],
+            status: 'pending',
+            items: cart.map(i => ({ product_id: i.product.id, quantity: i.quantity, price: i.product.price, size: i.size, color: i.color }))
+          }
+          const res = await addOrder(newOrder, null, subdomain)
+          setCart([])
+          navigate(`/store/${subdomain}/confirmation`, { state: { orderId: res.id, pastCart: cart, pastTotal: finalTotal } })
+        }}
       />
     </>
   )
@@ -82,28 +132,36 @@ function AdminDataWrapper() {
   const [orders, setOrders] = useState([])
   const [products, setProducts] = useState([])
   const [reviews, setReviews] = useState([])
+  const [settings, setSettings] = useState(null)
   const [loading, setLoading] = useState(true)
   const user = getUserContext()
 
   useEffect(() => {
     if (!user) return
-    Promise.all([
-      getStoredOrders(user.id),
-      getStoredProducts(user.id),
-      getStoredReviews(user.id)
-    ]).then(([o, p, r]) => {
-      setOrders(o || [])
-      setProducts(p || [])
-      setReviews(r || [])
-      setLoading(false)
-    }).catch(err => {
-      console.error('Failed to load data:', err)
-      setLoading(false)
-    })
+
+    const loadData = async () => {
+      try {
+        const o = await getStoredOrders(user.id)
+        const p = await getStoredProducts(user.id)
+        const r = await getStoredReviews(user.id)
+        const storage = await import('@/services/storage')
+        const s = await storage.getStoreSettings(user.id, user.subdomain)
+        
+        setOrders(Array.isArray(o) ? o : [])
+        setProducts(Array.isArray(p) ? p : [])
+        setReviews(Array.isArray(r) ? r : [])
+        setSettings(s || null)
+        setLoading(false)
+      } catch (err) {
+        console.error('Failed to load data:', err)
+        setLoading(false)
+      }
+    }
+    loadData()
   }, [user?.id])
 
   if (loading) return <LoadingSpinner />
-  return <Suspense fallback={<LoadingSpinner />}><Outlet context={{ orders, setOrders, products, setProducts, reviews, setReviews }} /></Suspense>
+  return <Suspense fallback={<LoadingSpinner />}><Outlet context={{ orders, setOrders, products, setProducts, reviews, setReviews, settings, setSettings }} /></Suspense>
 }
 
 function StoreDataWrapper() {
@@ -111,32 +169,51 @@ function StoreDataWrapper() {
   const [orders, setOrders] = useState([])
   const [products, setProducts] = useState([])
   const [reviews, setReviews] = useState([])
+  const [settings, setSettings] = useState(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     if (!subdomain) return
-    Promise.all([
-      getStoredOrders(null, subdomain),
-      getStoredProducts(null, subdomain),
-      getStoredReviews(null, subdomain)
-    ]).then(([o, p, r]) => {
-      setOrders(o || [])
-      setProducts(p || [])
-      setReviews(r || [])
-      setLoading(false)
-    }).catch(err => {
-      console.error('Failed to load data:', err)
-      setLoading(false)
-    })
+    
+    const loadData = async () => {
+      try {
+        const o = await getStoredOrders(null, subdomain)
+        const p = await getStoredProducts(null, subdomain)
+        const r = await getStoredReviews(null, subdomain)
+        const storage = await import('@/services/storage')
+        const s = await storage.getStoreSettings(null, subdomain)
+        
+        setOrders(o || [])
+        setProducts(p || [])
+        setReviews(r || [])
+        setSettings(s || null)
+        setLoading(false)
+      } catch (err) {
+        console.error('Failed to load data:', err)
+        setLoading(false)
+      }
+    }
+    loadData()
   }, [subdomain])
 
   if (loading) return <LoadingSpinner />
-  return <Suspense fallback={<LoadingSpinner />}><Outlet context={{ orders, setOrders, products, setProducts, reviews, setReviews, subdomain }} /></Suspense>
+  return <Suspense fallback={<LoadingSpinner />}><Outlet context={{ orders, setOrders, products, setProducts, reviews, setReviews, settings, subdomain }} /></Suspense>
+}
+
+function ScrollToTop() {
+  const { pathname } = useLocation();
+  
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
+  
+  return null;
 }
 
 export default function App() {
   return (
     <BrowserRouter>
+      <ScrollToTop />
       <Suspense fallback={<LoadingSpinner />}>
         <Routes>
           {/* Marketing & Signup */}
@@ -145,6 +222,8 @@ export default function App() {
           <Route path="/pricing" element={<Pricing />} />
           <Route path="/login" element={<AdminLogin />} />
           <Route path="/account" element={<AccountPage />} />
+          <Route path="/marketplace" element={<Marketplace />} />
+          <Route path="/marketplace/brand/:subdomain" element={<BrandProfile />} />
 
           {/* Protected Admin Dashboard */}
           <Route path="/admin" element={<ProtectedAdminRoute />}>
@@ -154,6 +233,7 @@ export default function App() {
               <Route path="products" element={<AdminProducts />} />
               <Route path="orders" element={<AdminOrders />} />
               <Route path="empty" element={<AdminEmpty />} />
+              <Route path="theme" element={<AdminTheme />} />
             </Route>
           </Route>
 

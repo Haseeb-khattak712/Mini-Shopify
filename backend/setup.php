@@ -16,7 +16,8 @@ $db->exec("CREATE TABLE IF NOT EXISTS users (
     password_hash TEXT NOT NULL,
     role TEXT NOT NULL DEFAULT 'customer',
     business_name TEXT,
-    subdomain TEXT UNIQUE
+    subdomain TEXT UNIQUE,
+    theme_settings TEXT
 )");
 
 // Create Products table

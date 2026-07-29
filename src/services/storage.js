@@ -1,8 +1,23 @@
 const API_URL = 'http://localhost:8000/api'
 
-function getAuthHeaders(adminId) {
+function getAuthHeaders() {
   const headers = { 'Content-Type': 'application/json' }
-  if (adminId) headers['X-User-Id'] = adminId
+  let token = localStorage.getItem('ownstore_token')
+  if (!token) {
+    const ctx = localStorage.getItem('ownstore_user_context')
+    if (ctx) {
+      try {
+        const parsed = JSON.parse(ctx)
+        if (parsed && parsed.token) {
+          token = parsed.token
+          localStorage.setItem('ownstore_token', token)
+        }
+      } catch (e) {}
+    }
+  }
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`
+  }
   return headers
 }
 
@@ -12,8 +27,12 @@ function getQuery(subdomain) {
 
 // Reviews API
 export async function getStoredReviews(adminId = null, subdomain = null) {
-  const res = await fetch(`${API_URL}/reviews.php${getQuery(subdomain)}`, { headers: getAuthHeaders(adminId) })
-  return await res.json()
+  try {
+    const res = await fetch(`${API_URL}/reviews.php${getQuery(subdomain)}`, { headers: getAuthHeaders(adminId) })
+    if (!res.ok) return []
+    const data = await res.json()
+    return Array.isArray(data) ? data : []
+  } catch (err) { return [] }
 }
 
 export async function addReview(review, adminId = null, subdomain = null) {
@@ -25,10 +44,38 @@ export async function addReview(review, adminId = null, subdomain = null) {
   return await res.json()
 }
 
+export async function validateDiscount(code) {
+  const res = await fetch(`${API_URL}/discounts.php`, {
+    method: 'POST',
+    body: JSON.stringify({ code }),
+    headers: getAuthHeaders()
+  })
+  return await res.json()
+}
+
+// Settings API
+export async function getStoreSettings(adminId = null, subdomain = null) {
+  const res = await fetch(`${API_URL}/settings.php${getQuery(subdomain)}`, { headers: getAuthHeaders(adminId) })
+  return await res.json()
+}
+
+export async function saveStoreSettings(settings, adminId) {
+  const res = await fetch(`${API_URL}/settings.php`, {
+    method: 'POST',
+    body: JSON.stringify(settings),
+    headers: getAuthHeaders(adminId)
+  })
+  return await res.json()
+}
+
 // Products API
 export async function getStoredProducts(adminId = null, subdomain = null) {
-  const res = await fetch(`${API_URL}/products.php${getQuery(subdomain)}`, { headers: getAuthHeaders(adminId) })
-  return await res.json()
+  try {
+    const res = await fetch(`${API_URL}/products.php${getQuery(subdomain)}`, { headers: getAuthHeaders(adminId) })
+    if (!res.ok) return []
+    const data = await res.json()
+    return Array.isArray(data) ? data : []
+  } catch (err) { return [] }
 }
 
 export async function addProduct(product, adminId = null) {
@@ -61,8 +108,21 @@ export async function deleteProduct(id, adminId = null) {
 
 // Orders API
 export async function getStoredOrders(adminId = null, subdomain = null) {
-  const res = await fetch(`${API_URL}/orders.php${getQuery(subdomain)}`, { headers: getAuthHeaders(adminId) })
-  return await res.json()
+  try {
+    const res = await fetch(`${API_URL}/orders.php${getQuery(subdomain)}`, { headers: getAuthHeaders(adminId) })
+    if (!res.ok) {
+      if (res.status === 401) {
+        // Force logout on 401 if we were trying to fetch our own data without a subdomain
+        if (!subdomain && localStorage.getItem('ownstore_auth')) {
+          logout()
+          window.location.href = '/login'
+        }
+      }
+      return []
+    }
+    const data = await res.json()
+    return Array.isArray(data) ? data : []
+  } catch (err) { return [] }
 }
 
 export async function addOrder(order, adminId = null, subdomain = null) {
@@ -90,7 +150,12 @@ export function isAuthenticated() {
 
 export function getUserContext() {
   const data = localStorage.getItem('ownstore_user_context')
-  return data ? JSON.parse(data) : null
+  if (!data) return null
+  try {
+    return JSON.parse(data)
+  } catch (e) {
+    return null
+  }
 }
 
 export function isAdmin() {
@@ -101,7 +166,12 @@ export function isAdmin() {
 // Multi-user account chooser functions
 export function getSavedAccounts() {
   const accounts = localStorage.getItem('ownstore_saved_accounts')
-  return accounts ? JSON.parse(accounts) : []
+  if (!accounts) return []
+  try {
+    return JSON.parse(accounts)
+  } catch (e) {
+    return []
+  }
 }
 
 function saveAccountToHistory(userObj) {
@@ -115,7 +185,18 @@ function saveAccountToHistory(userObj) {
 export function switchAccount(userObj) {
   localStorage.setItem('ownstore_auth', 'true')
   localStorage.setItem('ownstore_user_context', JSON.stringify(userObj))
+  // Wait, switchAccount doesn't have the token. 
+  // Let's modify saveAccountToHistory to save the token too?
+  // Actually, we can just save the token in userObj if we want, but let's just 
+  // say switchAccount also needs the token if we want true multi-account.
+  if (userObj.token) localStorage.setItem('ownstore_token', userObj.token)
   saveAccountToHistory(userObj)
+}
+
+export function removeSavedAccount(email) {
+  let accounts = getSavedAccounts()
+  accounts = accounts.filter(a => a.email !== email)
+  localStorage.setItem('ownstore_saved_accounts', JSON.stringify(accounts))
 }
 
 export async function login(email, password) {
@@ -129,8 +210,10 @@ export async function login(email, password) {
 
     if (res.ok && data.success) {
       localStorage.setItem('ownstore_auth', 'true')
-      localStorage.setItem('ownstore_user_context', JSON.stringify(data.user))
-      saveAccountToHistory(data.user)
+      if (data.token) localStorage.setItem('ownstore_token', data.token)
+      const userToSave = { ...data.user, token: data.token }
+      localStorage.setItem('ownstore_user_context', JSON.stringify(userToSave))
+      saveAccountToHistory(userToSave)
       return { success: true }
     }
     return { success: false, error: data.error || 'Login failed' }
@@ -150,7 +233,8 @@ export async function register(name, email, password, role = 'customer', busines
 
     if (res.ok && data.success) {
       localStorage.setItem('ownstore_auth', 'true')
-      const userObj = { id: data.id, name, email, role }
+      if (data.token) localStorage.setItem('ownstore_token', data.token)
+      const userObj = { id: data.id, name, email, role, token: data.token }
       if (role === 'admin') {
         userObj.business_name = business_name
         userObj.subdomain = subdomain
@@ -167,5 +251,19 @@ export async function register(name, email, password, role = 'customer', busines
 
 export function logout() {
   localStorage.removeItem('ownstore_auth')
+  localStorage.removeItem('ownstore_token')
   localStorage.removeItem('ownstore_user_context')
 }
+
+export async function getMarketplaceProducts() {
+  try {
+    const res = await fetch(`${API_URL}/marketplace.php`)
+    if (!res.ok) return []
+    const data = await res.json()
+    return Array.isArray(data) ? data : []
+  } catch (err) {
+    console.error('Failed to fetch marketplace products:', err)
+    return []
+  }
+}
+

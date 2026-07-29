@@ -3,13 +3,13 @@ import { useEffect } from 'react'
 // ── Buttons ──────────────────────────────────────────────────────────────────
 
 export function Button({ variant = 'primary', size = 'md', children, className = '', ...props }) {
-  const base = 'inline-flex items-center justify-center gap-2 font-medium rounded-[10px] cursor-pointer select-none active:scale-[0.97] disabled:opacity-40 disabled:pointer-events-none'
+  const base = 'inline-flex items-center justify-center gap-2 font-medium rounded-xl cursor-pointer select-none active:scale-[0.97] disabled:opacity-40 disabled:pointer-events-none transition-all duration-300 ease-out'
   const sizes = { sm: 'px-3 py-1.5 text-sm', md: 'px-4 py-2 text-sm', lg: 'px-6 py-3 text-base' }
   const variants = {
-    primary: 'bg-[#5E8224] text-white hover:bg-[#5E8224]/90 hover:scale-[1.02] shadow-[0_0_20px_rgba(94,130,36,0.3)] border-none shadow-sm',
-    secondary: 'bg-[#021612]  text-white/80  border border-white/10  hover:bg-[#000504]  shadow-sm transition-colors',
-    ghost: 'text-white/70  hover:bg-white/10  hover:text-white  transition-colors',
-    destructive: 'bg-red-500 text-white hover:bg-red-600 shadow-sm',
+    primary: 'bg-zinc-100 text-zinc-950 hover:bg-white shadow-[0_0_15px_rgba(255,255,255,0.1)] border border-transparent',
+    secondary: 'bg-zinc-900/80 text-zinc-300 border border-zinc-800 hover:bg-zinc-800 hover:text-white shadow-sm hover:border-zinc-700',
+    ghost: 'text-zinc-400 hover:bg-zinc-800/50 hover:text-white',
+    destructive: 'bg-gradient-to-b from-red-500 to-red-600 text-white hover:from-red-400 hover:to-red-500 shadow-[inset_0_1px_0_rgba(255,255,255,0.2)] border border-red-700/50',
   }
   return (
     <button className={`${base} ${sizes[size]} ${variants[variant]} ${className}`} {...props}>
@@ -24,16 +24,16 @@ export function Input({ label, error, hint, className = '', id, ...props }) {
   const inputId = id || label?.toLowerCase().replace(/\s+/g, '-')
   return (
     <div className="flex flex-col gap-1.5">
-      {label && <label htmlFor={inputId} className="text-sm font-medium text-white/80  transition-colors">{label}</label>}
+      {label && <label htmlFor={inputId} className="text-sm font-medium text-zinc-300 transition-colors">{label}</label>}
       <input
         id={inputId}
-        className={`w-full px-3.5 py-2.5 rounded-[10px] border text-sm text-white  placeholder:text-white/50  outline-none transition-colors
-          ${error ? 'border-red-400 ring-1 ring-red-400/40 bg-red-50/30 ' : 'border-white/10  bg-[#021612]  focus:border-shop-accent focus:ring-2 focus:ring-shop-accent/20'}
+        className={`w-full px-3.5 py-2.5 rounded-xl border text-sm text-zinc-100 placeholder:text-zinc-500 outline-none transition-all duration-300 ease-out
+          ${error ? 'border-red-500/50 ring-1 ring-red-500/20 bg-red-950/20' : 'border-zinc-800 bg-zinc-900/50 focus:bg-zinc-900 focus:border-zinc-500 focus:ring-2 focus:ring-zinc-500/20 shadow-sm'}
           ${className}`}
         {...props}
       />
-      {error && <p className="text-xs text-red-500 flex items-center gap-1"><span>⚠</span>{error}</p>}
-      {hint && !error && <p className="text-xs text-white/50">{hint}</p>}
+      {error && <p className="text-xs text-red-400 flex items-center gap-1"><span>⚠</span>{error}</p>}
+      {hint && !error && <p className="text-xs text-zinc-500">{hint}</p>}
     </div>
   )
 }
@@ -42,16 +42,16 @@ export function Input({ label, error, hint, className = '', id, ...props }) {
 
 export function StatusBadge({ status }) {
   const config = {
-    pending: { label: 'Pending', cls: 'bg-amber-50 text-amber-700 border-amber-200' },
-    processing: { label: 'Processing', cls: 'bg-blue-50 text-blue-700 border-blue-200' },
-    shipped: { label: 'Shipped', cls: 'bg-white/5 text-shop-primary border-indigo-200' },
-    delivered: { label: 'Delivered', cls: 'bg-green-50 text-green-700 border-green-200' },
-    cancelled: { label: 'Cancelled', cls: 'bg-red-50 text-red-600 border-red-200' },
+    pending: { label: 'Pending', cls: 'bg-amber-500/10 text-amber-400 border-amber-500/20' },
+    processing: { label: 'Processing', cls: 'bg-blue-500/10 text-blue-400 border-blue-500/20' },
+    shipped: { label: 'Shipped', cls: 'bg-zinc-100/10 text-zinc-300 border-zinc-500/20' },
+    delivered: { label: 'Delivered', cls: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' },
+    cancelled: { label: 'Cancelled', cls: 'bg-red-500/10 text-red-400 border-red-500/20' },
   }
   const { label, cls } = config[status]
   return (
-    <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium border font-mono ${cls}`}>
-      <span className="w-1.5 h-1.5 rounded-full bg-current opacity-80" />
+    <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-medium border font-mono tracking-wide ${cls}`}>
+      <span className="w-1.5 h-1.5 rounded-full bg-current opacity-80 shadow-[0_0_8px_currentColor]" />
       {label}
     </span>
   )
@@ -61,7 +61,7 @@ export function StatusBadge({ status }) {
 
 export function Card({ children, className = '' }) {
   return (
-    <div className={`bg-[#021612]  border border-white/10  rounded-[10px] transition-colors ${className}`}>
+    <div className={`bg-[#18181b]/80 backdrop-blur-xl border border-zinc-800 rounded-2xl shadow-xl shadow-black/20 transition-all duration-300 ${className}`}>
       {children}
     </div>
   )
@@ -71,17 +71,17 @@ export function Card({ children, className = '' }) {
 
 export function StatCard({ label, value, change, positive, icon, color }) {
   return (
-    <Card className="p-5">
+    <Card className="p-5 hover:bg-[#18181b] hover:border-zinc-700/50 cursor-default">
       <div className="flex items-start justify-between mb-3">
-        <span className={`w-10 h-10 rounded-[10px] flex items-center justify-center text-lg transition-colors ${color}`}>{icon}</span>
+        <span className={`w-10 h-10 rounded-xl flex items-center justify-center text-lg transition-colors border border-white/5 ${color}`}>{icon}</span>
         {change && (
-          <span className={`text-xs font-mono font-medium px-2 py-0.5 rounded-full transition-colors ${positive ? 'text-green-700  bg-green-50 ' : 'text-red-600  bg-red-50 '}`}>
+          <span className={`text-xs font-mono font-medium px-2 py-0.5 rounded-full transition-colors border ${positive ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20' : 'text-red-400 bg-red-500/10 border-red-500/20'}`}>
             {positive ? '↑' : '↓'} {change}
           </span>
         )}
       </div>
-      <p className="text-2xl font-bold text-white  font-display transition-colors">{value}</p>
-      <p className="text-sm text-white/60  mt-0.5 transition-colors">{label}</p>
+      <p className="text-2xl font-bold text-zinc-100 font-display tracking-tight transition-colors">{value}</p>
+      <p className="text-sm text-zinc-500 mt-0.5 transition-colors">{label}</p>
     </Card>
   )
 }
@@ -97,15 +97,15 @@ export function Modal({ title, onClose, children }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={onClose}>
-      <div className="absolute inset-0 bg-[#021612]/40 backdrop-blur-sm" />
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
       <div
-        className="relative bg-[#021612]  rounded-[12px] shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto transition-colors"
+        className="relative bg-[#18181b] border border-zinc-800 rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto transition-all"
         style={{ animation: 'slideUp 0.18s ease-out' }}
         onClick={e => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between px-6 py-4 border-b border-white/5  transition-colors">
-          <h2 className="font-semibold text-white  font-display transition-colors">{title}</h2>
-          <button onClick={onClose} className="text-white/50  hover:text-white/70  text-xl leading-none cursor-pointer transition-colors">×</button>
+        <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-800/50 transition-colors">
+          <h2 className="font-semibold text-zinc-100 font-display tracking-tight transition-colors">{title}</h2>
+          <button onClick={onClose} className="text-zinc-500 hover:text-zinc-300 text-xl leading-none cursor-pointer transition-colors">×</button>
         </div>
         <div className="p-6">{children}</div>
       </div>
@@ -142,7 +142,7 @@ export function Skeleton({ className = '' }) {
 
 export function ProductCardSkeleton() {
   return (
-    <div className="bg-[#021612]  border border-white/10  rounded-[10px] overflow-hidden transition-colors">
+    <div className="bg-[#18181b]/80 border border-zinc-800 rounded-2xl overflow-hidden transition-colors">
       <Skeleton className="aspect-square w-full rounded-none" />
       <div className="p-4 space-y-2">
         <Skeleton className="h-4 w-3/4" />

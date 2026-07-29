@@ -1,8 +1,9 @@
 <?php
+require_once __DIR__ . '/jwt.php';
 // CORS headers to allow React frontend to fetch data from PHP API
 header("Access-Control-Allow-Origin: *");
 header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS");
-header("Access-Control-Allow-Headers: Content-Type, Authorization");
+header("Access-Control-Allow-Headers: Content-Type, Authorization, X-User-Id");
 header("Content-Type: application/json");
 
 // Handle preflight requests
@@ -21,16 +22,6 @@ try {
     $db->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
 
     function getUserId($db) {
-        // 1. If admin is logged in, they will send X-User-Id header
-        $headers = getallheaders();
-        if (isset($headers['X-User-Id'])) {
-            return $headers['X-User-Id'];
-        }
-        if (isset($_SERVER['HTTP_X_USER_ID'])) {
-            return $_SERVER['HTTP_X_USER_ID'];
-        }
-
-        // 2. If it's the storefront, they will send ?subdomain=...
         $subdomain = $_GET['subdomain'] ?? '';
         if ($subdomain) {
             $stmt = $db->prepare("SELECT id FROM users WHERE subdomain = ?");
@@ -41,7 +32,14 @@ try {
             }
         }
 
-        // If neither is provided or valid, return null
+        $token = get_bearer_token();
+        if ($token) {
+            $payload = verify_jwt($token);
+            if ($payload && isset($payload['id'])) {
+                return $payload['id'];
+            }
+        }
+
         return null;
     }
 } catch (PDOException $e) {

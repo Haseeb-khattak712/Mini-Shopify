@@ -1,16 +1,17 @@
 import { useState } from 'react'
 import { Button, Input, Modal, Toast, Card } from '@/components/ui/ui'
 import { useOutletContext } from 'react-router-dom'
-import { addProduct, updateProduct, deleteProduct } from '@/services/storage'
+import { addProduct, updateProduct, deleteProduct, getUserContext } from '@/services/storage'
 
 export function AdminProducts() {
   const { products, setProducts } = useOutletContext()
+  const user = getUserContext()
   const [search, setSearch] = useState('')
   const [category, setCategory] = useState('All')
   const [showModal, setShowModal] = useState(false)
   const [toast, setToast] = useState('')
   const [editProduct, setEditProduct] = useState(null)
-  const [form, setForm] = useState({ name: '', price: '', stock: '', category: 'Apparel', description: '', sizes: '', colors: '' })
+  const [form, setForm] = useState({ name: '', price: '', stock: '', category: 'Apparel', description: '', sizes: '', colors: '', image: '' })
   const [formErrors, setFormErrors] = useState({})
 
   const categories = ['All', ...Array.from(new Set(products.map(p => p.category)))]
@@ -23,7 +24,7 @@ export function AdminProducts() {
 
   const openAdd = () => {
     setEditProduct(null)
-    setForm({ name: '', price: '', stock: '', category: 'Apparel', description: '', sizes: '', colors: '' })
+    setForm({ name: '', price: '', stock: '', category: 'Apparel', description: '', sizes: '', colors: '', image: '' })
     setFormErrors({})
     setShowModal(true)
   }
@@ -37,10 +38,15 @@ export function AdminProducts() {
       category: p.category, 
       description: p.description,
       sizes: p.sizes ? p.sizes.join(', ') : '',
-      colors: p.colors ? p.colors.join(', ') : ''
+      colors: p.colors ? p.colors.join(', ') : '',
+      image: p.image || ''
     })
     setFormErrors({})
     setShowModal(true)
+  }
+
+  const handleImageUpload = (e) => {
+    // Deprecated for multi-URL support, but keeping for compatibility
   }
 
   const validate = () => {
@@ -59,7 +65,7 @@ export function AdminProducts() {
 
     if (editProduct) {
       const updated = { ...editProduct, ...form, price: +form.price, stock: +form.stock, sizes: parsedSizes, colors: parsedColors }
-      await updateProduct(updated)
+      await updateProduct(updated, user?.id)
       setProducts(ps => ps.map(p => p.id === editProduct.id ? updated : p))
       setToast('Product updated successfully')
     } else {
@@ -71,9 +77,9 @@ export function AdminProducts() {
         description: form.description,
         sizes: parsedSizes,
         colors: parsedColors,
-        image: 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=600&h=600&fit=crop&auto=format',
+        image: form.image || 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=600&h=600&fit=crop&auto=format',
       }
-      const res = await addProduct(newP)
+      const res = await addProduct(newP, user?.id)
       setProducts(ps => [{ ...newP, id: res.id }, ...ps])
       setToast('Product added successfully')
     }
@@ -82,7 +88,7 @@ export function AdminProducts() {
   }
 
   const handleDelete = async (id) => {
-    await deleteProduct(id)
+    await deleteProduct(id, user?.id)
     setProducts(ps => ps.filter(p => p.id !== id))
     setToast('Product removed')
     setTimeout(() => setToast(''), 3000)
@@ -92,8 +98,8 @@ export function AdminProducts() {
     <div className="p-8">
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-2xl font-bold font-display text-white">Products</h1>
-          <p className="text-sm text-white/60 mt-0.5">{products.length} products in your catalog</p>
+          <h1 className="text-3xl font-bold font-display text-zinc-100 tracking-tight">Products</h1>
+          <p className="text-sm text-zinc-500 mt-1">{products.length} products in your catalog</p>
         </div>
         <Button onClick={openAdd}>+ Add product</Button>
       </div>
@@ -103,7 +109,7 @@ export function AdminProducts() {
         <div className="relative flex-1 min-w-48 max-w-72">
           <span className="absolute left-3 top-1/2 -translate-y-1/2 text-white/50 text-sm">⌕</span>
           <input
-            className="w-full pl-8 pr-3 py-2 rounded-[10px] border border-white/10 bg-[#021612] text-sm outline-none focus:border-shop-accent focus:ring-2 focus:ring-shop-accent/20"
+            className="w-full pl-8 pr-3 py-2 rounded-[10px] border border-zinc-800 bg-zinc-900/50 text-sm text-zinc-100 outline-none focus:border-zinc-500 focus:ring-2 focus:ring-zinc-500/20"
             placeholder="Search products…"
             value={search}
             onChange={e => setSearch(e.target.value)}
@@ -115,7 +121,7 @@ export function AdminProducts() {
               key={cat}
               onClick={() => setCategory(cat)}
               className={`px-3 py-1.5 rounded-lg text-sm font-medium cursor-pointer
-                ${category === cat ? 'bg-shop-primary text-white' : 'bg-[#021612] text-white/70 border border-white/10 hover:bg-[#000504]'}`}
+                ${category === cat ? 'bg-zinc-100 text-zinc-900' : 'bg-zinc-900/50 text-zinc-400 border border-zinc-800 hover:bg-zinc-800/50 hover:text-zinc-200'}`}
             >
               {cat}
             </button>
@@ -140,13 +146,13 @@ export function AdminProducts() {
                   <td colSpan={5} className="px-6 py-12 text-center text-sm text-white/50">No products match your search.</td>
                 </tr>
               ) : filtered.map(p => (
-                <tr key={p.id} className="border-b border-slate-50 hover:bg-[#000504]/50">
+                <tr key={p.id} className="border-b border-zinc-800/50 hover:bg-zinc-800/30 transition-colors last:border-0">
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-3">
                       <img src={p.image} alt={p.name} className="w-10 h-10 rounded-lg object-cover border border-white/5" />
                       <div>
-                        <p className="text-sm font-medium text-white">{p.name}</p>
-                        <p className="text-xs text-white/50 truncate max-w-48">{p.description.slice(0, 50)}…</p>
+                        <p className="text-sm font-medium text-zinc-100">{p.name}</p>
+                        <p className="text-xs text-zinc-500 truncate max-w-48">{p.description.slice(0, 50)}…</p>
                       </div>
                     </div>
                   </td>
@@ -185,7 +191,7 @@ export function AdminProducts() {
             <div>
               <label className="text-sm font-medium text-white/80 block mb-1.5">Category</label>
               <select
-                className="w-full px-3.5 py-2.5 rounded-[10px] border border-white/10 bg-[#021612] text-sm outline-none focus:border-shop-accent focus:ring-2 focus:ring-shop-accent/20"
+                className="w-full px-3.5 py-2.5 rounded-[10px] border border-zinc-800 bg-zinc-900/50 text-sm text-zinc-100 outline-none focus:border-zinc-500 focus:ring-2 focus:ring-zinc-500/20"
                 value={form.category}
                 onChange={e => setForm(f => ({ ...f, category: e.target.value }))}
               >
@@ -200,17 +206,14 @@ export function AdminProducts() {
             <div>
               <label className="text-sm font-medium text-white/80 block mb-1.5">Description</label>
               <textarea
-                className="w-full px-3.5 py-2.5 rounded-[10px] border border-white/10 bg-[#021612] text-sm outline-none focus:border-shop-accent focus:ring-2 focus:ring-shop-accent/20 resize-none"
+                className="w-full px-3.5 py-2.5 rounded-[10px] border border-zinc-800 bg-zinc-900/50 text-sm text-zinc-100 outline-none focus:border-zinc-500 focus:ring-2 focus:ring-zinc-500/20 resize-none"
                 rows={3}
                 placeholder="Brief product description…"
                 value={form.description}
                 onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
               />
             </div>
-            <div className="border-2 border-dashed border-white/10 rounded-[10px] p-6 text-center hover:border-indigo-300 hover:bg-white/5/20">
-              <p className="text-white/50 text-sm">📷 Drop an image here, or <span className="text-shop-primary cursor-pointer">browse</span></p>
-              <p className="text-xs text-white/40 mt-1">PNG, JPG up to 5MB</p>
-            </div>
+            <Input label="Image URLs (comma separated)" placeholder="https://..., https://..." value={form.image} onChange={e => setForm(f => ({ ...f, image: e.target.value }))} />
             <div className="flex gap-3 pt-2">
               <Button variant="secondary" className="flex-1" onClick={() => setShowModal(false)}>Cancel</Button>
               <Button className="flex-1" onClick={handleSave}>{editProduct ? 'Save changes' : 'Add product'}</Button>

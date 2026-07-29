@@ -27,7 +27,7 @@ const CITIES = [
 ];
 
 function Starfield() {
-  const count = 30000; // Double the count to 30,000 for extreme galactic density
+  const count = 10000; // Reduced for performance
   
   // Generate a hyper-realistic star texture: extremely sharp core, tiny subtle glow
   const starTexture = useMemo(() => {
@@ -112,7 +112,7 @@ function Starfield() {
       const x = pos[i * 3];
       const y = pos[i * 3 + 1];
       const z = pos[i * 3 + 2];
-      if (x*x + y*y + z*z > 30000) { 
+      if (x*x + y*y + z*z > 10000) { 
          const r = Math.random() * 10; 
          const theta = Math.random() * 2 * Math.PI;
          const phi = Math.acos(2 * Math.random() - 1);
