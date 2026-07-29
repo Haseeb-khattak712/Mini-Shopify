@@ -14,7 +14,10 @@ export default function AdminTheme() {
     headerLayout: 'left',
     fontFamily: 'Inter',
     heroTitle: 'Crafted with intention, built to last.',
-    heroSubtitle: 'Carefully curated essentials for everyday living — from wardrobe to workspace.'
+    heroSubtitle: 'Carefully curated essentials for everyday living — from wardrobe to workspace.',
+    seoTitle: '',
+    seoDescription: '',
+    socialImage: ''
   }
   const [settings, setSettings] = useState(initialSettings)
   const [saving, setSaving] = useState(false)
@@ -181,6 +184,44 @@ export default function AdminTheme() {
                     value={settings.heroSubtitle}
                     onChange={(e) => setSettings({ ...settings, heroSubtitle: e.target.value })}
                     className="w-full bg-zinc-900/50 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:border-zinc-500 focus:ring-2 focus:ring-zinc-500/20 resize-none h-20"
+                  />
+                </div>
+              </div>
+            </section>
+
+            <hr className="border-zinc-800/50" />
+
+            {/* SEO Settings */}
+            <section>
+              <h3 className="text-sm font-bold text-white/60 uppercase tracking-wider mb-4">SEO & Social Sharing</h3>
+              <div className="space-y-4">
+                <div>
+                  <label className="text-sm text-white/80 block mb-2">Meta Title</label>
+                  <input 
+                    type="text"
+                    placeholder="e.g. My Awesome Store | Premium Goods"
+                    value={settings.seoTitle || ''}
+                    onChange={(e) => setSettings({ ...settings, seoTitle: e.target.value })}
+                    className="w-full bg-zinc-900/50 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:border-zinc-500 focus:ring-2 focus:ring-zinc-500/20"
+                  />
+                </div>
+                <div>
+                  <label className="text-sm text-white/80 block mb-2">Meta Description</label>
+                  <textarea 
+                    value={settings.seoDescription || ''}
+                    onChange={(e) => setSettings({ ...settings, seoDescription: e.target.value })}
+                    placeholder="Brief description for search engines..."
+                    className="w-full bg-zinc-900/50 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:border-zinc-500 focus:ring-2 focus:ring-zinc-500/20 resize-none h-20"
+                  />
+                </div>
+                <div>
+                  <label className="text-sm text-white/80 block mb-2">Social Sharing Image URL</label>
+                  <input 
+                    type="text"
+                    placeholder="https://..."
+                    value={settings.socialImage || ''}
+                    onChange={(e) => setSettings({ ...settings, socialImage: e.target.value })}
+                    className="w-full bg-zinc-900/50 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:border-zinc-500 focus:ring-2 focus:ring-zinc-500/20"
                   />
                 </div>
               </div>

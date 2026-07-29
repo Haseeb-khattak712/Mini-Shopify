@@ -1,4 +1,5 @@
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
+import React from 'react'
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, FunnelChart, Funnel, LabelList, BarChart, Bar } from 'recharts'
 import { Card, StatusBadge } from '@/components/ui/ui'
 import { useTilt } from '@/hooks/useTilt'
 import { useOutletContext } from 'react-router-dom'
@@ -38,14 +39,35 @@ export function AdminDashboard() {
   const averageOrderValue = orders.length > 0 ? (totalRevenue / orders.length).toFixed(2) : '0.00'
 
   // Generate 7-day sales data dynamically
-  const salesData = [...Array(7)].map((_, i) => {
+  const salesData = React.useMemo(() => [...Array(7)].map((_, i) => {
     const d = new Date()
     d.setDate(d.getDate() - (6 - i))
     const dateStr = d.toISOString().split('T')[0]
     const shortLabel = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
     const dayRevenue = orders.filter(o => o.date === dateStr && o.status !== 'cancelled').reduce((sum, o) => sum + o.total, 0)
     return { day: shortLabel, revenue: dayRevenue }
-  })
+  }), [orders])
+
+  // Leaderboard logic
+  const topProducts = React.useMemo(() => {
+    const productSales = orders.flatMap(o => o.items).reduce((acc, item) => {
+      const id = item.product_id || item.product?.id;
+      const name = item.name || item.product?.name || `Product ${id}`;
+      if (!acc[id]) acc[id] = { name, revenue: 0, sold: 0 };
+      acc[id].revenue += (item.price || 0) * (item.quantity || 1);
+      acc[id].sold += (item.quantity || 1);
+      return acc;
+    }, {});
+    return Object.values(productSales).sort((a, b) => b.revenue - a.revenue).slice(0, 5);
+  }, [orders])
+
+  // Mock Funnel Data
+  const funnelData = React.useMemo(() => [
+    { name: 'Visitors', value: 12450, fill: '#3f3f46' },
+    { name: 'Added to Cart', value: 3150, fill: '#52525b' },
+    { name: 'Checkout', value: 1820, fill: '#71717a' },
+    { name: 'Purchased', value: Math.max(orders.length, 120), fill: '#10b981' }
+  ], [orders.length])
 
   return (
     <div className="p-8" style={{ perspective: '1200px' }}>
@@ -144,6 +166,58 @@ export function AdminDashboard() {
           </table>
         </div>
       </Card>
+
+      {/* Advanced Analytics Row */}
+      <div className="grid xl:grid-cols-3 gap-6 mt-8">
+
+        {/* Globe Placeholder */}
+        <Card className="p-6 flex flex-col items-center justify-center min-h-[300px] overflow-hidden relative">
+          <div className="absolute inset-0 bg-gradient-to-b from-transparent to-zinc-950/80 z-10 pointer-events-none" />
+          <h2 className="font-semibold text-zinc-100 font-display tracking-tight absolute top-6 left-6 z-20">Global Reach</h2>
+          <div className="w-48 h-48 rounded-full border border-zinc-700/50 relative animate-[spin_20s_linear_infinite] flex items-center justify-center opacity-80" style={{ transformStyle: 'preserve-3d', backgroundImage: 'radial-gradient(circle at 30% 30%, rgba(255,255,255,0.1), transparent)' }}>
+            <div className="absolute inset-0 border border-zinc-700/30 rounded-full" style={{ transform: 'rotateX(60deg)' }} />
+            <div className="absolute inset-0 border border-zinc-700/30 rounded-full" style={{ transform: 'rotateY(60deg)' }} />
+            <div className="absolute w-2 h-2 bg-emerald-400 rounded-full shadow-[0_0_10px_#10b981]" style={{ top: '30%', left: '20%' }} />
+            <div className="absolute w-1.5 h-1.5 bg-emerald-400 rounded-full shadow-[0_0_10px_#10b981]" style={{ top: '60%', right: '30%' }} />
+            <div className="absolute w-2 h-2 bg-emerald-400 rounded-full shadow-[0_0_10px_#10b981]" style={{ bottom: '40%', left: '60%' }} />
+          </div>
+          <p className="absolute bottom-6 text-xs text-zinc-500 z-20">Sales span 12 countries</p>
+        </Card>
+
+        {/* Funnel */}
+        <Card className="p-6">
+          <h2 className="font-semibold text-zinc-100 font-display tracking-tight mb-4">Conversion Funnel</h2>
+          <ResponsiveContainer width="100%" height={240}>
+            <FunnelChart>
+              <Tooltip contentStyle={{ background: '#18181b', border: '1px solid #27272a', borderRadius: '8px' }} />
+              <Funnel dataKey="value" data={funnelData} isAnimationActive>
+                <LabelList position="center" fill="#fff" stroke="none" dataKey="name" fontSize={12} fontWeight={600} />
+              </Funnel>
+            </FunnelChart>
+          </ResponsiveContainer>
+        </Card>
+
+        {/* Leaderboard */}
+        <Card className="p-6">
+          <h2 className="font-semibold text-zinc-100 font-display tracking-tight mb-4">Top Products</h2>
+          <div className="flex flex-col gap-4">
+            {topProducts.length === 0 ? (
+              <p className="text-sm text-zinc-500 text-center py-8">No product sales yet.</p>
+            ) : topProducts.map((p, i) => (
+              <div key={i} className="flex items-center gap-4">
+                <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${i === 0 ? 'bg-yellow-500/20 text-yellow-500' : i === 1 ? 'bg-zinc-300/20 text-zinc-300' : i === 2 ? 'bg-amber-700/20 text-amber-600' : 'bg-zinc-800 text-zinc-500'}`}>
+                  {i + 1}
+                </span>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm text-zinc-200 truncate">{p.name}</p>
+                  <p className="text-xs text-zinc-500">{p.sold} units sold</p>
+                </div>
+                <p className="text-sm font-semibold text-emerald-400">${p.revenue.toLocaleString()}</p>
+              </div>
+            ))}
+          </div>
+        </Card>
+      </div>
     </div>
   )
 }

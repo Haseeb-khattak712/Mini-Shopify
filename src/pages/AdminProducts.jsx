@@ -11,7 +11,7 @@ export function AdminProducts() {
   const [showModal, setShowModal] = useState(false)
   const [toast, setToast] = useState('')
   const [editProduct, setEditProduct] = useState(null)
-  const [form, setForm] = useState({ name: '', price: '', stock: '', category: 'Apparel', description: '', sizes: '', colors: '', image: '' })
+  const [form, setForm] = useState({ name: '', price: '', stock: '', category: 'Apparel', description: '', sizes: '', colors: '', image: '', is_digital: false, file_url: '', variant_stock: {} })
   const [formErrors, setFormErrors] = useState({})
 
   const categories = ['All', ...Array.from(new Set(products.map(p => p.category)))]
@@ -24,7 +24,7 @@ export function AdminProducts() {
 
   const openAdd = () => {
     setEditProduct(null)
-    setForm({ name: '', price: '', stock: '', category: 'Apparel', description: '', sizes: '', colors: '', image: '' })
+    setForm({ name: '', price: '', stock: '', category: 'Apparel', description: '', sizes: '', colors: '', image: '', is_digital: false, file_url: '', variant_stock: {} })
     setFormErrors({})
     setShowModal(true)
   }
@@ -39,14 +39,40 @@ export function AdminProducts() {
       description: p.description,
       sizes: p.sizes ? p.sizes.join(', ') : '',
       colors: p.colors ? p.colors.join(', ') : '',
-      image: p.image || ''
+      image: p.image || '',
+      is_digital: !!p.is_digital,
+      file_url: p.file_url || '',
+      variant_stock: (typeof p.variant_stock === 'string' ? JSON.parse(p.variant_stock) : p.variant_stock) || {}
     })
     setFormErrors({})
     setShowModal(true)
   }
 
-  const handleImageUpload = (e) => {
-    // Deprecated for multi-URL support, but keeping for compatibility
+  const handleUpload = async (e, field) => {
+    const file = e.target.files[0]
+    if (!file) return
+
+    const formData = new FormData()
+    formData.append('file', file)
+
+    try {
+      const token = localStorage.getItem('ownstore_token') || ''
+      const res = await fetch('http://localhost:8000/api/upload.php', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` },
+        body: formData
+      })
+      const data = await res.json()
+      if (data.success) {
+        setForm(f => ({ ...f, [field]: data.url }))
+        setToast('File uploaded successfully')
+        setTimeout(() => setToast(''), 3000)
+      } else {
+        alert(data.error)
+      }
+    } catch(err) {
+      alert('Upload failed')
+    }
   }
 
   const validate = () => {
@@ -64,7 +90,7 @@ export function AdminProducts() {
     const parsedColors = form.colors.split(',').map(c => c.trim()).filter(Boolean)
 
     if (editProduct) {
-      const updated = { ...editProduct, ...form, price: +form.price, stock: +form.stock, sizes: parsedSizes, colors: parsedColors }
+      const updated = { ...editProduct, ...form, price: +form.price, stock: +form.stock, sizes: parsedSizes, colors: parsedColors, is_digital: form.is_digital ? 1 : 0 }
       await updateProduct(updated, user?.id)
       setProducts(ps => ps.map(p => p.id === editProduct.id ? updated : p))
       setToast('Product updated successfully')
@@ -78,6 +104,9 @@ export function AdminProducts() {
         sizes: parsedSizes,
         colors: parsedColors,
         image: form.image || 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=600&h=600&fit=crop&auto=format',
+        is_digital: form.is_digital ? 1 : 0,
+        file_url: form.file_url || '',
+        variant_stock: form.variant_stock
       }
       const res = await addProduct(newP, user?.id)
       setProducts(ps => [{ ...newP, id: res.id }, ...ps])
@@ -92,6 +121,18 @@ export function AdminProducts() {
     setProducts(ps => ps.filter(p => p.id !== id))
     setToast('Product removed')
     setTimeout(() => setToast(''), 3000)
+  }
+
+  // Variant combinations
+  const sizesList = form.sizes.split(',').map(s => s.trim()).filter(Boolean)
+  const colorsList = form.colors.split(',').map(c => c.trim()).filter(Boolean)
+  let variants = []
+  if (sizesList.length > 0 && colorsList.length > 0) {
+    sizesList.forEach(s => colorsList.forEach(c => variants.push(`${c}-${s}`)))
+  } else if (sizesList.length > 0) {
+    variants = sizesList
+  } else if (colorsList.length > 0) {
+    variants = colorsList
   }
 
   return (
@@ -203,6 +244,27 @@ export function AdminProducts() {
               <Input label="Sizes (comma separated)" placeholder="S, M, L" value={form.sizes} onChange={e => setForm(f => ({ ...f, sizes: e.target.value }))} />
               <Input label="Colors (comma separated)" placeholder="Red, Blue" value={form.colors} onChange={e => setForm(f => ({ ...f, colors: e.target.value }))} />
             </div>
+
+            {variants.length > 0 && (
+              <div className="bg-zinc-900/50 rounded-[10px] border border-zinc-800 p-4">
+                <label className="text-sm font-medium text-white/80 block mb-3">Variant Stock</label>
+                <div className="grid grid-cols-2 gap-3">
+                  {variants.map(v => (
+                    <div key={v} className="flex items-center gap-2">
+                      <span className="text-sm text-zinc-400 flex-1 truncate" title={v}>{v}</span>
+                      <input
+                        type="number"
+                        className="w-20 px-2 py-1 rounded bg-zinc-800 border border-zinc-700 text-sm text-zinc-100 outline-none"
+                        placeholder="0"
+                        value={form.variant_stock[v] || ''}
+                        onChange={e => setForm(f => ({ ...f, variant_stock: { ...f.variant_stock, [v]: e.target.value } }))}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             <div>
               <label className="text-sm font-medium text-white/80 block mb-1.5">Description</label>
               <textarea
@@ -213,7 +275,31 @@ export function AdminProducts() {
                 onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
               />
             </div>
-            <Input label="Image URLs (comma separated)" placeholder="https://..., https://..." value={form.image} onChange={e => setForm(f => ({ ...f, image: e.target.value }))} />
+            <div>
+              <Input label="Image URLs (comma separated)" placeholder="https://..., https://..." value={form.image} onChange={e => setForm(f => ({ ...f, image: e.target.value }))} />
+              <input type="file" accept="image/*" onChange={(e) => handleUpload(e, 'image')} className="mt-2 text-xs text-zinc-500" />
+            </div>
+            <div className="flex items-center gap-2 mt-2">
+              <input 
+                type="checkbox" 
+                id="is_digital" 
+                checked={form.is_digital} 
+                onChange={e => setForm(f => ({ ...f, is_digital: e.target.checked }))}
+                className="w-4 h-4 rounded border-zinc-700 bg-zinc-900/50 text-shop-primary"
+              />
+              <label htmlFor="is_digital" className="text-sm font-medium text-white/80">Digital Product</label>
+            </div>
+            {form.is_digital && (
+              <div className="pl-6 border-l-2 border-shop-primary/30">
+                <Input 
+                  label="File URL (for digital download)" 
+                  placeholder="https://..." 
+                  value={form.file_url} 
+                  onChange={e => setForm(f => ({ ...f, file_url: e.target.value }))} 
+                />
+                <input type="file" onChange={(e) => handleUpload(e, 'file_url')} className="mt-2 text-xs text-zinc-500" />
+              </div>
+            )}
             <div className="flex gap-3 pt-2">
               <Button variant="secondary" className="flex-1" onClick={() => setShowModal(false)}>Cancel</Button>
               <Button className="flex-1" onClick={handleSave}>{editProduct ? 'Save changes' : 'Add product'}</Button>

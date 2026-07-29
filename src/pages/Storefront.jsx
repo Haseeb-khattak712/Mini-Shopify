@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Button, Toast } from '@/components/ui/ui'
-import { PRODUCTS } from '@/data' // fallback if needed
+
 import { useTilt } from '@/hooks/useTilt'
 import { Link } from 'react-router-dom'
 import Confetti from 'react-confetti'
@@ -148,7 +148,7 @@ function StoreNav({ cartCount, theme }) {
 
 // ── 3D Product Card ────────────────────────────────────────────────────────────
 
-function ProductCard3D({ product, onAddToCart, onQuickView }) {
+const ProductCard3D = React.memo(function ProductCard3D({ product, onAddToCart, onQuickView }) {
   const navigate = useNavigate()
   const { subdomain } = useParams()
   const tilt = useTilt(14)
@@ -233,11 +233,11 @@ function ProductCard3D({ product, onAddToCart, onQuickView }) {
       </div>
     </div>
   )
-}
+})
 
 // ── List View Product Card ──────────────────────────────────────────────────────
 
-function ProductListCard({ product, onAddToCart, onQuickView }) {
+const ProductListCard = React.memo(function ProductListCard({ product, onAddToCart, onQuickView }) {
   const navigate = useNavigate()
   const { subdomain } = useParams()
   const [justAdded, setJustAdded] = useState(false)
@@ -314,7 +314,7 @@ function ProductListCard({ product, onAddToCart, onQuickView }) {
       </div>
     </div>
   )
-}
+})
 
 // ── Quick View Modal ────────────────────────────────────────────────────────────
 
@@ -672,7 +672,8 @@ export function ProductDetail() {
   const { cart, handleAddToCart, products, reviews, setReviews, subdomain } = useOutletContext();
   const product = (Array.isArray(products) ? products : []).find(p => String(p.id) === String(id));
 
-  const productReviews = (Array.isArray(reviews) ? reviews : []).filter(r => r.product_id === id || r.productId === id);
+  const productReviews = (Array.isArray(reviews) ? reviews : [])
+    .filter(r => (r.product_id === id || r.productId === id) && (r.status || 'approved') === 'approved');
   const averageRating = productReviews.length 
     ? (productReviews.reduce((sum, r) => sum + r.rating, 0) / productReviews.length).toFixed(1)
     : 0;
@@ -781,6 +782,15 @@ export function ProductDetail() {
 
   const related = (Array.isArray(products) ? products : []).filter(p => p.category === product.category && p.id !== product.id).slice(0, 3);
 
+  const variantKey = [selectedColor, selectedSize].filter(Boolean).join('-');
+  let availableStock = product.stock;
+  if (variantKey && product.variant_stock) {
+      const vStock = typeof product.variant_stock === 'string' ? JSON.parse(product.variant_stock) : product.variant_stock;
+      if (vStock[variantKey] !== undefined) {
+          availableStock = parseInt(vStock[variantKey], 10);
+      }
+  }
+
   return (
     <div className="min-h-screen bg-zinc-950 transition-colors storefront-theme">
       <style>{`
@@ -846,8 +856,8 @@ export function ProductDetail() {
             <p className="text-sm text-white/70  leading-relaxed mb-6 transition-colors">{product.description}</p>
 
             <div className="flex items-center gap-2 mb-2">
-              <span className={`text-xs font-mono ${product.stock > 10 ? 'text-green-600' : product.stock > 0 ? 'text-amber-600' : 'text-red-500'}`}>
-                {product.stock > 10 ? '✓ In stock' : product.stock > 0 ? `⚠ Only ${product.stock} left` : '✕ Out of stock'}
+              <span className={`text-xs font-mono ${availableStock > 10 ? 'text-green-600' : availableStock > 0 ? 'text-amber-600' : 'text-red-500'}`}>
+                {availableStock > 10 ? '✓ In stock' : availableStock > 0 ? `⚠ Only ${availableStock} left` : '✕ Out of stock'}
               </span>
             </div>
 
@@ -882,12 +892,12 @@ export function ProductDetail() {
               <div className="flex items-center border border-white/10  rounded-[10px] overflow-hidden transition-colors">
                 <button onClick={() => setQty(q => Math.max(1, q - 1))} className="w-9 h-9 flex items-center justify-center text-white/60  hover:bg-zinc-950  cursor-pointer transition-colors">−</button>
                 <span className="w-10 text-center text-sm font-semibold text-white  font-mono transition-colors">{qty}</span>
-                <button onClick={() => setQty(q => Math.min(product.stock, q + 1))} className="w-9 h-9 flex items-center justify-center text-white/60  hover:bg-zinc-950  cursor-pointer transition-colors">+</button>
+                <button onClick={() => setQty(q => Math.min(availableStock, q + 1))} className="w-9 h-9 flex items-center justify-center text-white/60  hover:bg-zinc-950  cursor-pointer transition-colors">+</button>
               </div>
             </div>
 
             <div className="flex gap-3 mt-auto">
-              <Button className="flex-1 active:scale-95 transition-transform" size="lg" onClick={add} disabled={product.stock === 0}>
+              <Button className="flex-1 active:scale-95 transition-transform" size="lg" onClick={add} disabled={availableStock === 0}>
                 Add to cart · ${(product.price * qty).toFixed(2)}
               </Button>
             </div>
@@ -988,7 +998,7 @@ export function CartCheckout() {
     setCart([])
     navigate(`/store/${subdomain}/confirmation`)
   };
-  const [form, setForm] = useState({ name: customer?.name || '', address: '', phone: '' })
+  const [form, setForm] = useState({ name: customer?.name || '', email: customer?.email || '', address: '', phone: '' })
   const [paymentForm, setPaymentForm] = useState({ cardName: '', cardNumber: '', expiry: '', cvc: '' })
   const [errors, setErrors] = useState({})
   const [step, setStep] = useState('cart') // 'cart', 'checkout', 'payment'
@@ -1011,6 +1021,7 @@ export function CartCheckout() {
   const validateCheckout = () => {
     const e = {}
     if (!form.name.trim()) e.name = 'Full name is required'
+    if (!form.email.trim()) e.email = 'Email is required'
     if (!form.address.trim()) e.address = 'Delivery address is required'
     if (!form.phone.trim()) e.phone = 'Phone number is required'
     setErrors(e)
@@ -1039,6 +1050,7 @@ export function CartCheckout() {
     const newOrder = {
       customer_id: customer?.id || null,
       customer: form.name,
+      email: form.email,
       total: total,
       date: new Date().toISOString().split('T')[0],
       status: 'processing',
@@ -1118,11 +1130,13 @@ export function CartCheckout() {
                   <div className="flex flex-col gap-4">
                     {[
                       { key: 'name', placeholder: 'Full name' },
+                      { key: 'email', placeholder: 'Email address', type: 'email' },
                       { key: 'address', placeholder: 'Full delivery address' },
                       { key: 'phone', placeholder: 'Phone number' },
-                    ].map(({ key, placeholder }) => (
+                    ].map(({ key, placeholder, type = 'text' }) => (
                       <div key={key}>
                         <input
+                          type={type}
                           placeholder={placeholder}
                           value={form[key]}
                           onChange={e => { setForm(f => ({ ...f, [key]: e.target.value })); setErrors(er => ({ ...er, [key]: '' })) }}
@@ -1282,6 +1296,11 @@ export function OrderConfirmation() {
                   <div className="flex-1 min-w-0">
                     <p className="text-xs font-medium text-white/90  truncate transition-colors">{item.product.name}</p>
                     <p className="text-[11px] text-white/50  font-mono transition-colors">×{item.quantity}</p>
+                    {item.product.is_digital && item.product.file_url && (
+                      <a href={item.product.file_url} target="_blank" rel="noreferrer" className="text-xs text-shop-primary hover:underline mt-1 inline-block">
+                        Download File ↓
+                      </a>
+                    )}
                   </div>
                   <p className="text-sm font-semibold text-white  transition-colors">${item.product.price * item.quantity}</p>
                 </div>

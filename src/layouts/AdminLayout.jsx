@@ -6,6 +6,9 @@ const NAV = [
   { id: '/admin/dashboard', label: 'Dashboard', icon: '⬡' },
   { id: '/admin/products', label: 'Products', icon: '□' },
   { id: '/admin/orders', label: 'Orders', icon: '◫' },
+  { id: '/admin/customers', label: 'Customers', icon: '👤' },
+  { id: '/admin/discounts', label: 'Discounts', icon: '🎟️' },
+  { id: '/admin/reviews', label: 'Reviews', icon: '★' },
   { id: '/admin/theme', label: 'Online Store', icon: '✦' },
   { id: '/admin/empty', label: 'Empty States', icon: '◻' },
 ]

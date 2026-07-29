@@ -99,6 +99,12 @@ function Starfield() {
   }, []);
 
   const pointsRef = useRef(null);
+
+  useEffect(() => {
+    return () => {
+      if (starTexture) starTexture.dispose();
+    }
+  }, [starTexture]);
   
   useFrame((state) => {
     if (!pointsRef.current) return;

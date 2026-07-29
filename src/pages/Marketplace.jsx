@@ -19,16 +19,47 @@ const EDITORIALS = [
   { id: 'e3', category: 'Culture', title: 'Coffee & Craftsmanship', snippet: 'Meet the artisans reshaping morning rituals.', image: 'https://images.unsplash.com/photo-1497935586351-b67a49e012bf?w=800&q=80' }
 ]
 
+const UNIVERSAL_DEPARTMENTS = {
+  'Clothing': ['Apparel', 'Clothing', 'T-Shirts', 'Shirts', 'Pants', 'Dresses', 'Accessories', 'Shoes', 'Fashion'],
+  'Stationery': ['Stationery', 'Stationary', 'Office', 'Notebooks', 'Pens', 'Planners', 'Desk', 'Paper'],
+  'Home & Living': ['Home', 'Decor', 'Furniture', 'Lighting', 'Kitchen', 'Bedroom', 'Living'],
+  'Electronics': ['Electronics', 'Tech', 'Gadgets', 'Audio', 'Computers', 'Phones'],
+  'Art & Collectibles': ['Art', 'Collectibles', 'Prints', 'Paintings', 'Sculptures', 'Digital']
+};
+
 export function Marketplace() {
   const navigate = useNavigate()
   const [products, setProducts] = useState([])
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
-  const [selectedCategory, setSelectedCategory] = useState('All')
+  const [selectedDepartment, setSelectedDepartment] = useState('All')
+  const [selectedCategories, setSelectedCategories] = useState([])
+  const [priceRange, setPriceRange] = useState({ min: 0, max: 1000 })
+  const [selectedBrands, setSelectedBrands] = useState([])
+  const [quickFilters, setQuickFilters] = useState({ trending: false, sale: false, freeShipping: false })
+  const [visibleCount, setVisibleCount] = useState(12)
+  const [isFiltersOpen, setIsFiltersOpen] = useState(false)
   const [sortBy, setSortBy] = useState('newest')
   const [isWishlistOpen, setIsWishlistOpen] = useState(false)
   const [newsletterEmail, setNewsletterEmail] = useState('')
   const [toast, setToast] = useState('')
+
+  const toggleCategory = (cat) => {
+    setSelectedCategories(prev => prev.includes(cat) ? prev.filter(c => c !== cat) : [...prev, cat])
+  }
+  
+  const toggleBrand = (brand) => {
+    setSelectedBrands(prev => prev.includes(brand) ? prev.filter(b => b !== brand) : [...prev, brand])
+  }
+  
+  const resetFilters = () => {
+    setSearchQuery('');
+    setSelectedCategories([]);
+    setPriceRange({ min: 0, max: 1000 });
+    setSelectedBrands([]);
+    setQuickFilters({ trending: false, sale: false, freeShipping: false });
+    setVisibleCount(12);
+  }
   const { wishlist, toggleWishlist, isInWishlist } = useWishlist()
   const user = getUserContext()
 
@@ -48,8 +79,25 @@ export function Marketplace() {
     loadProducts()
   }, [])
 
-  const categories = ['All', ...new Set(products.map(p => p.category).filter(Boolean))]
-  
+  const departmentsList = ['All', ...Object.keys(UNIVERSAL_DEPARTMENTS), 'Other'];
+
+  const productsByDepartment = products.filter(p => {
+    if (selectedDepartment === 'All') return true;
+    
+    const productCat = (p.category || '').toLowerCase();
+    
+    if (selectedDepartment === 'Other') {
+      return !Object.values(UNIVERSAL_DEPARTMENTS).some(cats => 
+        cats.some(c => c.toLowerCase() === productCat)
+      );
+    }
+    
+    const departmentCategories = UNIVERSAL_DEPARTMENTS[selectedDepartment] || [];
+    return departmentCategories.some(c => c.toLowerCase() === productCat);
+  });
+
+  const availableCategories = ['All', ...new Set(productsByDepartment.map(p => p.category).filter(Boolean))];
+
   const uniqueBrandsMap = new Map()
   products.forEach(p => {
     if (p.business_name && p.subdomain) {
@@ -60,14 +108,30 @@ export function Marketplace() {
   })
   const brands = Array.from(uniqueBrandsMap.entries()).map(([name, subdomain]) => ({ name, subdomain }))
 
-  const filteredProducts = products
+  const filteredProducts = productsByDepartment
     .filter(p => {
       const bName = p.business_name || '';
       const pName = p.name || '';
       const matchesSearch = pName.toLowerCase().includes(searchQuery.toLowerCase()) || 
                             bName.toLowerCase().includes(searchQuery.toLowerCase());
-      const matchesCategory = selectedCategory === 'All' || p.category === selectedCategory;
-      return matchesSearch && matchesCategory;
+      
+      const matchesCategory = selectedCategories.length === 0 || selectedCategories.includes(p.category);
+      
+      const price = parseFloat(p.price) || 0;
+      const matchesPrice = price >= priceRange.min && price <= priceRange.max;
+      
+      const matchesBrand = selectedBrands.length === 0 || selectedBrands.includes(bName);
+      
+      const pIdStr = String(p.id);
+      const isTrending = pIdStr.includes('1') || pIdStr.includes('5');
+      const isOnSale = pIdStr.includes('3') || pIdStr.includes('7');
+      const isFreeShipping = pIdStr.includes('2') || pIdStr.includes('8') || pIdStr.includes('9');
+      
+      const matchesTrending = !quickFilters.trending || isTrending;
+      const matchesSale = !quickFilters.sale || isOnSale;
+      const matchesShipping = !quickFilters.freeShipping || isFreeShipping;
+
+      return matchesSearch && matchesCategory && matchesPrice && matchesBrand && matchesTrending && matchesSale && matchesShipping;
     })
     .sort((a, b) => {
       if (sortBy === 'price_asc') return parseFloat(a.price) - parseFloat(b.price);
@@ -264,25 +328,58 @@ export function Marketplace() {
           <span className="text-zinc-500 font-mono text-sm">{filteredProducts.length} items</span>
         </div>
         
-        <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
-          <div className="relative w-full md:w-96 flex-shrink-0">
-            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500">🔍</span>
-            <input 
-              type="text" 
-              placeholder="Search products or brands..." 
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-zinc-900 border border-zinc-800 text-white rounded-full pl-11 pr-4 py-3 outline-none focus:border-white/20 focus:ring-1 focus:ring-white/20 transition-all placeholder:text-zinc-600"
-            />
+        <div className="flex flex-col gap-6">
+          <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
+            <div className="flex items-center gap-3 w-full md:w-auto flex-shrink-0">
+              <button 
+                onClick={() => setIsFiltersOpen(true)}
+                className="bg-zinc-900 border border-zinc-800 hover:border-white/20 text-white rounded-full px-5 py-3 text-sm font-medium flex items-center gap-2 transition-all flex-shrink-0 cursor-pointer"
+              >
+                <span>⚙️</span> Filters
+              </button>
+              <div className="relative w-full md:w-80 flex-shrink-0">
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500">🔍</span>
+                <input 
+                  type="text" 
+                  placeholder="Search products..." 
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full bg-zinc-900 border border-zinc-800 text-white rounded-full pl-11 pr-4 py-3 outline-none focus:border-white/20 focus:ring-1 focus:ring-white/20 transition-all placeholder:text-zinc-600"
+                />
+              </div>
+            </div>
+            
+            <div className="flex w-full md:w-auto overflow-x-auto hide-scrollbar pb-2 md:pb-0">
+              <div className="flex items-center gap-2 bg-zinc-900/50 p-1.5 rounded-full border border-white/5">
+                {departmentsList.map(dept => (
+                  <button
+                    key={dept}
+                    onClick={() => {
+                      setSelectedDepartment(dept);
+                      setSelectedCategories([]);
+                      setVisibleCount(12);
+                    }}
+                    className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all duration-300 cursor-pointer ${selectedDepartment === dept ? 'bg-white text-zinc-950 shadow-sm scale-100' : 'text-zinc-400 hover:text-white hover:bg-white/5 scale-95'}`}
+                  >
+                    {dept}
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
           
-          <div className="flex flex-col sm:flex-row gap-4 w-full md:w-auto overflow-x-auto hide-scrollbar pb-2 md:pb-0">
-            <div className="flex items-center gap-2">
-              {categories.map(cat => (
+          <div className="flex flex-col sm:flex-row gap-4 w-full items-center justify-between border-t border-white/5 pt-6">
+            <div className="flex items-center gap-2 overflow-x-auto hide-scrollbar w-full pb-2 md:pb-0">
+              {availableCategories.length > 1 && (
+                <div className="flex items-center gap-2 mr-4 flex-shrink-0">
+                  <span className="text-xs font-mono text-zinc-500 uppercase tracking-widest whitespace-nowrap">Filter by Category:</span>
+                </div>
+              )}
+              {availableCategories.filter(c => c !== 'All').map(cat => (
                 <button
                   key={cat}
-                  onClick={() => setSelectedCategory(cat)}
-                  className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${selectedCategory === cat ? 'bg-white text-zinc-950' : 'bg-zinc-900 text-zinc-400 hover:text-white border border-zinc-800'}`}
+                  onClick={() => toggleCategory(cat)}
+                  className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors cursor-pointer ${selectedCategories.includes(cat) ? 'bg-zinc-800 text-white border-zinc-700' : 'bg-transparent text-zinc-400 hover:text-white border-transparent'} border`}
                 >
                   {cat}
                 </button>
@@ -292,7 +389,7 @@ export function Marketplace() {
             <select 
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value)}
-              className="bg-zinc-900 border border-zinc-800 text-zinc-300 rounded-full px-4 py-2 text-sm outline-none focus:border-white/20 appearance-none cursor-pointer min-w-[140px]"
+              className="bg-zinc-900 border border-zinc-800 text-zinc-300 rounded-full px-4 py-2 text-sm outline-none focus:border-white/20 appearance-none cursor-pointer min-w-[140px] flex-shrink-0"
             >
               <option value="newest">Sort by: Newest</option>
               <option value="price_asc">Price: Low to High</option>
@@ -309,14 +406,41 @@ export function Marketplace() {
             <div className="w-8 h-8 rounded-full border-4 border-white/10 border-t-white animate-spin" />
           </div>
         ) : filteredProducts.length === 0 ? (
-          <div className="text-center py-24 bg-zinc-900/30 rounded-3xl border border-zinc-800/50">
-            <p className="text-zinc-400 text-lg mb-4">No products found matching your criteria.</p>
-            <button onClick={() => {setSearchQuery(''); setSelectedCategory('All')}} className="text-white hover:underline font-medium">Clear all filters</button>
+          <div className="flex flex-col items-center w-full">
+            <div className="w-full text-center py-24 bg-zinc-900/30 rounded-3xl border border-zinc-800/50 mb-16">
+              <p className="text-zinc-400 text-lg mb-6">No products found matching your specific criteria.</p>
+              <button onClick={resetFilters} className="text-zinc-950 bg-white hover:bg-zinc-200 px-8 py-3 rounded-full font-medium transition-colors shadow-lg cursor-pointer">Clear all filters</button>
+            </div>
+            
+            {products.length > 0 && (
+              <div className="w-full">
+                <h3 className="text-2xl font-display font-bold text-white tracking-tight mb-8">Trending Across the Marketplace</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-8 gap-y-12">
+                  {products.slice(0, 4).map((p, i) => (
+                    <motion.div key={p.id} onClick={() => navigate(`/store/${p.subdomain}/product/${p.id}`)} className="group cursor-pointer flex flex-col">
+                      <div className="relative aspect-[4/5] bg-zinc-900 rounded-2xl overflow-hidden mb-5">
+                        <img src={p.image} alt={p.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                        <div className="absolute top-3 left-3 bg-zinc-950/80 backdrop-blur-sm border border-white/10 text-white/90 text-[10px] font-mono tracking-wider px-2.5 py-1 rounded-full uppercase shadow-lg">By {p.business_name}</div>
+                        <button onClick={(e) => { e.stopPropagation(); toggleWishlist(p); }} className={`absolute top-3 right-3 w-8 h-8 backdrop-blur-md rounded-full border flex items-center justify-center transition-all duration-300 translate-x-2 group-hover:translate-x-0 cursor-pointer ${isInWishlist(p.id) ? 'bg-white text-red-500 border-white opacity-100' : 'bg-white/10 border-white/20 text-white hover:bg-white hover:text-red-500 opacity-0 group-hover:opacity-100'}`}>{isInWishlist(p.id) ? '❤️' : '♡'}</button>
+                      </div>
+                      <div className="flex flex-col gap-1.5 px-1">
+                        <div className="flex justify-between items-start gap-4">
+                          <h3 className="font-medium text-white truncate text-base">{p.name}</h3>
+                          <p className="font-mono text-white">${p.price}</p>
+                        </div>
+                        <p className="text-xs text-zinc-500 font-mono tracking-wide uppercase truncate">{p.category}</p>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-8 gap-y-12">
-            <AnimatePresence>
-              {filteredProducts.map((p, i) => (
+          <>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-8 gap-y-12">
+              <AnimatePresence>
+                {filteredProducts.slice(0, visibleCount).map((p, i) => (
                 <motion.div
                   key={p.id}
                   initial={{ opacity: 0, y: 20 }}
@@ -363,6 +487,18 @@ export function Marketplace() {
               ))}
             </AnimatePresence>
           </div>
+          
+          {visibleCount < filteredProducts.length && (
+            <div className="mt-16 flex justify-center">
+              <button 
+                onClick={() => setVisibleCount(prev => prev + 12)}
+                className="bg-transparent border border-white/20 text-white px-8 py-3 rounded-full hover:bg-white hover:text-zinc-950 transition-colors font-medium cursor-pointer shadow-sm hover:shadow-white/20"
+              >
+                Load More Products
+              </button>
+            </div>
+          )}
+          </>
         )}
       </main>
 
@@ -431,6 +567,82 @@ export function Marketplace() {
         </div>
       </footer>
       <WishlistSidebar isOpen={isWishlistOpen} onClose={() => setIsWishlistOpen(false)} wishlist={wishlist} onRemove={toggleWishlist} />
+      
+      {/* Filters Sidebar */}
+      <AnimatePresence>
+        {isFiltersOpen && (
+          <>
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setIsFiltersOpen(false)} className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] cursor-pointer" />
+            <motion.div
+              initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }} transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+              className="fixed top-0 right-0 h-full w-full max-w-md bg-zinc-950 border-l border-white/10 z-[70] shadow-2xl flex flex-col"
+            >
+              <div className="p-6 border-b border-white/10 flex items-center justify-between bg-zinc-950/80 backdrop-blur-md z-10 sticky top-0">
+                <h2 className="text-xl font-display font-bold text-white flex items-center gap-2"><span>⚙️</span> Filters</h2>
+                <button onClick={() => setIsFiltersOpen(false)} className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-white/10 text-white transition-colors cursor-pointer">✕</button>
+              </div>
+              <div className="flex-1 overflow-y-auto p-6 space-y-10 hide-scrollbar">
+                
+                {/* Quick Toggles */}
+                <div>
+                  <h3 className="text-sm font-mono tracking-widest text-zinc-500 uppercase mb-4">Quick Filters</h3>
+                  <div className="space-y-3">
+                    <label className="flex items-center justify-between cursor-pointer group">
+                      <span className="text-white group-hover:text-zinc-300 transition-colors flex items-center gap-2"><span>🔥</span> Trending</span>
+                      <input type="checkbox" checked={quickFilters.trending} onChange={(e) => setQuickFilters(p => ({...p, trending: e.target.checked}))} className="w-5 h-5 rounded border-zinc-700 bg-zinc-900 text-white focus:ring-0 cursor-pointer accent-white" />
+                    </label>
+                    <label className="flex items-center justify-between cursor-pointer group">
+                      <span className="text-white group-hover:text-zinc-300 transition-colors flex items-center gap-2"><span>🏷️</span> On Sale</span>
+                      <input type="checkbox" checked={quickFilters.sale} onChange={(e) => setQuickFilters(p => ({...p, sale: e.target.checked}))} className="w-5 h-5 rounded border-zinc-700 bg-zinc-900 text-white focus:ring-0 cursor-pointer accent-white" />
+                    </label>
+                    <label className="flex items-center justify-between cursor-pointer group">
+                      <span className="text-white group-hover:text-zinc-300 transition-colors flex items-center gap-2"><span>📦</span> Free Shipping</span>
+                      <input type="checkbox" checked={quickFilters.freeShipping} onChange={(e) => setQuickFilters(p => ({...p, freeShipping: e.target.checked}))} className="w-5 h-5 rounded border-zinc-700 bg-zinc-900 text-white focus:ring-0 cursor-pointer accent-white" />
+                    </label>
+                  </div>
+                </div>
+
+                {/* Price Range */}
+                <div>
+                  <h3 className="text-sm font-mono tracking-widest text-zinc-500 uppercase mb-4">Price Range</h3>
+                  <div className="flex items-center gap-4">
+                    <div className="flex-1">
+                      <label className="text-xs text-zinc-500 mb-1 block">Min ($)</label>
+                      <input type="number" value={priceRange.min} onChange={(e) => setPriceRange(p => ({...p, min: Number(e.target.value)}))} className="w-full bg-zinc-900 border border-zinc-800 text-white rounded-lg px-3 py-2 outline-none focus:border-white/20 transition-all" />
+                    </div>
+                    <span className="text-zinc-600 mt-4">-</span>
+                    <div className="flex-1">
+                      <label className="text-xs text-zinc-500 mb-1 block">Max ($)</label>
+                      <input type="number" value={priceRange.max} onChange={(e) => setPriceRange(p => ({...p, max: Number(e.target.value)}))} className="w-full bg-zinc-900 border border-zinc-800 text-white rounded-lg px-3 py-2 outline-none focus:border-white/20 transition-all" />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Brands */}
+                {brands.length > 0 && (
+                  <div>
+                    <h3 className="text-sm font-mono tracking-widest text-zinc-500 uppercase mb-4">Creators & Brands</h3>
+                    <div className="space-y-3 max-h-60 overflow-y-auto pr-2 custom-scrollbar">
+                      {brands.map(b => (
+                        <label key={b.name} className="flex items-center gap-3 cursor-pointer group">
+                          <input type="checkbox" checked={selectedBrands.includes(b.name)} onChange={() => toggleBrand(b.name)} className="w-5 h-5 rounded border-zinc-700 bg-zinc-900 text-white focus:ring-0 cursor-pointer accent-white" />
+                          <span className="text-white group-hover:text-zinc-300 transition-colors text-sm">{b.name}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+              
+              <div className="p-6 border-t border-white/10 bg-zinc-950 flex gap-4">
+                <button onClick={resetFilters} className="flex-1 py-3 px-4 rounded-xl font-semibold text-white bg-zinc-900 hover:bg-zinc-800 transition-colors cursor-pointer">Clear All</button>
+                <button onClick={() => setIsFiltersOpen(false)} className="flex-[2] py-3 px-4 rounded-xl font-semibold text-zinc-950 bg-white hover:bg-zinc-200 transition-colors shadow-lg cursor-pointer">Show {filteredProducts.length} Results</button>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
       {toast && <Toast message={toast} onClose={() => setToast('')} />}
     </div>
   )

@@ -1,4 +1,5 @@
-const API_URL = 'http://localhost:8000/api'
+// Use environment variable if available (local dev), otherwise fallback to relative path (production)
+const API_URL = import.meta.env.VITE_API_URL || '/backend/api'
 
 function getAuthHeaders() {
   const headers = { 'Content-Type': 'application/json' }
@@ -44,11 +45,65 @@ export async function addReview(review, adminId = null, subdomain = null) {
   return await res.json()
 }
 
+export async function updateReview(review, adminId = null) {
+  const res = await fetch(`${API_URL}/reviews.php`, {
+    method: 'PUT',
+    body: JSON.stringify(review),
+    headers: getAuthHeaders(adminId)
+  })
+  return await res.json()
+}
+
+export async function deleteReview(id, adminId = null) {
+  const headers = getAuthHeaders(adminId)
+  const res = await fetch(`${API_URL}/reviews.php?id=${id}`, {
+    method: 'DELETE',
+    headers
+  })
+  return await res.json()
+}
+
 export async function validateDiscount(code) {
   const res = await fetch(`${API_URL}/discounts.php`, {
     method: 'POST',
     body: JSON.stringify({ code }),
     headers: getAuthHeaders()
+  })
+  return await res.json()
+}
+
+export async function getStoredDiscounts(adminId = null) {
+  try {
+    const res = await fetch(`${API_URL}/discounts.php`, { headers: getAuthHeaders(adminId) })
+    if (!res.ok) return []
+    const data = await res.json()
+    return Array.isArray(data) ? data : []
+  } catch (err) { return [] }
+}
+
+export async function addDiscount(discount, adminId = null) {
+  const res = await fetch(`${API_URL}/discounts.php`, {
+    method: 'POST',
+    body: JSON.stringify(discount),
+    headers: getAuthHeaders(adminId)
+  })
+  return await res.json()
+}
+
+export async function updateDiscount(discount, adminId = null) {
+  const res = await fetch(`${API_URL}/discounts.php`, {
+    method: 'PUT',
+    body: JSON.stringify(discount),
+    headers: getAuthHeaders(adminId)
+  })
+  return await res.json()
+}
+
+export async function deleteDiscount(id, adminId = null) {
+  const headers = getAuthHeaders(adminId)
+  const res = await fetch(`${API_URL}/discounts.php?id=${id}`, {
+    method: 'DELETE',
+    headers
   })
   return await res.json()
 }
