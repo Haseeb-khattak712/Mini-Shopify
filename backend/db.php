@@ -21,6 +21,12 @@ try {
     // Fetch assoc array by default
     $db->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
 
+    // Auto-initialize database if empty
+    $check = $db->query("SELECT name FROM sqlite_master WHERE type='table' AND name='users'");
+    if (!$check->fetch()) {
+        require_once __DIR__ . '/init_db.php';
+    }
+
     function getUserId($db, $requireAuth = false) {
         $token = get_bearer_token();
         if ($token) {
