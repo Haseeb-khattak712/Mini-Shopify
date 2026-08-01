@@ -56,19 +56,20 @@ try {
 
     function getUserId($db, $requireAuth = false) {
         $token = get_bearer_token();
+        $jwtUserId = null;
         if ($token) {
             $payload = verify_jwt($token);
             if ($payload && isset($payload['id'])) {
-                return $payload['id'];
+                $jwtUserId = $payload['id'];
             }
         }
 
-        // If auth is required but token missing/invalid, fail immediately
+        // If auth is strictly required, we MUST return the JWT user or fail.
         if ($requireAuth) {
-            return null;
+            return $jwtUserId;
         }
 
-        // For public endpoints, fallback to subdomain
+        // For public endpoints (requireAuth = false), prioritize subdomain over JWT
         $subdomain = $_GET['subdomain'] ?? '';
         if ($subdomain) {
             $stmt = $db->prepare("SELECT id FROM users WHERE subdomain = ?");
@@ -79,7 +80,8 @@ try {
             }
         }
 
-        return null;
+        // Fallback to JWT if no subdomain is provided (e.g., admin previewing their own store without subdomain param)
+        return $jwtUserId;
     }
 } catch (PDOException $e) {
     http_response_code(500);
