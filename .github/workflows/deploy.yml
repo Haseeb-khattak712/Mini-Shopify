@@ -27,7 +27,7 @@ jobs:
 
     - name: Prepare Deployment Folder
       run: |
-        mkdir deploy_package
+        mkdir -p deploy_package
         cp -r dist/* deploy_package/
         cp -r backend deploy_package/
 
