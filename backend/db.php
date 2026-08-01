@@ -25,6 +25,20 @@ try {
     $check = $db->query("SELECT name FROM sqlite_master WHERE type='table' AND name='users'");
     if (!$check->fetch()) {
         require_once __DIR__ . '/init_db.php';
+    } else {
+        // Migration: add missing columns to products table if they don't exist
+        $cols = $db->query("PRAGMA table_info(products)")->fetchAll();
+        $colNames = array_column($cols, 'name');
+        
+        if (!in_array('is_digital', $colNames)) {
+            $db->exec("ALTER TABLE products ADD COLUMN is_digital INTEGER DEFAULT 0");
+        }
+        if (!in_array('file_url', $colNames)) {
+            $db->exec("ALTER TABLE products ADD COLUMN file_url TEXT");
+        }
+        if (!in_array('variant_stock', $colNames)) {
+            $db->exec("ALTER TABLE products ADD COLUMN variant_stock TEXT");
+        }
     }
 
     function getUserId($db, $requireAuth = false) {

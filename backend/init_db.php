@@ -29,7 +29,10 @@ $db->exec("CREATE TABLE IF NOT EXISTS products (
     description TEXT,
     image TEXT,
     sizes TEXT,
-    colors TEXT
+    colors TEXT,
+    is_digital INTEGER DEFAULT 0,
+    file_url TEXT,
+    variant_stock TEXT
 )");
 
 // Create Orders table
@@ -91,7 +94,7 @@ $products = [
         'colors' => json_encode(['Brown', 'Black'])
     ]
 ];
-$insertP = $db->prepare("INSERT INTO products (id, user_id, name, price, stock, category, description, image, sizes, colors) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+$insertP = $db->prepare("INSERT INTO products (id, user_id, name, price, stock, category, description, image, sizes, colors, is_digital, file_url, variant_stock) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, '', '{}')");
 foreach ($products as $p) {
     $insertP->execute([$p['id'], $p['user_id'], $p['name'], $p['price'], $p['stock'], $p['category'], $p['description'], $p['image'], $p['sizes'], $p['colors']]);
 }
