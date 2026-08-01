@@ -1,6 +1,7 @@
 import { useState, Suspense, useEffect, useRef, lazy } from 'react'
 import { motion, useScroll, useTransform, AnimatePresence, useMotionValueEvent, useSpring } from 'framer-motion'
 import { Button, Input } from '@/components/ui/ui'
+import { Menu, X } from 'lucide-react'
 import { HeroScene } from '@/components/shared/HeroScene'
 import { useTilt } from '@/hooks/useTilt'
 
@@ -71,6 +72,8 @@ export function LandingPage() {
   const scale = useTransform(pageScrollProgress, [0, 1], [1, 1.2])
 
   const [navVisible, setNavVisible] = useState(false)
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  
   useMotionValueEvent(heroScrollProgress, "change", (latest) => {
     setNavVisible(latest >= 0.95)
   })
@@ -97,18 +100,60 @@ export function LandingPage() {
           </div>
           <div className="flex items-center gap-3">
             {isAuthenticated() ? (
-              <div className="flex items-center gap-3">
+              <div className="hidden md:flex items-center gap-3">
                 <Button variant="ghost" size="sm" onClick={() => navigate('/login')} className="hover:!bg-white/10 font-medium text-white">Switch Account</Button>
                 <Button size="sm" onClick={() => navigate(isAdmin() ? '/admin' : '/account')} className="!bg-zinc-100 hover:!bg-white !text-zinc-900 hover:scale-105 transition-all">{isAdmin() ? 'Dashboard' : 'Account'}</Button>
               </div>
             ) : (
-              <>
+              <div className="hidden md:flex items-center gap-3">
                 <Button variant="ghost" size="sm" onClick={() => navigate('/login')} className="hover:!bg-white/10 font-medium text-white">Log in</Button>
                 <Button size="sm" onClick={() => navigate('/signup')} className="!bg-gradient-to-br from-shop-accent/10 to-transparent border border-shop-accent/20 shadow-[0_30px_60px_rgba(149,191,71,0.15)] backdrop-blur-md hover:!bg-gradient-to-br from-shop-accent/10 to-transparent border border-shop-accent/20 shadow-[0_30px_60px_rgba(149,191,71,0.15)] backdrop-blur-md/90 text-white hover:scale-105 transition-all shadow-md shadow-shop-primary/20">Start Free</Button>
-              </>
+              </div>
             )}
+            {/* Mobile Menu Toggle */}
+            <button className="md:hidden text-white p-2" onClick={() => setMobileMenuOpen(true)}>
+              <Menu size={24} />
+            </button>
           </div>
         </div>
+
+        {/* Mobile Menu Overlay */}
+        <AnimatePresence>
+          {mobileMenuOpen && (
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="absolute top-0 left-0 w-full h-screen bg-zinc-950/95 backdrop-blur-2xl z-50 flex flex-col p-6 md:hidden"
+            >
+              <div className="flex justify-end mb-8">
+                <button className="text-white p-2" onClick={() => setMobileMenuOpen(false)}>
+                  <X size={28} />
+                </button>
+              </div>
+              <div className="flex flex-col gap-6 text-2xl font-display font-medium text-white/90">
+                <a href="#platform" onClick={() => setMobileMenuOpen(false)} className="hover:text-white transition-colors">Platform</a>
+                <a href="#customization" onClick={() => setMobileMenuOpen(false)} className="hover:text-white transition-colors">Customization</a>
+                <a href="#checkout" onClick={() => setMobileMenuOpen(false)} className="hover:text-white transition-colors">Checkout</a>
+                <Link to="/pricing" onClick={() => setMobileMenuOpen(false)} className="hover:text-white transition-colors">Pricing</Link>
+                <Link to="/marketplace" onClick={() => setMobileMenuOpen(false)} className="text-shop-accent transition-colors">Marketplace</Link>
+              </div>
+              <div className="mt-auto flex flex-col gap-4">
+                {isAuthenticated() ? (
+                  <>
+                    <Button onClick={() => navigate(isAdmin() ? '/admin' : '/account')} className="w-full !bg-zinc-100 !text-zinc-900 py-6 text-lg">{isAdmin() ? 'Dashboard' : 'Account'}</Button>
+                    <Button variant="outline" onClick={() => navigate('/login')} className="w-full text-white border-white/20 py-6 text-lg">Switch Account</Button>
+                  </>
+                ) : (
+                  <>
+                    <Button onClick={() => navigate('/signup')} className="w-full !bg-shop-accent !text-shop-primary py-6 text-lg">Start Free Trial</Button>
+                    <Button variant="outline" onClick={() => navigate('/login')} className="w-full text-white border-white/20 py-6 text-lg">Log in</Button>
+                  </>
+                )}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </nav>
 
       {/* SECTION 1: HERO (Scroll Sequence Stage) */}
@@ -130,12 +175,16 @@ export function LandingPage() {
                 The premier platform for ambitious brands to create, manage, and scale their online business globally.
               </p>
               <div className="flex flex-wrap gap-5">
-                <Button size="lg" onClick={() => navigate('/signup')} className="bg-white !text-zinc-950 hover:bg-white/10 hover:!text-white hover:scale-[1.02] transition-all text-lg lg:text-xl px-10 h-14 lg:h-16 rounded-full border-none font-semibold shadow-[0_0_40px_rgba(255,255,255,0.15)]">
-                  Start free trial
-                </Button>
-                <Button variant="outline" size="lg" onClick={() => navigate('/store/demo')} className="hover:scale-[1.02] transition-all bg-gradient-to-br from-white/[0.08] to-transparent border border-white/10 shadow-[0_30px_60px_rgba(0,0,0,0.6)] backdrop-blur-md hover:bg-black/40 backdrop-blur-md border border-white/20 text-white text-lg lg:text-xl px-10 h-14 lg:h-16 rounded-full font-medium">
-                  Watch demo
-                </Button>
+                <motion.div whileTap={{ scale: 0.95 }}>
+                  <Button size="lg" onClick={() => navigate('/signup')} className="bg-white !text-zinc-950 hover:bg-white/10 hover:!text-white hover:scale-[1.02] transition-all text-lg lg:text-xl px-10 h-14 lg:h-16 rounded-full border-none font-semibold shadow-[0_0_40px_rgba(255,255,255,0.15)]">
+                    Start free trial
+                  </Button>
+                </motion.div>
+                <motion.div whileTap={{ scale: 0.95 }}>
+                  <Button variant="outline" size="lg" onClick={() => navigate('/store/demo')} className="hover:scale-[1.02] transition-all bg-gradient-to-br from-white/[0.08] to-transparent border border-white/10 shadow-[0_30px_60px_rgba(0,0,0,0.6)] backdrop-blur-md hover:bg-black/40 backdrop-blur-md border border-white/20 text-white text-lg lg:text-xl px-10 h-14 lg:h-16 rounded-full font-medium">
+                    Watch demo
+                  </Button>
+                </motion.div>
               </div>
             </motion.div>
 
