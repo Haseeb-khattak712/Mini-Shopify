@@ -1,7 +1,6 @@
 import { useState, Suspense, useEffect, useRef, lazy } from 'react'
 import { motion, useScroll, useTransform, AnimatePresence, useMotionValueEvent, useSpring } from 'framer-motion'
 import { Button, Input } from '@/components/ui/ui'
-import { Menu, X } from 'lucide-react'
 import { HeroScene } from '@/components/shared/HeroScene'
 import { useTilt } from '@/hooks/useTilt'
 
@@ -112,7 +111,7 @@ export function LandingPage() {
             )}
             {/* Mobile Menu Toggle */}
             <button className="md:hidden text-white p-2" onClick={() => setMobileMenuOpen(true)}>
-              <Menu size={24} />
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/></svg>
             </button>
           </div>
         </div>
@@ -128,7 +127,7 @@ export function LandingPage() {
             >
               <div className="flex justify-end mb-8">
                 <button className="text-white p-2" onClick={() => setMobileMenuOpen(false)}>
-                  <X size={28} />
+                  <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
                 </button>
               </div>
               <div className="flex flex-col gap-6 text-2xl font-display font-medium text-white/90">
