@@ -12,10 +12,11 @@ export default function ScrollSequenceBackground({ scrollYProgress }) {
 
   // Preload images
   useEffect(() => {
-    const loadedImages = [];
+    const loadedImages = new Array(FRAME_COUNT);
     let loadedCount = 0;
     
-    for (let i = 0; i < FRAME_COUNT; i++) {
+    // Prioritize frame 0 so it displays instantly
+    const loadFrame = (i) => {
       const img = new Image();
       const frameNum = String(i).padStart(5, '0');
       img.src = `/frames/frame_${frameNum}.jpg`;
@@ -23,54 +24,91 @@ export default function ScrollSequenceBackground({ scrollYProgress }) {
       img.onload = () => {
         loadedCount++;
         setImagesLoaded(loadedCount);
+        // Force a draw if this is the first frame
+        if (i === 0 || i === frameRef.current) {
+          if (rafRef.current) cancelAnimationFrame(rafRef.current);
+          rafRef.current = requestAnimationFrame(() => drawFrame(frameRef.current));
+        }
       };
-      loadedImages.push(img);
+      loadedImages[i] = img;
+    };
+
+    // Load frame 0 immediately
+    loadFrame(0);
+
+    // Then load the rest
+    for (let i = 1; i < FRAME_COUNT; i++) {
+      loadFrame(i);
     }
+    
     setImages(loadedImages);
   }, []);
 
   // Function to draw a specific frame
   const drawFrame = useCallback((index) => {
-    if (!canvasRef.current || !images[index] || !images[index].complete || images[index].naturalHeight === 0) return;
+    if (!canvasRef.current || !images[index] || !images[index].complete || images[index].naturalHeight === 0) {
+      // If the exact frame isn't loaded yet, try to find the closest loaded frame
+      let closest = -1;
+      for (let i = index; i >= 0; i--) {
+        if (images[i]?.complete && images[i].naturalHeight > 0) {
+          closest = i;
+          break;
+        }
+      }
+      if (closest === -1) return; // Nothing loaded yet
+      index = closest;
+    }
     
     const canvas = canvasRef.current;
-    const ctx = canvas.getContext('2d', { alpha: false }); // Optimize by disabling alpha channel if not needed
+    const ctx = canvas.getContext('2d', { alpha: false });
     const img = images[index];
+    
+    const dpr = window.devicePixelRatio || 1;
+    
+    // CSS dimensions
+    const cssWidth = window.innerWidth;
+    const cssHeight = window.innerHeight;
 
     // Cover behavior (like object-fit: cover)
-    const scale = Math.max(canvas.width / img.width, canvas.height / img.height);
-    const x = (canvas.width / 2) - (img.width / 2) * scale;
-    const y = (canvas.height / 2) - (img.height / 2) * scale;
+    const scale = Math.max(cssWidth / img.width, cssHeight / img.height);
+    const x = (cssWidth / 2) - (img.width / 2) * scale;
+    const y = (cssHeight / 2) - (img.height / 2) * scale;
 
-    // Use fillRect instead of clearRect for performance, or just drawImage if it covers everything
+    ctx.fillStyle = '#000000';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    
+    // Draw using transformed coordinates for retina
+    ctx.save();
+    ctx.scale(dpr, dpr);
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
     ctx.drawImage(img, x, y, img.width * scale, img.height * scale);
-  }, [images, imagesLoaded]);
+    ctx.restore();
+  }, [images]);
 
   // Handle Resize and Initial Draw
   useEffect(() => {
-    // Only initialize canvas dimensions if not set
-    const canvas = canvasRef.current;
-    if (canvas && canvas.width === 0) {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
-    }
-    drawFrame(frameRef.current);
-    
     const handleResize = () => {
+      const canvas = canvasRef.current;
       if (canvas) {
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
+        const dpr = window.devicePixelRatio || 1;
+        canvas.width = window.innerWidth * dpr;
+        canvas.height = window.innerHeight * dpr;
+        canvas.style.width = `${window.innerWidth}px`;
+        canvas.style.height = `${window.innerHeight}px`;
       }
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
       rafRef.current = requestAnimationFrame(() => drawFrame(frameRef.current));
     };
+    
+    handleResize(); // Initial setup
     
     window.addEventListener('resize', handleResize);
     return () => {
       window.removeEventListener('resize', handleResize);
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
     };
-  }, [imagesLoaded, drawFrame]);
+  }, [drawFrame]);
 
   // Handle scroll updates using rAF
   useMotionValueEvent(scrollYProgress, "change", (latest) => {
@@ -91,12 +129,13 @@ export default function ScrollSequenceBackground({ scrollYProgress }) {
     <div className="absolute inset-0 w-full h-full bg-black z-0 pointer-events-none">
       <canvas 
         ref={canvasRef} 
-        className="w-full h-full object-cover opacity-60"
+        className="absolute top-0 left-0 w-full h-full object-cover opacity-90 transition-opacity duration-1000"
+        style={{ opacity: imagesLoaded > 0 ? 0.9 : 0 }}
       />
-      {/* Loading state indicator */}
-      {imagesLoaded < FRAME_COUNT && (
-        <div className="absolute inset-0 flex items-center justify-center text-white/50 text-sm font-mono bg-black">
-          Loading assets: {Math.round((imagesLoaded / FRAME_COUNT) * 100)}%
+      {/* We removed the full screen blocking loader so it displays instantly */}
+      {imagesLoaded < FRAME_COUNT && imagesLoaded > 0 && (
+        <div className="absolute bottom-4 right-4 text-white/30 text-xs font-mono bg-black/50 px-2 py-1 rounded">
+          Buffering {Math.round((imagesLoaded / FRAME_COUNT) * 100)}%
         </div>
       )}
       
