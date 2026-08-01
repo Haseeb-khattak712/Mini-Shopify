@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { getMarketplaceProducts, getUserContext } from '@/services/storage'
 import { useWishlist } from '@/hooks/useWishlist'
@@ -41,8 +41,14 @@ export function Marketplace() {
   const [isFiltersOpen, setIsFiltersOpen] = useState(false)
   const [sortBy, setSortBy] = useState('newest')
   const [isWishlistOpen, setIsWishlistOpen] = useState(false)
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [newsletterEmail, setNewsletterEmail] = useState('')
   const [toast, setToast] = useState('')
+
+  // Close mobile menu on route change if needed
+  useEffect(() => {
+    setIsMobileMenuOpen(false)
+  }, [useLocation().pathname])
 
   const toggleCategory = (cat) => {
     setSelectedCategories(prev => prev.includes(cat) ? prev.filter(c => c !== cat) : [...prev, cat])
@@ -155,7 +161,7 @@ export function Marketplace() {
             <img src="/logo.png" alt="OwnStore" className="w-8 h-8 object-contain mix-blend-luminosity group-hover:mix-blend-normal transition-all duration-300" />
             <span className="font-logo font-black text-xl tracking-tighter text-white">OwnStore</span>
           </div>
-          <div className="flex gap-4 items-center">
+          <div className="hidden sm:flex gap-4 items-center">
             <button onClick={() => setIsWishlistOpen(true)} className="text-sm font-medium text-white/70 hover:text-red-400 transition-colors flex items-center gap-1.5 cursor-pointer">
               <span>❤️</span> {wishlist.length > 0 && <span className="font-mono text-[10px] bg-white/10 px-1.5 py-0.5 rounded-full leading-none">{wishlist.length}</span>}
             </button>
@@ -172,7 +178,44 @@ export function Marketplace() {
               Start Selling
             </button>
           </div>
+          <div className="flex sm:hidden items-center gap-3">
+            <button onClick={() => setIsWishlistOpen(true)} className="text-sm font-medium text-white/70 hover:text-red-400 transition-colors flex items-center gap-1.5 cursor-pointer">
+              <span>❤️</span> {wishlist.length > 0 && <span className="font-mono text-[10px] bg-white/10 px-1.5 py-0.5 rounded-full leading-none">{wishlist.length}</span>}
+            </button>
+            <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="text-white/80 hover:text-white p-1">
+              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={isMobileMenuOpen ? "M6 18L18 6M6 6l12 12" : "M4 6h16M4 12h16M4 18h16"} />
+              </svg>
+            </button>
+          </div>
         </div>
+        
+        {/* Mobile Nav Drawer */}
+        <AnimatePresence>
+          {isMobileMenuOpen && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              className="sm:hidden border-t border-white/5 bg-zinc-900/95 backdrop-blur-xl overflow-hidden"
+            >
+              <div className="flex flex-col p-4 gap-3">
+                {user ? (
+                  <button onClick={() => navigate('/account')} className="w-full text-left px-4 py-3 rounded-lg text-sm font-medium text-white/80 hover:bg-white/10 transition-colors">
+                    Account
+                  </button>
+                ) : (
+                  <button onClick={() => navigate('/login')} className="w-full text-left px-4 py-3 rounded-lg text-sm font-medium text-white/80 hover:bg-white/10 transition-colors">
+                    Sign In
+                  </button>
+                )}
+                <button onClick={() => navigate('/signup')} className="w-full text-center text-sm font-medium bg-white text-zinc-950 px-4 py-3 rounded-lg hover:bg-zinc-200 transition-colors">
+                  Start Selling
+                </button>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </nav>
 
       {/* 2. Dynamic Hero Section */}
@@ -417,7 +460,7 @@ export function Marketplace() {
                 <h3 className="text-2xl font-display font-bold text-white tracking-tight mb-8">Trending Across the Marketplace</h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-8 gap-y-12">
                   {products.slice(0, 4).map((p, i) => (
-                    <motion.div key={p.id} onClick={() => navigate(`/store/${p.subdomain}/product/${p.id}`)} className="group cursor-pointer flex flex-col">
+                    <motion.div key={p.id} onClick={() => navigate(`/store/${p.subdomain}/product/${p.id}`)} whileTap={{ scale: 0.98 }} className="group cursor-pointer flex flex-col">
                       <div className="relative aspect-[4/5] bg-zinc-900 rounded-2xl overflow-hidden mb-5">
                         <img src={p.image} alt={p.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
                         <div className="absolute top-3 left-3 bg-zinc-950/80 backdrop-blur-sm border border-white/10 text-white/90 text-[10px] font-mono tracking-wider px-2.5 py-1 rounded-full uppercase shadow-lg">By {p.business_name}</div>
@@ -447,6 +490,7 @@ export function Marketplace() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: (i % 10) * 0.05 }}
                   onClick={() => navigate(`/store/${p.subdomain}/product/${p.id}`)}
+                  whileTap={{ scale: 0.98 }}
                   className="group cursor-pointer flex flex-col"
                 >
                   <div className="relative aspect-[4/5] bg-zinc-900 rounded-2xl overflow-hidden mb-5">

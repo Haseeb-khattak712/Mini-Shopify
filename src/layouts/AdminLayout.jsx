@@ -1,5 +1,6 @@
-import { Fragment } from 'react'
+import { useState, useEffect } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { motion, AnimatePresence } from 'framer-motion'
 import { logout, getUserContext } from '@/services/storage'
 
 const NAV = [
@@ -17,6 +18,12 @@ export function AdminLayout({ children }) {
   const location = useLocation()
   const navigate = useNavigate()
   const user = getUserContext()
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+
+  // Close mobile menu on route change
+  useEffect(() => {
+    setIsMobileMenuOpen(false)
+  }, [location.pathname])
 
   const handleLogout = () => {
     logout()
@@ -24,11 +31,39 @@ export function AdminLayout({ children }) {
   }
 
   return (
-    <div className="flex h-screen bg-transparent transition-colors">
+    <div className="flex h-screen bg-transparent transition-colors md:flex-row flex-col">
+      {/* Mobile Header */}
+      <header className="md:hidden flex items-center justify-between p-4 border-b border-zinc-800/60 bg-zinc-950/80 backdrop-blur-xl z-30">
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 rounded-lg bg-zinc-100 flex items-center justify-center text-zinc-950 text-sm font-bold shadow-[0_0_15px_rgba(255,255,255,0.1)]">
+            {user?.business_name?.charAt(0)?.toUpperCase() || 'S'}
+          </div>
+          <p className="text-sm font-semibold text-zinc-100 font-display tracking-tight">{user?.business_name || 'OwnStore'}</p>
+        </div>
+        <button onClick={() => setIsMobileMenuOpen(true)} className="p-2 text-zinc-400 hover:text-white hover:bg-white/10 rounded-lg">
+          <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+          </svg>
+        </button>
+      </header>
+
+      {/* Overlay */}
+      <AnimatePresence>
+        {isMobileMenuOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setIsMobileMenuOpen(false)}
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 md:hidden"
+          />
+        )}
+      </AnimatePresence>
+
       {/* Sidebar */}
-      <aside className="w-64 bg-[#18181b]/40 backdrop-blur-xl border-r border-zinc-800/60 flex flex-col shrink-0 transition-colors">
+      <aside className={`fixed inset-y-0 left-0 z-50 w-64 bg-[#18181b] md:bg-[#18181b]/40 md:backdrop-blur-xl border-r border-zinc-800/60 flex flex-col shrink-0 transition-transform duration-300 md:relative md:translate-x-0 ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}>
         {/* Brand */}
-        <div className="px-6 py-5 border-b border-zinc-800/60 transition-colors">
+        <div className="px-6 py-5 border-b border-zinc-800/60 transition-colors flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-[10px] bg-zinc-100 flex items-center justify-center text-zinc-950 text-sm font-bold shadow-[0_0_15px_rgba(255,255,255,0.1)] border border-zinc-200/50">
               {user?.business_name?.charAt(0)?.toUpperCase() || 'S'}
@@ -38,10 +73,11 @@ export function AdminLayout({ children }) {
               <p className="text-[11px] text-zinc-500 font-mono mt-1 truncate">{user?.subdomain || 'demo'}.ownstore.com</p>
             </div>
           </div>
+          <button onClick={() => setIsMobileMenuOpen(false)} className="md:hidden p-1 text-zinc-500 hover:text-white rounded-md">✕</button>
         </div>
 
         {/* Nav */}
-        <nav className="flex-1 px-4 py-6 flex flex-col gap-1">
+        <nav className="flex-1 px-4 py-6 flex flex-col gap-1 overflow-y-auto">
           <p className="text-[10px] font-mono font-medium text-zinc-500 uppercase tracking-widest px-2 mb-3">Management</p>
           {NAV.map(item => {
             const isActive = location.pathname === item.id

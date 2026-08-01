@@ -88,9 +88,12 @@ function StoreNav({ cartCount, theme }) {
   const navigate = useNavigate()
   const { subdomain } = useParams()
   const { setIsCartOpen } = useOutletContext()
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+
   useEffect(() => {
     setIsCartOpen(false) // Close cart on route changes if necessary, or just rely on context
-  }, [])
+    setIsMobileMenuOpen(false) // Close menu on route changes
+  }, [useLocation().pathname])
 
   const storeName = theme?.storeName || subdomain?.replace('-', ' ') || 'OwnStore'
   const storeInitial = theme?.storeName ? theme.storeName.charAt(0).toUpperCase() : (subdomain?.charAt(0)?.toUpperCase() || 'S')
@@ -113,33 +116,68 @@ function StoreNav({ cartCount, theme }) {
               <p className="text-[10px] text-white/50 font-mono mt-0.5">{subdomain || 'demo'}.ownstore.com</p>
             </div>
           </button>
-        <div className="flex items-center gap-3">
-          <button onClick={() => navigate('/marketplace')} className="hidden sm:flex px-4 py-2 rounded-lg text-sm font-medium text-white/70 hover:bg-white/10 transition-colors">
-            ← Marketplace
-          </button>
-          {isAuthenticated() ? (
-            <button onClick={() => navigate(`/account`)} className="px-4 py-2 rounded-lg text-sm font-medium text-white/70  hover:bg-white/10  transition-colors">
-              Account
+          <div className="hidden sm:flex items-center gap-3">
+            <button onClick={() => navigate('/marketplace')} className="px-4 py-2 rounded-lg text-sm font-medium text-white/70 hover:bg-white/10 transition-colors">
+              ← Marketplace
             </button>
-          ) : (
-            <button onClick={() => navigate(`/login`)} className="px-4 py-2 rounded-lg text-sm font-medium text-white/70  hover:bg-white/10  transition-colors">
-              Login
-            </button>
-          )}
-          <button
-            onClick={() => setIsCartOpen(true)}
-            className="relative flex items-center gap-2 bg-zinc-950  hover:bg-white/10  border border-white/10  rounded-[10px] px-4 py-2 text-sm font-medium text-white/80  cursor-pointer transition-colors"
-          >
-            🛒 Cart
-            {cartCount > 0 && (
-              <span className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-shop-primary text-white text-[10px] font-bold rounded-full flex items-center justify-center font-mono"
-                style={{ animation: 'badgePop 0.3s cubic-bezier(0.34,1.56,0.64,1)' }}>
-                {cartCount}
-              </span>
+            {isAuthenticated() ? (
+              <button onClick={() => navigate(`/account`)} className="px-4 py-2 rounded-lg text-sm font-medium text-white/70 hover:bg-white/10 transition-colors">
+                Account
+              </button>
+            ) : (
+              <button onClick={() => navigate(`/login`)} className="px-4 py-2 rounded-lg text-sm font-medium text-white/70 hover:bg-white/10 transition-colors">
+                Login
+              </button>
             )}
-          </button>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setIsCartOpen(true)}
+              className="relative flex items-center gap-2 bg-zinc-950 hover:bg-white/10 border border-white/10 rounded-[10px] px-3 md:px-4 py-2 text-sm font-medium text-white/80 cursor-pointer transition-colors"
+            >
+              🛒 <span className="hidden md:inline">Cart</span>
+              {cartCount > 0 && (
+                <span className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-shop-primary text-white text-[10px] font-bold rounded-full flex items-center justify-center font-mono"
+                  style={{ animation: 'badgePop 0.3s cubic-bezier(0.34,1.56,0.64,1)' }}>
+                  {cartCount}
+                </span>
+              )}
+            </button>
+            <button
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              className="sm:hidden p-2 text-white/80 hover:bg-white/10 rounded-lg transition-colors"
+            >
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={isMobileMenuOpen ? "M6 18L18 6M6 6l12 12" : "M4 6h16M4 12h16M4 18h16"} />
+              </svg>
+            </button>
+          </div>
         </div>
-      </div>
+        <AnimatePresence>
+          {isMobileMenuOpen && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              className="sm:hidden border-t border-white/10 overflow-hidden bg-zinc-900/95 backdrop-blur-xl"
+            >
+              <div className="flex flex-col p-4 gap-2">
+                <button onClick={() => navigate('/marketplace')} className="w-full text-left px-4 py-3 rounded-lg text-sm font-medium text-white/80 hover:bg-white/10 transition-colors">
+                  ← Marketplace
+                </button>
+                {isAuthenticated() ? (
+                  <button onClick={() => navigate(`/account`)} className="w-full text-left px-4 py-3 rounded-lg text-sm font-medium text-white/80 hover:bg-white/10 transition-colors">
+                    Account
+                  </button>
+                ) : (
+                  <button onClick={() => navigate(`/login`)} className="w-full text-left px-4 py-3 rounded-lg text-sm font-medium text-white/80 hover:bg-white/10 transition-colors">
+                    Login
+                  </button>
+                )}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       <style>{`@keyframes badgePop { from { transform:scale(0) } to { transform:scale(1) } }`}</style>
       </header>
     </>
@@ -162,11 +200,12 @@ const ProductCard3D = memo(function ProductCard3D({ product, onAddToCart, onQuic
   }
 
   return (
-    <div
+    <motion.div
       ref={tilt.ref}
       onMouseMove={tilt.onMouseMove}
       onMouseLeave={tilt.onMouseLeave}
       onClick={() => navigate(`/store/${subdomain}/product/${product.id}`)}
+      whileTap={{ scale: 0.98 }}
       className="bg-zinc-900/50  border border-white/10  rounded-[10px] overflow-visible cursor-pointer group transition-colors"
       style={{ transformStyle: 'preserve-3d', willChange: 'transform', transition: 'box-shadow 0.2s, background-color 0.2s, border-color 0.2s' }}
     >
@@ -231,7 +270,7 @@ const ProductCard3D = memo(function ProductCard3D({ product, onAddToCart, onQuic
           </button>
         </div>
       </div>
-    </div>
+    </motion.div>
   )
 })
 

@@ -1,4 +1,5 @@
 import React, { useMemo } from 'react'
+import { motion } from 'framer-motion'
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, FunnelChart, Funnel, LabelList, BarChart, Bar } from 'recharts'
 import { Card, StatusBadge } from '@/components/ui/ui'
 import { useTilt } from '@/hooks/useTilt'
@@ -8,10 +9,11 @@ import { getUserContext } from '@/services/storage'
 function Stat3DCard({ label, value, change, positive, icon, color }) {
   const tilt = useTilt(10)
   return (
-    <div
+    <motion.div
       ref={tilt.ref}
       onMouseMove={tilt.onMouseMove}
       onMouseLeave={tilt.onMouseLeave}
+      whileTap={{ scale: 0.95 }}
       className="bg-[#18181b]/80 backdrop-blur-xl border border-zinc-800 rounded-2xl p-5 cursor-default shadow-xl shadow-black/20 transition-all duration-300"
       style={{ transformStyle: 'preserve-3d', willChange: 'transform' }}
     >
@@ -25,7 +27,7 @@ function Stat3DCard({ label, value, change, positive, icon, color }) {
       </div>
       <p className="text-3xl font-bold text-zinc-100 font-display tracking-tight" style={{ transform: 'translateZ(14px)' }}>{value}</p>
       <p className="text-sm text-zinc-500 mt-1" style={{ transform: 'translateZ(8px)' }}>{label}</p>
-    </div>
+    </motion.div>
   )
 }
 
@@ -70,15 +72,15 @@ export function AdminDashboard() {
   ], [orders.length])
 
   return (
-    <div className="p-8" style={{ perspective: '1200px' }}>
+    <div className="p-4 md:p-8 overflow-x-hidden" style={{ perspective: '1200px' }}>
       {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold font-display text-zinc-100 tracking-tight transition-colors">{user?.business_name || 'Dashboard'}</h1>
-        <p className="text-sm text-zinc-500 mt-1 transition-colors">Welcome back, {user?.email}</p>
+      <div className="mb-6 md:mb-8 pt-14 md:pt-0">
+        <h1 className="text-2xl md:text-3xl font-bold font-display text-zinc-100 tracking-tight transition-colors">{user?.business_name || 'Dashboard'}</h1>
+        <p className="text-xs md:text-sm text-zinc-500 mt-1 transition-colors">Welcome back, {user?.email}</p>
       </div>
 
       {/* Stats — 3D tilt cards */}
-      <div className="grid grid-cols-2 xl:grid-cols-5 gap-6 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-4 md:gap-6 mb-8">
         <Stat3DCard label="Total Revenue" value={`$${totalRevenue.toLocaleString()}`} change="18%" positive icon="💰" color="bg-emerald-500/10 text-emerald-400" />
         <Stat3DCard label="Average Order Value" value={`$${averageOrderValue}`} icon="📈" color="bg-indigo-500/10 text-indigo-400" />
         <Stat3DCard label="Orders Today" value={String(ordersToday || '—')} change="5%" positive icon="📦" color="bg-blue-500/10 text-blue-400" />
