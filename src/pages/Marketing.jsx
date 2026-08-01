@@ -63,8 +63,8 @@ export function LandingPage() {
   })
   
   const heroScrollProgress = useSpring(rawHeroScrollProgress, {
-    stiffness: 100,
-    damping: 30,
+    stiffness: 400,
+    damping: 40,
     restDelta: 0.001
   });
 
@@ -160,7 +160,7 @@ export function LandingPage() {
         {/* Sticky wrapper */}
         <div className="sticky top-0 h-screen overflow-hidden flex items-center">
 
-          <ScrollSequenceBackground scrollYProgress={heroScrollProgress} />
+          <ScrollSequenceBackground scrollYProgress={rawHeroScrollProgress} />
 
           <div className="relative z-10 mx-auto max-w-[1728px] w-full px-6 md:px-10 lg:px-16 xl:px-20 2xl:px-24 grid lg:grid-cols-12 gap-12 items-center">
             <motion.div
