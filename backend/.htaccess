@@ -6,3 +6,8 @@
 
 # Allow CORS if needed at Apache level, though PHP handles it in db.php
 # Header set Access-Control-Allow-Origin "*"
+
+# Ensure Authorization header is passed to PHP (required for JWT on FastCGI/shared hosting)
+RewriteEngine On
+RewriteCond %{HTTP:Authorization} ^(.*)
+RewriteRule .* - [e=HTTP_AUTHORIZATION:%1]
