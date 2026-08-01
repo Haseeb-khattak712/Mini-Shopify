@@ -48,10 +48,14 @@ $filename = uniqid('file_') . '_' . time() . '.' . $ext;
 $targetPath = $uploadDir . $filename;
 
 if (move_uploaded_file($file['tmp_name'], $targetPath)) {
-    // Generate public URL
+    // Generate public URL relative to where the API is hosted
     $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https://' : 'http://';
     $host = $_SERVER['HTTP_HOST'] ?? 'localhost:8000';
-    $url = $protocol . $host . '/uploads/' . $filename;
+    $base_path = dirname(dirname($_SERVER['SCRIPT_NAME'])); // normally /backend
+    $base_path = str_replace('\\', '/', $base_path);
+    if ($base_path === '/' || $base_path === '\\') $base_path = '';
+    
+    $url = $protocol . $host . $base_path . '/uploads/' . $filename;
     
     echo json_encode(['success' => true, 'url' => $url]);
 } else {
