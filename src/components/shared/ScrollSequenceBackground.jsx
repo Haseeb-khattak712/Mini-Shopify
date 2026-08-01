@@ -31,7 +31,7 @@ export default function ScrollSequenceBackground({ scrollYProgress }) {
 
   // Function to draw a specific frame
   const drawFrame = useCallback((index) => {
-    if (!canvasRef.current || !images[index] || imagesLoaded < FRAME_COUNT) return;
+    if (!canvasRef.current || !images[index] || !images[index].complete || images[index].naturalHeight === 0) return;
     
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d', { alpha: false }); // Optimize by disabling alpha channel if not needed
@@ -48,34 +48,32 @@ export default function ScrollSequenceBackground({ scrollYProgress }) {
 
   // Handle Resize and Initial Draw
   useEffect(() => {
-    if (imagesLoaded === FRAME_COUNT) {
-      const canvas = canvasRef.current;
+    // Only initialize canvas dimensions if not set
+    const canvas = canvasRef.current;
+    if (canvas && canvas.width === 0) {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+    drawFrame(frameRef.current);
+    
+    const handleResize = () => {
       if (canvas) {
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
       }
-      drawFrame(frameRef.current);
-      
-      const handleResize = () => {
-        if (canvas) {
-          canvas.width = window.innerWidth;
-          canvas.height = window.innerHeight;
-        }
-        if (rafRef.current) cancelAnimationFrame(rafRef.current);
-        rafRef.current = requestAnimationFrame(() => drawFrame(frameRef.current));
-      };
-      
-      window.addEventListener('resize', handleResize);
-      return () => {
-        window.removeEventListener('resize', handleResize);
-        if (rafRef.current) cancelAnimationFrame(rafRef.current);
-      };
-    }
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+      rafRef.current = requestAnimationFrame(() => drawFrame(frameRef.current));
+    };
+    
+    window.addEventListener('resize', handleResize);
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    };
   }, [imagesLoaded, drawFrame]);
 
   // Handle scroll updates using rAF
   useMotionValueEvent(scrollYProgress, "change", (latest) => {
-    if (imagesLoaded < FRAME_COUNT) return;
     
     const nextFrameIndex = Math.min(
       FRAME_COUNT - 1,
