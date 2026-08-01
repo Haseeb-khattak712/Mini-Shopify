@@ -5,6 +5,7 @@ $db->exec("DROP TABLE IF EXISTS orders");
 $db->exec("DROP TABLE IF EXISTS reviews");
 $db->exec("DROP TABLE IF EXISTS users");
 $db->exec("DROP TABLE IF EXISTS customers"); // no longer needed
+$db->exec("DROP TABLE IF EXISTS discounts");
 
 // Create unified Users table
 $db->exec("CREATE TABLE IF NOT EXISTS users (
@@ -56,6 +57,16 @@ $db->exec("CREATE TABLE IF NOT EXISTS reviews (
     rating INTEGER NOT NULL,
     text TEXT,
     date TEXT NOT NULL
+)");
+
+// Create Discounts table
+$db->exec("CREATE TABLE IF NOT EXISTS discounts (
+    id TEXT PRIMARY KEY,
+    user_id TEXT NOT NULL,
+    code TEXT NOT NULL,
+    type TEXT NOT NULL,
+    value REAL NOT NULL,
+    active INTEGER DEFAULT 1
 )");
 
 // Seed demo admin user

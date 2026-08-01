@@ -29,6 +29,16 @@ try {
     if (!$check->fetch()) {
         require_once __DIR__ . '/init_db.php';
     } else {
+        // Migration: Create discounts table if it doesn't exist
+        $db->exec("CREATE TABLE IF NOT EXISTS discounts (
+            id TEXT PRIMARY KEY,
+            user_id TEXT NOT NULL,
+            code TEXT NOT NULL,
+            type TEXT NOT NULL,
+            value REAL NOT NULL,
+            active INTEGER DEFAULT 1
+        )");
+
         // Migration: add missing columns to products table if they don't exist
         $cols = $db->query("PRAGMA table_info(products)")->fetchAll();
         $colNames = array_column($cols, 'name');
