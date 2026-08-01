@@ -1,8 +1,0 @@
-# Deny access to SQLite database files
-<FilesMatch "\.(sqlite|db)$">
-    Order allow,deny
-    Deny from all
-</FilesMatch>
-
-# Allow CORS if needed at Apache level, though PHP handles it in db.php
-# Header set Access-Control-Allow-Origin "*"

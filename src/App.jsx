@@ -1,4 +1,4 @@
-import React, { useState, useEffect, Suspense, lazy } from 'react'
+import React, { useState, useEffect, useMemo, Suspense, lazy } from 'react'
 import { BrowserRouter, Routes, Route, Navigate, Outlet, useOutletContext, useParams, useNavigate, useLocation } from 'react-router-dom'
 import { getStoredOrders, isAdmin, getUserContext, getStoredProducts, getStoredReviews, addOrder } from '@/services/storage'
 import { CheckoutModal } from '@/components/shared/CheckoutModal'
@@ -40,7 +40,7 @@ function ProtectedAdminRoute() {
 // Wrapper for Storefront to hold cart state
 function StoreWrapper() {
   const dataContext = useOutletContext()
-  const [cart, setCart] = React.useState(() => {
+  const [cart, setCart] = useState(() => {
     try {
       const saved = localStorage.getItem('ownstore_cart')
       return saved ? JSON.parse(saved) : []
@@ -49,11 +49,11 @@ function StoreWrapper() {
     }
   })
   
-  React.useEffect(() => {
+  useEffect(() => {
     localStorage.setItem('ownstore_cart', JSON.stringify(cart))
   }, [cart])
-  const [isCartOpen, setIsCartOpen] = React.useState(false)
-  const [isCheckoutModalOpen, setIsCheckoutModalOpen] = React.useState(false)
+  const [isCartOpen, setIsCartOpen] = useState(false)
+  const [isCheckoutModalOpen, setIsCheckoutModalOpen] = useState(false)
   const { subdomain } = useParams()
   const navigate = useNavigate()
 
@@ -114,7 +114,7 @@ function StoreWrapper() {
     return sub + shipping
   }
 
-  const storeContextValue = React.useMemo(() => ({ 
+  const storeContextValue = useMemo(() => ({ 
     ...dataContext, cart, handleAddToCart, handleUpdateCart, setCart, isCartOpen, setIsCartOpen, setIsCheckoutModalOpen 
   }), [dataContext, cart, isCartOpen]);
 
@@ -203,7 +203,7 @@ function AdminDataWrapper() {
     loadData()
   }, [user?.id])
 
-  const adminContextValue = React.useMemo(() => ({
+  const adminContextValue = useMemo(() => ({
     orders, setOrders, products, setProducts, reviews, setReviews, discounts, setDiscounts, settings, setSettings
   }), [orders, products, reviews, discounts, settings]);
 
@@ -224,13 +224,13 @@ function StoreDataWrapper() {
     
     const loadData = async () => {
       try {
-        const o = await getStoredOrders(null, subdomain)
+
         const p = await getStoredProducts(null, subdomain)
         const r = await getStoredReviews(null, subdomain)
         const storage = await import('@/services/storage')
         const s = await storage.getStoreSettings(null, subdomain)
         
-        setOrders(o || [])
+
         setProducts(p || [])
         setReviews(r || [])
         setSettings(s || null)
@@ -265,7 +265,7 @@ function StoreDataWrapper() {
     }
   }, [settings, subdomain])
 
-  const storeContextValue = React.useMemo(() => ({
+  const storeContextValue = useMemo(() => ({
     orders, setOrders, products, setProducts, reviews, setReviews, settings, setSettings, subdomain
   }), [orders, products, reviews, settings, subdomain]);
 

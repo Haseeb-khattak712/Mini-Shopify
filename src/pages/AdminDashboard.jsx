@@ -1,5 +1,5 @@
-import React from 'react'
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, FunnelChart, Funnel, LabelList, BarChart, Bar } from 'recharts'
+import React, { useMemo } from 'react'
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, FunnelChart, Funnel, LabelList, BarChart, Bar } from 'recharts'
 import { Card, StatusBadge } from '@/components/ui/ui'
 import { useTilt } from '@/hooks/useTilt'
 import { useOutletContext } from 'react-router-dom'
@@ -39,7 +39,7 @@ export function AdminDashboard() {
   const averageOrderValue = orders.length > 0 ? (totalRevenue / orders.length).toFixed(2) : '0.00'
 
   // Generate 7-day sales data dynamically
-  const salesData = React.useMemo(() => [...Array(7)].map((_, i) => {
+  const salesData = useMemo(() => [...Array(7)].map((_, i) => {
     const d = new Date()
     d.setDate(d.getDate() - (6 - i))
     const dateStr = d.toISOString().split('T')[0]
@@ -49,7 +49,7 @@ export function AdminDashboard() {
   }), [orders])
 
   // Leaderboard logic
-  const topProducts = React.useMemo(() => {
+  const topProducts = useMemo(() => {
     const productSales = orders.flatMap(o => o.items).reduce((acc, item) => {
       const id = item.product_id || item.product?.id;
       const name = item.name || item.product?.name || `Product ${id}`;
@@ -62,7 +62,7 @@ export function AdminDashboard() {
   }, [orders])
 
   // Mock Funnel Data
-  const funnelData = React.useMemo(() => [
+  const funnelData = useMemo(() => [
     { name: 'Visitors', value: 12450, fill: '#3f3f46' },
     { name: 'Added to Cart', value: 3150, fill: '#52525b' },
     { name: 'Checkout', value: 1820, fill: '#71717a' },
@@ -107,7 +107,7 @@ export function AdminDashboard() {
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
               <XAxis dataKey="day" tick={{ fontSize: 11, fill: '#71717a', fontFamily: 'JetBrains Mono' }} axisLine={false} tickLine={false} dy={10} />
               <YAxis tick={{ fontSize: 11, fill: '#71717a', fontFamily: 'JetBrains Mono' }} axisLine={false} tickLine={false} tickFormatter={v => `$${(v / 1000).toFixed(1)}k`} dx={-10} />
-              <Tooltip
+              <RechartsTooltip
                 formatter={(v) => [`$${v.toLocaleString()}`, 'Revenue']}
                 contentStyle={{ background: 'rgba(24,24,27,0.9)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', color: '#f4f4f5', fontSize: '12px', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.5)' }}
                 itemStyle={{ color: '#ffffff', fontWeight: 600 }}
@@ -189,7 +189,7 @@ export function AdminDashboard() {
           <h2 className="font-semibold text-zinc-100 font-display tracking-tight mb-4">Conversion Funnel</h2>
           <ResponsiveContainer width="100%" height={240}>
             <FunnelChart>
-              <Tooltip contentStyle={{ background: '#18181b', border: '1px solid #27272a', borderRadius: '8px' }} />
+              <RechartsTooltip contentStyle={{ background: '#18181b', border: '1px solid #27272a', borderRadius: '8px' }} />
               <Funnel dataKey="value" data={funnelData} isAnimationActive>
                 <LabelList position="center" fill="#fff" stroke="none" dataKey="name" fontSize={12} fontWeight={600} />
               </Funnel>

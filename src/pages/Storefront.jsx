@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react'
+import React, { useState, useRef, useEffect, memo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Button, Toast } from '@/components/ui/ui'
 
@@ -148,7 +148,7 @@ function StoreNav({ cartCount, theme }) {
 
 // ── 3D Product Card ────────────────────────────────────────────────────────────
 
-const ProductCard3D = React.memo(function ProductCard3D({ product, onAddToCart, onQuickView }) {
+const ProductCard3D = memo(function ProductCard3D({ product, onAddToCart, onQuickView }) {
   const navigate = useNavigate()
   const { subdomain } = useParams()
   const tilt = useTilt(14)
@@ -237,7 +237,7 @@ const ProductCard3D = React.memo(function ProductCard3D({ product, onAddToCart, 
 
 // ── List View Product Card ──────────────────────────────────────────────────────
 
-const ProductListCard = React.memo(function ProductListCard({ product, onAddToCart, onQuickView }) {
+const ProductListCard = memo(function ProductListCard({ product, onAddToCart, onQuickView }) {
   const navigate = useNavigate()
   const { subdomain } = useParams()
   const [justAdded, setJustAdded] = useState(false)
