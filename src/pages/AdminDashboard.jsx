@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react'
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, FunnelChart, Funnel, LabelList, BarChart, Bar } from 'recharts'
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, FunnelChart, Funnel, LabelList, BarChart, Bar } from 'recharts'
 import { Card, StatusBadge } from '@/components/ui/ui'
 import { useTilt } from '@/hooks/useTilt'
 import { useOutletContext } from 'react-router-dom'
@@ -107,7 +107,7 @@ export function AdminDashboard() {
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
               <XAxis dataKey="day" tick={{ fontSize: 11, fill: '#71717a', fontFamily: 'JetBrains Mono' }} axisLine={false} tickLine={false} dy={10} />
               <YAxis tick={{ fontSize: 11, fill: '#71717a', fontFamily: 'JetBrains Mono' }} axisLine={false} tickLine={false} tickFormatter={v => `$${(v / 1000).toFixed(1)}k`} dx={-10} />
-              <RechartsTooltip
+              <Tooltip
                 formatter={(v) => [`$${v.toLocaleString()}`, 'Revenue']}
                 contentStyle={{ background: 'rgba(24,24,27,0.9)', backdropFilter: 'blur(8px)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', color: '#f4f4f5', fontSize: '12px', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.5)' }}
                 itemStyle={{ color: '#ffffff', fontWeight: 600 }}
@@ -189,7 +189,7 @@ export function AdminDashboard() {
           <h2 className="font-semibold text-zinc-100 font-display tracking-tight mb-4">Conversion Funnel</h2>
           <ResponsiveContainer width="100%" height={240}>
             <FunnelChart>
-              <RechartsTooltip contentStyle={{ background: '#18181b', border: '1px solid #27272a', borderRadius: '8px' }} />
+              <Tooltip contentStyle={{ background: '#18181b', border: '1px solid #27272a', borderRadius: '8px' }} />
               <Funnel dataKey="value" data={funnelData} isAnimationActive>
                 <LabelList position="center" fill="#fff" stroke="none" dataKey="name" fontSize={12} fontWeight={600} />
               </Funnel>
