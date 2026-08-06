@@ -23,7 +23,8 @@ function getAuthHeaders() {
 }
 
 function getQuery(subdomain) {
-  return subdomain ? `?subdomain=${subdomain}` : ''
+  const t = Date.now();
+  return subdomain ? `?subdomain=${subdomain}&_t=${t}` : `?_t=${t}`;
 }
 
 // Reviews API
@@ -74,7 +75,7 @@ export async function validateDiscount(code) {
 
 export async function getStoredDiscounts(adminId = null) {
   try {
-    const res = await fetch(`${API_URL}/discounts.php`, { headers: getAuthHeaders(adminId) })
+    const res = await fetch(`${API_URL}/discounts.php?_t=${Date.now()}`, { headers: getAuthHeaders(adminId) })
     if (!res.ok) return []
     const data = await res.json()
     return Array.isArray(data) ? data : []

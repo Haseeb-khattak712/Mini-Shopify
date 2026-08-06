@@ -5,7 +5,6 @@ import { HeroScene } from '@/components/shared/HeroScene'
 import { useTilt } from '@/hooks/useTilt'
 
 const GlobeScene = lazy(() => import('@/components/shared/GlobeScene').then(module => ({ default: module.GlobeScene })));
-import ScrollSequenceBackground from '@/components/shared/ScrollSequenceBackground'
 import { useNavigate, Link } from 'react-router-dom'
 import { isAuthenticated, register, getUserContext, isAdmin } from '@/services/storage'
 
@@ -160,7 +159,18 @@ export function LandingPage() {
         {/* Sticky wrapper */}
         <div className="sticky top-0 h-screen overflow-hidden flex items-center">
 
-          <ScrollSequenceBackground scrollYProgress={rawHeroScrollProgress} />
+          <div className="absolute inset-0 w-full h-full bg-black z-0 pointer-events-none">
+            <video 
+              autoPlay 
+              loop 
+              muted 
+              playsInline
+              className="absolute top-0 left-0 w-full h-full object-cover opacity-60"
+              src="https://cdn.pixabay.com/video/2021/08/04/83866-584742540_large.mp4"
+            />
+            <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-black/80 pointer-events-none mix-blend-multiply" />
+            <div className="absolute inset-0 bg-shop-primary/10 pointer-events-none mix-blend-overlay" />
+          </div>
 
           <div className="relative z-10 mx-auto max-w-[1728px] w-full px-6 md:px-10 lg:px-16 xl:px-20 2xl:px-24 grid lg:grid-cols-12 gap-12 items-center">
             <motion.div
