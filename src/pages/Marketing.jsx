@@ -632,17 +632,89 @@ export function LandingPage() {
       </section>
 
       {/* Footer */}
-      <footer className="bg-[#000000] px-6 py-12 relative z-[80] -mt-20 rounded-t-[80px] border-t border-white/15 shadow-[0_-20px_60px_rgba(0,0,0,0.8)] overflow-hidden">
-        <div className="mx-auto max-w-[1728px] px-6 md:px-10 lg:px-16 xl:px-20 2xl:px-24 flex flex-col md:flex-row items-center justify-between text-sm text-white/60 font-medium mt-10">
-          <div className="flex items-center gap-3 mb-4 md:mb-0 cursor-pointer group" onClick={() => window.location.href = '/'} style={{ perspective: '1000px' }}>
-            <img src="/logo.png" alt="OwnStore Logo" className="w-8 h-8 object-contain drop-shadow-md opacity-80 mix-blend-luminosity group-hover:mix-blend-normal group-hover:opacity-100 transition-all duration-500" style={{ transition: 'transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)', transformStyle: 'preserve-3d' }} onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.15) rotateY(15deg) rotateX(10deg) translateZ(10px)'} onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1) rotateY(0deg) rotateX(0deg) translateZ(0px)'} />
-            <span className="font-black text-shop-accent font-logo text-xl tracking-tighter transition-colors duration-300">OwnStore</span>
-            <span className="ml-4 text-sm text-white/60">© 2026 OwnStore Inc.</span>
+      <footer className="bg-[#000000] pt-24 pb-12 relative z-[80] -mt-20 rounded-t-[80px] border-t border-white/15 shadow-[0_-20px_60px_rgba(0,0,0,0.8)] overflow-hidden">
+        <div className="mx-auto max-w-[1728px] px-6 md:px-10 lg:px-16 xl:px-20 2xl:px-24">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-12 lg:gap-8 mb-16">
+            
+            {/* Brand Column */}
+            <div className="lg:col-span-2">
+              <div className="flex items-center gap-3 mb-6 cursor-pointer group" onClick={() => window.location.href = '/'} style={{ perspective: '1000px' }}>
+                <img src="/logo.png" alt="OwnStore Logo" className="w-10 h-10 object-contain drop-shadow-md opacity-90 transition-transform duration-500" style={{ transition: 'transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)' }} onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.15) rotateY(15deg) rotateX(10deg)'} onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1) rotateY(0deg) rotateX(0deg)'} />
+                <span className="font-black text-white font-logo text-2xl tracking-tighter">Own<span className="text-shop-accent">Store</span></span>
+              </div>
+              <p className="text-white/60 text-sm leading-relaxed mb-8 max-w-sm">
+                Empowering independent brands and visionary creators to build, scale, and manage their commerce empire from anywhere in the world.
+              </p>
+              {/* Social Links */}
+              <div className="flex items-center gap-4">
+                <a href="#" className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-white/70 hover:bg-shop-primary/20 hover:text-shop-primary hover:border-shop-primary/50 transition-all duration-300">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
+                </a>
+                <a href="#" className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-white/70 hover:bg-shop-primary/20 hover:text-shop-primary hover:border-shop-primary/50 transition-all duration-300">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C3 15.5.5 9.6 3 5c2.2 2.6 5.6 4.1 9 4-.9-4.2 4-6.6 7-3.8 1.1 0 3-1.2 3-1.2z"/></svg>
+                </a>
+                <a href="#" className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-white/70 hover:bg-shop-primary/20 hover:text-shop-primary hover:border-shop-primary/50 transition-all duration-300">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
+                </a>
+              </div>
+            </div>
+
+            {/* Links Columns */}
+            <div>
+              <h4 className="text-white font-semibold mb-6">Product</h4>
+              <ul className="space-y-4 text-sm text-white/60">
+                <li><a href="#" className="hover:text-shop-primary transition-colors">Features</a></li>
+                <li><a href="#" className="hover:text-shop-primary transition-colors">Pricing</a></li>
+                <li><a href="#" className="hover:text-shop-primary transition-colors">Storefronts</a></li>
+                <li><a href="#" className="hover:text-shop-primary transition-colors">Point of Sale</a></li>
+                <li><a href="#" className="hover:text-shop-primary transition-colors">Changelog</a></li>
+              </ul>
+            </div>
+
+            <div>
+              <h4 className="text-white font-semibold mb-6">Resources</h4>
+              <ul className="space-y-4 text-sm text-white/60">
+                <li><a href="#" className="hover:text-shop-primary transition-colors">Help Center</a></li>
+                <li><a href="#" className="hover:text-shop-primary transition-colors">Developer API</a></li>
+                <li><a href="#" className="hover:text-shop-primary transition-colors">Community Forum</a></li>
+                <li><a href="#" className="hover:text-shop-primary transition-colors">Tutorials</a></li>
+                <li><a href="#" className="hover:text-shop-primary transition-colors">Blog</a></li>
+              </ul>
+            </div>
+
+            <div>
+              <h4 className="text-white font-semibold mb-6">Company</h4>
+              <ul className="space-y-4 text-sm text-white/60">
+                <li><a href="#" className="hover:text-shop-primary transition-colors">About Us</a></li>
+                <li><a href="#" className="hover:text-shop-primary transition-colors">Careers</a></li>
+                <li><a href="#" className="hover:text-shop-primary transition-colors">Partners</a></li>
+                <li><a href="#" className="hover:text-shop-primary transition-colors">Contact</a></li>
+                <li><a href="#" className="hover:text-shop-primary transition-colors">Legal</a></li>
+              </ul>
+            </div>
+
+            {/* Newsletter Column */}
+            <div className="lg:col-span-1">
+              <h4 className="text-white font-semibold mb-6">Stay Updated</h4>
+              <p className="text-white/60 text-sm mb-4 leading-relaxed">Subscribe to our newsletter for the latest ecommerce insights.</p>
+              <form className="flex flex-col gap-3" onSubmit={e => e.preventDefault()}>
+                <input type="email" placeholder="Email address" className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-sm text-white outline-none focus:border-shop-primary focus:ring-1 focus:ring-shop-primary transition-all" />
+                <button type="submit" className="w-full bg-white text-black hover:bg-shop-primary hover:text-white font-medium rounded-lg px-4 py-3 text-sm transition-colors">
+                  Subscribe
+                </button>
+              </form>
+            </div>
+
           </div>
-          <div className="flex gap-8">
-            <a href="#" className="hover:text-shop-primary transition-colors">Terms of Service</a>
-            <a href="#" className="hover:text-shop-primary transition-colors">Privacy Policy</a>
-            <a href="#" className="hover:text-shop-primary transition-colors">Sitemap</a>
+
+          {/* Bottom Bar */}
+          <div className="pt-8 border-t border-white/10 flex flex-col md:flex-row items-center justify-between text-sm text-white/40">
+            <p>© {new Date().getFullYear()} OwnStore Inc. All rights reserved.</p>
+            <div className="flex gap-6 mt-4 md:mt-0">
+              <a href="#" className="hover:text-white transition-colors">Privacy Policy</a>
+              <a href="#" className="hover:text-white transition-colors">Terms of Service</a>
+              <a href="#" className="hover:text-white transition-colors">Cookie Settings</a>
+            </div>
           </div>
         </div>
       </footer>
