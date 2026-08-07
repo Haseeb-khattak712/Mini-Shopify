@@ -11,7 +11,6 @@ const AdminLayout = lazy(() => import('@/layouts/AdminLayout').then(m => ({ defa
 const AdminDashboard = lazy(() => import('@/pages/AdminDashboard').then(m => ({ default: m.AdminDashboard })))
 const AdminProducts = lazy(() => import('@/pages/AdminProducts').then(m => ({ default: m.AdminProducts })))
 const AdminOrders = lazy(() => import('@/pages/AdminOrders').then(m => ({ default: m.AdminOrders })))
-const AdminEmpty = lazy(() => import('@/pages/AdminEmpty').then(m => ({ default: m.AdminEmpty })))
 const AdminTheme = lazy(() => import('@/pages/AdminTheme'))
 const AdminDiscounts = lazy(() => import('@/pages/AdminDiscounts').then(m => ({ default: m.AdminDiscounts })))
 const AdminReviews = lazy(() => import('@/pages/AdminReviews').then(m => ({ default: m.AdminReviews })))
@@ -308,7 +307,6 @@ export default function App() {
               <Route path="discounts" element={<AdminDiscounts />} />
               <Route path="reviews" element={<AdminReviews />} />
               <Route path="customers" element={<AdminCustomers />} />
-              <Route path="empty" element={<AdminEmpty />} />
               <Route path="theme" element={<AdminTheme />} />
             </Route>
           </Route>
