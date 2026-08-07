@@ -10,7 +10,7 @@ class Database {
     public static function getConnection() {
         if (self::$instance === null) {
             try {
-                $db_file = __DIR__ . '/../database/ownstore.sqlite';
+                $db_file = __DIR__ . '/../ownstore.sqlite';
                 self::$instance = new PDO("sqlite:" . $db_file);
                 self::$instance->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
                 self::$instance->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
