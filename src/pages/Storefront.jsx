@@ -27,6 +27,8 @@ function HeroCarousel({ images }) {
         <motion.img
           key={index}
           src={images[index]}
+          loading={index === 0 ? "eager" : "lazy"}
+          decoding="async"
           initial={{ opacity: 0, scale: 1.05 }}
           animate={{ opacity: 0.6, scale: 1 }}
           exit={{ opacity: 0 }}
@@ -229,12 +231,14 @@ const ProductCard3D = memo(function ProductCard3D({ product, onAddToCart, onQuic
     >
       {/* Image layer — pops forward */}
       <div
-        className={`relative overflow-hidden bg-white/10 ${isFlat ? '' : 'rounded-t-[10px]'}`}
+        className={`relative overflow-hidden bg-zinc-800 ${isFlat ? '' : 'rounded-t-[10px]'}`}
         style={isFlat ? { aspectRatio: '1' } : { transform: 'translateZ(0)', aspectRatio: '1' }}
       >
         <img
           src={product.image}
           alt={product.name}
+          loading="lazy"
+          decoding="async"
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
         />
         {/* Badges */}
@@ -312,10 +316,12 @@ const ProductListCard = memo(function ProductListCard({ product, onAddToCart, on
       className="bg-zinc-900/50 border border-white/10 rounded-[10px] overflow-hidden cursor-pointer group flex hover:bg-white/5 transition-colors"
     >
       {/* Image Side */}
-      <div className="relative w-40 md:w-48 shrink-0 bg-white/10">
+      <div className="w-1/3 sm:w-48 shrink-0 bg-zinc-800">
         <img
           src={product.image}
           alt={product.name}
+          loading="lazy"
+          decoding="async"
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
         />
         <div className="absolute top-2 left-2 flex flex-col gap-1">
@@ -408,8 +414,8 @@ function QuickViewModal({ product, isOpen, onClose, onAddToCart }) {
             </button>
             
             {/* Image */}
-            <div className="w-full md:w-1/2 h-64 md:h-auto bg-white/5 relative">
-              <img src={product.image} alt={product.name} className="w-full h-full object-cover" />
+            <div className="w-full md:w-1/2 h-64 md:h-auto bg-zinc-800 relative">
+              <img src={product.image} alt={product.name} loading="lazy" decoding="async" className="w-full h-full object-cover" />
               {product.badge && (
                 <span className={`absolute top-4 left-4 text-[10px] font-bold uppercase tracking-wider text-white px-2 py-1 rounded-sm shadow-md ${
                   product.badge.toLowerCase() === 'sale' ? 'bg-red-500' : 
@@ -539,7 +545,7 @@ export function StoreHome() {
           )}
           {theme.heroLayout === 'static' && theme.heroImage && (
             <div className="absolute inset-0 w-full h-full bg-zinc-950">
-              <img src={theme.heroImage} className="absolute inset-0 w-full h-full object-cover" alt="Hero" />
+              <img src={theme.heroImage} loading="eager" decoding="async" className="absolute inset-0 w-full h-full object-cover" alt="Hero" />
             </div>
           )}
           {(theme.heroLayout === 'cinematic' || theme.heroLayout === 'static') && (
@@ -893,10 +899,10 @@ export function ProductDetail() {
               ref={tilt.ref}
               onMouseMove={tilt.onMouseMove}
               onMouseLeave={tilt.onMouseLeave}
-              className="bg-white/10  rounded-[10px] overflow-hidden aspect-square transition-colors"
+              className="bg-zinc-800 rounded-[10px] overflow-hidden aspect-square transition-colors"
               style={{ transformStyle: 'preserve-3d', willChange: 'transform' }}
             >
-              <img src={selectedImage || productImages[0]} alt={product.name} className="w-full h-full object-cover" />
+              <img src={selectedImage || productImages[0]} alt={product.name} loading="eager" decoding="async" className="w-full h-full object-cover" />
             </div>
             
             {productImages.length > 1 && (
