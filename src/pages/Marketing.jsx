@@ -59,23 +59,43 @@ function ScrollFrames({ progress }) {
 
   useEffect(() => {
     const frameCount = 96;
-    const imgs = [];
-    for (let i = 0; i < frameCount; i++) {
-      const img = new Image();
-      // Use decoding="async" to prevent decoding from blocking the main thread
-      img.decoding = 'async';
-      img.src = `/frames/frame_${i.toString().padStart(5, '0')}.jpg`;
-      imgs.push(img);
-    }
+    const imgs = new Array(frameCount);
     imagesRef.current = imgs;
     
-    imgs[0].onload = () => {
+    // Load first frame immediately with high priority
+    const firstImg = new Image();
+    firstImg.src = `/frames/frame_00000.jpg`;
+    imgs[0] = firstImg;
+    
+    firstImg.onload = () => {
       if (canvasRef.current) {
-        canvasRef.current.width = imgs[0].width;
-        canvasRef.current.height = imgs[0].height;
-        const ctx = canvasRef.current.getContext('2d', { alpha: false }); // Disable alpha for better performance
-        ctx.drawImage(imgs[0], 0, 0);
+        canvasRef.current.width = firstImg.width;
+        canvasRef.current.height = firstImg.height;
+        const ctx = canvasRef.current.getContext('2d', { alpha: false });
+        ctx.drawImage(firstImg, 0, 0);
         lastDrawnIndexRef.current = 0;
+      }
+      
+      // Load remaining frames sequentially in the background 
+      // so we don't choke the network and block other components from loading
+      let i = 1;
+      function loadNext() {
+        if (i >= frameCount) return;
+        const img = new Image();
+        img.decoding = 'async';
+        img.src = `/frames/frame_${i.toString().padStart(5, '0')}.jpg`;
+        imgs[i] = img;
+        i++;
+        // Load the next one only after this one finishes
+        img.onload = loadNext;
+        img.onerror = loadNext;
+      }
+      
+      // Start background queue when browser is idle
+      if ('requestIdleCallback' in window) {
+        window.requestIdleCallback(loadNext);
+      } else {
+        setTimeout(loadNext, 100);
       }
     };
   }, []);
