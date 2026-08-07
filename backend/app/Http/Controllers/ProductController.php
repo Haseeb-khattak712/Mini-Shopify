@@ -1,30 +1,40 @@
 <?php
-require_once __DIR__ . '/../db.php';
+namespace App\Http\Controllers;
 
-$method = $_SERVER['REQUEST_METHOD'];
-$require_auth = ($method !== 'GET');
-$user_id = getUserId($db, $require_auth);
+use Config\Database;
+use App\Utils\Auth;
 
-if (!$user_id) {
-    http_response_code(401);
-    echo json_encode(['error' => 'Unauthorized or missing subdomain']);
-    exit;
-}
+class ProductController {
+    
+    private function getUserId($require_auth) {
+        $subdomain = $_GET['subdomain'] ?? null;
+        $user_id = Auth::getUserId($require_auth, $subdomain);
+        if (!$user_id) {
+            http_response_code(401);
+            echo json_encode(['error' => 'Unauthorized or missing subdomain']);
+            exit;
+        }
+        return $user_id;
+    }
 
-switch ($method) {
-    case 'GET':
+    public function index() {
+        $db = Database::getConnection();
+        $user_id = $this->getUserId(false);
+
         $stmt = $db->prepare("SELECT * FROM products WHERE user_id = ? ORDER BY id DESC");
         $stmt->execute([$user_id]);
         $products = $stmt->fetchAll();
-        // Decode JSON fields
+        
         foreach ($products as &$p) {
             $p['sizes'] = json_decode($p['sizes'], true) ?: [];
             $p['colors'] = json_decode($p['colors'], true) ?: [];
         }
         echo json_encode($products);
-        break;
+    }
 
-    case 'POST':
+    public function store() {
+        $db = Database::getConnection();
+        $user_id = $this->getUserId(true);
         $data = json_decode(file_get_contents('php://input'), true);
         if (!$data) {
             http_response_code(400);
@@ -58,10 +68,13 @@ switch ($method) {
         ]);
         
         echo json_encode(['success' => true, 'id' => $id]);
-        break;
+    }
 
-    case 'PUT':
+    public function update() {
+        $db = Database::getConnection();
+        $user_id = $this->getUserId(true);
         $data = json_decode(file_get_contents('php://input'), true);
+        
         if (!$data || !isset($data['id'])) {
             http_response_code(400);
             echo json_encode(['error' => 'Invalid JSON or missing id']);
@@ -93,9 +106,11 @@ switch ($method) {
         ]);
         
         echo json_encode(['success' => true]);
-        break;
+    }
 
-    case 'DELETE':
+    public function destroy() {
+        $db = Database::getConnection();
+        $user_id = $this->getUserId(true);
         $id = $_GET['id'] ?? null;
         if (!$id) {
             http_response_code(400);
@@ -106,6 +121,5 @@ switch ($method) {
         $stmt = $db->prepare("DELETE FROM products WHERE id=? AND user_id=?");
         $stmt->execute([$id, $user_id]);
         echo json_encode(['success' => true]);
-        break;
+    }
 }
-?>

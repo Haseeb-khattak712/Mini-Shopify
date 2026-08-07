@@ -1,18 +1,20 @@
 <?php
-require_once __DIR__ . '/../db.php';
+namespace App\Http\Controllers;
 
-$method = $_SERVER['REQUEST_METHOD'];
-$require_auth = ($method === 'PUT' || $method === 'DELETE');
-$user_id = getUserId($db, $require_auth);
+use Config\Database;
+use App\Utils\Auth;
 
-if (!$user_id) {
-    http_response_code(401);
-    echo json_encode(['error' => 'Unauthorized or missing subdomain']);
-    exit;
-}
+class ReviewController {
+    public function index() {
+        $db = Database::getConnection();
+        $user_id = Auth::getUserId();
+        
+        if (!$user_id) {
+            http_response_code(401);
+            echo json_encode(['error' => 'Unauthorized or missing subdomain']);
+            exit;
+        }
 
-switch ($method) {
-    case 'GET':
         $product_id = $_GET['product_id'] ?? null;
         if ($product_id) {
             $stmt = $db->prepare("SELECT * FROM reviews WHERE user_id = ? AND product_id = ? AND status = 'approved' ORDER BY date DESC");
@@ -21,11 +23,20 @@ switch ($method) {
             $stmt = $db->prepare("SELECT * FROM reviews WHERE user_id = ? ORDER BY date DESC");
             $stmt->execute([$user_id]);
         }
-        $reviews = $stmt->fetchAll();
+        $reviews = $stmt->fetchAll(\PDO::FETCH_ASSOC);
         echo json_encode($reviews);
-        break;
+    }
 
-    case 'POST':
+    public function store() {
+        $db = Database::getConnection();
+        $user_id = Auth::getUserId();
+        
+        if (!$user_id) {
+            http_response_code(401);
+            echo json_encode(['error' => 'Unauthorized or missing subdomain']);
+            exit;
+        }
+
         $data = json_decode(file_get_contents('php://input'), true);
         if (!$data) {
             http_response_code(400);
@@ -49,9 +60,16 @@ switch ($method) {
         ]);
         
         echo json_encode(['success' => true, 'id' => $id]);
-        break;
+    }
 
-    case 'PUT':
+    public function update() {
+        $db = Database::getConnection();
+        $user_id = Auth::getUserId(true);
+        if (!$user_id) {
+            http_response_code(401);
+            echo json_encode(['error' => 'Unauthorized']);
+            exit;
+        }
         $data = json_decode(file_get_contents('php://input'), true);
         if (!$data || !isset($data['id'])) {
             http_response_code(400);
@@ -66,11 +84,17 @@ switch ($method) {
             $data['id'],
             $user_id
         ]);
-        
         echo json_encode(['success' => true]);
-        break;
+    }
 
-    case 'DELETE':
+    public function destroy() {
+        $db = Database::getConnection();
+        $user_id = Auth::getUserId(true);
+        if (!$user_id) {
+            http_response_code(401);
+            echo json_encode(['error' => 'Unauthorized']);
+            exit;
+        }
         $id = $_GET['id'] ?? null;
         if (!$id) {
             http_response_code(400);
@@ -81,6 +105,5 @@ switch ($method) {
         $stmt = $db->prepare("DELETE FROM reviews WHERE id=? AND user_id=?");
         $stmt->execute([$id, $user_id]);
         echo json_encode(['success' => true]);
-        break;
+    }
 }
-?>

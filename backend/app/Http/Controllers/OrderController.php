@@ -1,54 +1,61 @@
 <?php
-require_once __DIR__ . '/../db.php';
+namespace App\Http\Controllers;
 
-$method = $_SERVER['REQUEST_METHOD'];
+use Config\Database;
+use App\Utils\Auth;
+use App\Utils\Jwt;
 
-$auth_user_id = null;
-$token = get_bearer_token();
-if ($token) {
-    $payload = verify_jwt($token);
-    if ($payload && isset($payload['id'])) {
-        $auth_user_id = $payload['id'];
+class OrderController {
+
+    private function getAuthUserId() {
+        $token = Auth::getBearerToken();
+        if ($token) {
+            $payload = Jwt::verify($token);
+            if ($payload && isset($payload['id'])) {
+                return $payload['id'];
+            }
+        }
+        return null;
     }
-}
 
-// Get store owner ID from subdomain
-$subdomain = $_GET['subdomain'] ?? '';
-$store_owner_id = null;
-if ($subdomain) {
-    $stmt = $db->prepare("SELECT id FROM users WHERE subdomain = ?");
-    $stmt->execute([$subdomain]);
-    $store = $stmt->fetch();
-    if ($store) {
-        $store_owner_id = $store['id'];
+    private function getRole($auth_user_id) {
+        if (!$auth_user_id) return 'customer';
+        $db = Database::getConnection();
+        $stmt = $db->prepare("SELECT role FROM users WHERE id = ?");
+        $stmt->execute([$auth_user_id]);
+        $user = $stmt->fetch();
+        return $user ? $user['role'] : 'customer';
     }
-}
 
-// Determine role of authenticated user
-$role = 'customer';
-if ($auth_user_id) {
-    $stmt = $db->prepare("SELECT role FROM users WHERE id = ?");
-    $stmt->execute([$auth_user_id]);
-    $user = $stmt->fetch();
-    if ($user) {
-        $role = $user['role'];
+    private function getStoreOwnerId() {
+        $subdomain = $_GET['subdomain'] ?? '';
+        if ($subdomain) {
+            $db = Database::getConnection();
+            $stmt = $db->prepare("SELECT id FROM users WHERE subdomain = ?");
+            $stmt->execute([$subdomain]);
+            $store = $stmt->fetch();
+            if ($store) {
+                return $store['id'];
+            }
+        }
+        return null;
     }
-}
 
-switch ($method) {
-    case 'GET':
+    public function index() {
+        $auth_user_id = $this->getAuthUserId();
         if (!$auth_user_id) {
             http_response_code(401);
             echo json_encode(['error' => 'Unauthorized']);
             exit;
         }
 
+        $role = $this->getRole($auth_user_id);
+        $db = Database::getConnection();
+
         if ($role === 'admin') {
-            // Admin fetching their store's orders
             $stmt = $db->prepare("SELECT * FROM orders WHERE user_id = ? ORDER BY date DESC, id DESC");
             $stmt->execute([$auth_user_id]);
         } else {
-            // Customer fetching their personal orders across all stores
             $stmt = $db->prepare("SELECT * FROM orders WHERE customer_id = ? ORDER BY date DESC, id DESC");
             $stmt->execute([$auth_user_id]);
         }
@@ -58,9 +65,10 @@ switch ($method) {
             $o['items'] = json_decode($o['items'], true) ?: [];
         }
         echo json_encode($orders);
-        break;
+    }
 
-    case 'POST':
+    public function store() {
+        $store_owner_id = $this->getStoreOwnerId();
         $data = json_decode(file_get_contents('php://input'), true);
         if (!$data) {
             http_response_code(400);
@@ -77,6 +85,7 @@ switch ($method) {
         $id = $data['id'] ?? 'ORD-' . rand(1000, 9999);
         $items = json_encode($data['items'] ?? []);
 
+        $db = Database::getConnection();
         $stmt = $db->prepare("INSERT INTO orders (id, user_id, customer_id, customer, email, total, date, status, items) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
         $stmt->execute([
             $id,
@@ -118,10 +127,13 @@ switch ($method) {
         }
         
         echo json_encode(['success' => true, 'id' => $id]);
-        break;
+    }
 
-    case 'PUT':
+    public function update() {
+        $auth_user_id = $this->getAuthUserId();
+        $role = $this->getRole($auth_user_id);
         $data = json_decode(file_get_contents('php://input'), true);
+        
         if (!$data || !isset($data['id'])) {
             http_response_code(400);
             echo json_encode(['error' => 'Invalid JSON or missing id']);
@@ -134,6 +146,7 @@ switch ($method) {
             exit;
         }
 
+        $db = Database::getConnection();
         $stmt = $db->prepare("UPDATE orders SET status=? WHERE id=? AND user_id=?");
         $stmt->execute([
             $data['status'],
@@ -142,6 +155,5 @@ switch ($method) {
         ]);
         
         echo json_encode(['success' => true]);
-        break;
+    }
 }
-?>

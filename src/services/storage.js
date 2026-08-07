@@ -30,7 +30,7 @@ function getQuery(subdomain) {
 // Reviews API
 export async function getStoredReviews(adminId = null, subdomain = null) {
   try {
-    const res = await fetch(`${API_URL}/reviews.php${getQuery(subdomain)}`, { headers: getAuthHeaders(adminId) })
+    const res = await fetch(`${API_URL}/reviews${getQuery(subdomain)}`, { headers: getAuthHeaders(adminId) })
     if (!res.ok) return []
     const data = await res.json()
     return Array.isArray(data) ? data : []
@@ -38,7 +38,7 @@ export async function getStoredReviews(adminId = null, subdomain = null) {
 }
 
 export async function addReview(review, adminId = null, subdomain = null) {
-  const res = await fetch(`${API_URL}/reviews.php${getQuery(subdomain)}`, {
+  const res = await fetch(`${API_URL}/reviews${getQuery(subdomain)}`, {
     method: 'POST',
     body: JSON.stringify(review),
     headers: getAuthHeaders(adminId)
@@ -47,7 +47,7 @@ export async function addReview(review, adminId = null, subdomain = null) {
 }
 
 export async function updateReview(review, adminId = null) {
-  const res = await fetch(`${API_URL}/reviews.php`, {
+  const res = await fetch(`${API_URL}/reviews`, {
     method: 'PUT',
     body: JSON.stringify(review),
     headers: getAuthHeaders(adminId)
@@ -57,7 +57,7 @@ export async function updateReview(review, adminId = null) {
 
 export async function deleteReview(id, adminId = null) {
   const headers = getAuthHeaders(adminId)
-  const res = await fetch(`${API_URL}/reviews.php?id=${id}`, {
+  const res = await fetch(`${API_URL}/reviews?id=${id}`, {
     method: 'DELETE',
     headers
   })
@@ -65,7 +65,7 @@ export async function deleteReview(id, adminId = null) {
 }
 
 export async function validateDiscount(code) {
-  const res = await fetch(`${API_URL}/discounts.php`, {
+  const res = await fetch(`${API_URL}/discounts`, {
     method: 'POST',
     body: JSON.stringify({ code }),
     headers: getAuthHeaders()
@@ -75,7 +75,7 @@ export async function validateDiscount(code) {
 
 export async function getStoredDiscounts(adminId = null) {
   try {
-    const res = await fetch(`${API_URL}/discounts.php?_t=${Date.now()}`, { headers: getAuthHeaders(adminId) })
+    const res = await fetch(`${API_URL}/discounts?_t=${Date.now()}`, { headers: getAuthHeaders(adminId) })
     if (!res.ok) return []
     const data = await res.json()
     return Array.isArray(data) ? data : []
@@ -83,7 +83,7 @@ export async function getStoredDiscounts(adminId = null) {
 }
 
 export async function addDiscount(discount, adminId = null) {
-  const res = await fetch(`${API_URL}/discounts.php`, {
+  const res = await fetch(`${API_URL}/discounts`, {
     method: 'POST',
     body: JSON.stringify(discount),
     headers: getAuthHeaders(adminId)
@@ -92,7 +92,7 @@ export async function addDiscount(discount, adminId = null) {
 }
 
 export async function updateDiscount(discount, adminId = null) {
-  const res = await fetch(`${API_URL}/discounts.php`, {
+  const res = await fetch(`${API_URL}/discounts`, {
     method: 'PUT',
     body: JSON.stringify(discount),
     headers: getAuthHeaders(adminId)
@@ -102,7 +102,7 @@ export async function updateDiscount(discount, adminId = null) {
 
 export async function deleteDiscount(id, adminId = null) {
   const headers = getAuthHeaders(adminId)
-  const res = await fetch(`${API_URL}/discounts.php?id=${id}`, {
+  const res = await fetch(`${API_URL}/discounts?id=${id}`, {
     method: 'DELETE',
     headers
   })
@@ -111,12 +111,12 @@ export async function deleteDiscount(id, adminId = null) {
 
 // Settings API
 export async function getStoreSettings(adminId = null, subdomain = null) {
-  const res = await fetch(`${API_URL}/settings.php${getQuery(subdomain)}`, { headers: getAuthHeaders(adminId) })
+  const res = await fetch(`${API_URL}/settings${getQuery(subdomain)}`, { headers: getAuthHeaders(adminId) })
   return await res.json()
 }
 
 export async function saveStoreSettings(settings, adminId) {
-  const res = await fetch(`${API_URL}/settings.php`, {
+  const res = await fetch(`${API_URL}/settings`, {
     method: 'POST',
     body: JSON.stringify(settings),
     headers: getAuthHeaders(adminId)
@@ -127,7 +127,7 @@ export async function saveStoreSettings(settings, adminId) {
 // Products API
 export async function getStoredProducts(adminId = null, subdomain = null) {
   try {
-    const res = await fetch(`${API_URL}/products.php${getQuery(subdomain)}`, { headers: getAuthHeaders(adminId) })
+    const res = await fetch(`${API_URL}/products${getQuery(subdomain)}`, { headers: getAuthHeaders(adminId) })
     if (!res.ok) return []
     const data = await res.json()
     return Array.isArray(data) ? data : []
@@ -135,7 +135,7 @@ export async function getStoredProducts(adminId = null, subdomain = null) {
 }
 
 export async function addProduct(product, adminId = null) {
-  const res = await fetch(`${API_URL}/products.php`, {
+  const res = await fetch(`${API_URL}/products`, {
     method: 'POST',
     body: JSON.stringify(product),
     headers: getAuthHeaders(adminId)
@@ -144,7 +144,7 @@ export async function addProduct(product, adminId = null) {
 }
 
 export async function updateProduct(product, adminId = null) {
-  const res = await fetch(`${API_URL}/products.php`, {
+  const res = await fetch(`${API_URL}/products`, {
     method: 'PUT',
     body: JSON.stringify(product),
     headers: getAuthHeaders(adminId)
@@ -155,7 +155,7 @@ export async function updateProduct(product, adminId = null) {
 export async function deleteProduct(id, adminId = null) {
   const headers = getAuthHeaders(adminId)
   delete headers['Content-Type']
-  const res = await fetch(`${API_URL}/products.php?id=${id}`, {
+  const res = await fetch(`${API_URL}/products?id=${id}`, {
     method: 'DELETE',
     headers
   })
@@ -165,7 +165,7 @@ export async function deleteProduct(id, adminId = null) {
 // Orders API
 export async function getStoredOrders(adminId = null, subdomain = null) {
   try {
-    const res = await fetch(`${API_URL}/orders.php${getQuery(subdomain)}`, { headers: getAuthHeaders(adminId) })
+    const res = await fetch(`${API_URL}/orders${getQuery(subdomain)}`, { headers: getAuthHeaders(adminId) })
     if (!res.ok) {
       if (res.status === 401) {
         // Force logout on 401 if we were trying to fetch our own data without a subdomain
@@ -182,7 +182,7 @@ export async function getStoredOrders(adminId = null, subdomain = null) {
 }
 
 export async function addOrder(order, adminId = null, subdomain = null) {
-  const res = await fetch(`${API_URL}/orders.php${getQuery(subdomain)}`, {
+  const res = await fetch(`${API_URL}/orders${getQuery(subdomain)}`, {
     method: 'POST',
     body: JSON.stringify(order),
     headers: getAuthHeaders(adminId)
@@ -191,7 +191,7 @@ export async function addOrder(order, adminId = null, subdomain = null) {
 }
 
 export async function updateOrder(order, adminId = null) {
-  const res = await fetch(`${API_URL}/orders.php`, {
+  const res = await fetch(`${API_URL}/orders`, {
     method: 'PUT',
     body: JSON.stringify(order),
     headers: getAuthHeaders(adminId)
@@ -257,7 +257,7 @@ export function removeSavedAccount(email) {
 
 export async function login(email, password) {
   try {
-    const res = await fetch(`${API_URL}/auth.php?action=login`, {
+    const res = await fetch(`${API_URL}/auth/login`, {
       method: 'POST',
       body: JSON.stringify({ email, password }),
       headers: { 'Content-Type': 'application/json' }
@@ -280,7 +280,7 @@ export async function login(email, password) {
 
 export async function register(name, email, password, role = 'customer', business_name = '', subdomain = '') {
   try {
-    const res = await fetch(`${API_URL}/auth.php?action=register`, {
+    const res = await fetch(`${API_URL}/auth/register`, {
       method: 'POST',
       body: JSON.stringify({ name, email, password, role, business_name, subdomain }),
       headers: { 'Content-Type': 'application/json' }
@@ -313,7 +313,7 @@ export function logout() {
 
 export async function getMarketplaceProducts() {
   try {
-    const res = await fetch(`${API_URL}/marketplace.php`)
+    const res = await fetch(`${API_URL}/marketplace`)
     if (!res.ok) return []
     const data = await res.json()
     return Array.isArray(data) ? data : []
