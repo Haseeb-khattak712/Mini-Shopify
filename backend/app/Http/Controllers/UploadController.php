@@ -46,8 +46,11 @@ class UploadController {
             $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https://' : 'http://';
             $host = $_SERVER['HTTP_HOST'] ?? 'localhost:8000';
             
-            // with front controller, URL is /uploads/filename relative to root
-            $url = $protocol . $host . '/uploads/' . $filename;
+            // dynamically determine base path
+            $scriptName = $_SERVER['SCRIPT_NAME'];
+            $base = str_replace(['/public/index.php', '/server.php'], '', $scriptName);
+            
+            $url = $protocol . $host . $base . '/uploads/' . $filename;
             
             echo json_encode(['success' => true, 'url' => $url]);
         } else {
