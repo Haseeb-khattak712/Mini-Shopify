@@ -6,19 +6,31 @@ import { getStoreSettings, saveStoreSettings, getUserContext } from '@/services/
 
 export default function AdminTheme() {
   const context = useOutletContext() || {}
-  const initialSettings = (context.settings && context.settings.primaryColor) ? context.settings : {
+  const baseSettings = context.settings && context.settings.primaryColor ? context.settings : {};
+  const initialSettings = {
     storeName: '',
+    logoUrl: '',
     announcementText: '',
+    stickyNav: true,
     primaryColor: '#4f46e5',
     buttonRadius: 'rounded',
     headerLayout: 'left',
     fontFamily: 'Inter',
+    heroLayout: 'cinematic',
+    heroImage: '',
+    heroOpacity: '60',
     heroTitle: 'Crafted with intention, built to last.',
     heroSubtitle: 'Carefully curated essentials for everyday living — from wardrobe to workspace.',
-    seoTitle: '',
-    seoDescription: '',
-    socialImage: ''
+    heroButtonText: 'Shop Collection',
+    cardStyle: '3d',
+    defaultView: 'grid',
+    footerText: '',
+    socialInstagram: '',
+    socialTwitter: '',
+    socialTiktok: '',
+    ...baseSettings
   }
+  
   const [settings, setSettings] = useState(initialSettings)
   const [saving, setSaving] = useState(false)
   const [iframeReady, setIframeReady] = useState(false)
@@ -45,7 +57,7 @@ export default function AdminTheme() {
   }
 
   const fonts = ['Inter', 'Roboto', 'Playfair Display', 'Merriweather', 'Space Grotesk']
-  const colors = ['#4f46e5', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#0ea5e9', '#14b8a6']
+  const colors = ['#4f46e5', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#0ea5e9', '#14b8a6', '#000000']
 
   return (
     <div className="h-[calc(100vh-4rem)] flex overflow-hidden bg-zinc-950">
@@ -65,17 +77,28 @@ export default function AdminTheme() {
         {/* Scrollable controls */}
         <div className="flex-1 overflow-y-auto p-6 custom-scrollbar">
           <div className="space-y-8">
+            
             {/* Header Settings */}
             <section>
               <h3 className="text-sm font-bold text-white/60 uppercase tracking-wider mb-4">Header Settings</h3>
               <div className="space-y-4">
                 <div>
-                  <label className="text-sm text-white/80 block mb-2">Store Name (Logo)</label>
+                  <label className="text-sm text-white/80 block mb-2">Store Name</label>
                   <input 
                     type="text"
                     placeholder="Leave empty to use subdomain"
                     value={settings.storeName || ''}
                     onChange={(e) => setSettings({ ...settings, storeName: e.target.value })}
+                    className="w-full bg-zinc-900/50 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:border-zinc-500 focus:ring-2 focus:ring-zinc-500/20"
+                  />
+                </div>
+                <div>
+                  <label className="text-sm text-white/80 block mb-2">Logo Image URL</label>
+                  <input 
+                    type="text"
+                    placeholder="https://... (Optional)"
+                    value={settings.logoUrl || ''}
+                    onChange={(e) => setSettings({ ...settings, logoUrl: e.target.value })}
                     className="w-full bg-zinc-900/50 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:border-zinc-500 focus:ring-2 focus:ring-zinc-500/20"
                   />
                 </div>
@@ -106,12 +129,23 @@ export default function AdminTheme() {
                     </button>
                   </div>
                 </div>
+                <div>
+                  <label className="flex items-center gap-2 cursor-pointer text-sm text-white/80 mt-4">
+                    <input 
+                      type="checkbox" 
+                      checked={settings.stickyNav} 
+                      onChange={(e) => setSettings({...settings, stickyNav: e.target.checked})} 
+                      className="rounded border-zinc-700 bg-zinc-900/50 text-shop-primary focus:ring-shop-primary/20"
+                    />
+                    Sticky Navigation
+                  </label>
+                </div>
               </div>
             </section>
 
             <hr className="border-zinc-800/50" />
 
-            {/* Colors & Buttons */}
+            {/* Colors & Styles */}
             <section>
               <h3 className="text-sm font-bold text-white/60 uppercase tracking-wider mb-4">Colors & Styles</h3>
               <div className="space-y-6">
@@ -166,66 +200,176 @@ export default function AdminTheme() {
 
             <hr className="border-zinc-800/50" />
 
-            {/* Content */}
+            {/* Hero Section */}
             <section>
               <h3 className="text-sm font-bold text-white/60 uppercase tracking-wider mb-4">Hero Section</h3>
               <div className="space-y-4">
                 <div>
-                  <label className="text-sm text-white/80 block mb-2">Headline</label>
-                  <textarea 
-                    value={settings.heroTitle}
-                    onChange={(e) => setSettings({ ...settings, heroTitle: e.target.value })}
-                    className="w-full bg-zinc-900/50 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:border-zinc-500 focus:ring-2 focus:ring-zinc-500/20 resize-none h-20"
-                  />
+                  <label className="text-sm text-white/80 block mb-2">Hero Layout</label>
+                  <select 
+                    value={settings.heroLayout}
+                    onChange={(e) => setSettings({ ...settings, heroLayout: e.target.value })}
+                    className="w-full bg-zinc-900/50 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:border-zinc-500 focus:ring-2 focus:ring-zinc-500/20"
+                  >
+                    <option value="cinematic">Cinematic Carousel</option>
+                    <option value="static">Static Image</option>
+                    <option value="minimalist">Minimalist (No Image)</option>
+                    <option value="hidden">Hidden</option>
+                  </select>
+                </div>
+
+                {settings.heroLayout === 'static' && (
+                  <div>
+                    <label className="text-sm text-white/80 block mb-2">Hero Image URL</label>
+                    <input 
+                      type="text"
+                      placeholder="https://..."
+                      value={settings.heroImage || ''}
+                      onChange={(e) => setSettings({ ...settings, heroImage: e.target.value })}
+                      className="w-full bg-zinc-900/50 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:border-zinc-500 focus:ring-2 focus:ring-zinc-500/20"
+                    />
+                  </div>
+                )}
+
+                {(settings.heroLayout === 'cinematic' || settings.heroLayout === 'static') && (
+                  <div>
+                    <label className="text-sm text-white/80 flex justify-between mb-2">
+                      Overlay Opacity <span>{settings.heroOpacity}%</span>
+                    </label>
+                    <input 
+                      type="range"
+                      min="0" max="100" step="5"
+                      value={settings.heroOpacity || '60'}
+                      onChange={(e) => setSettings({ ...settings, heroOpacity: e.target.value })}
+                      className="w-full accent-shop-primary"
+                    />
+                  </div>
+                )}
+
+                {settings.heroLayout !== 'hidden' && (
+                  <>
+                    <div>
+                      <label className="text-sm text-white/80 block mb-2">Headline</label>
+                      <textarea 
+                        value={settings.heroTitle}
+                        onChange={(e) => setSettings({ ...settings, heroTitle: e.target.value })}
+                        className="w-full bg-zinc-900/50 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:border-zinc-500 focus:ring-2 focus:ring-zinc-500/20 resize-none h-20"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-sm text-white/80 block mb-2">Subtitle</label>
+                      <textarea 
+                        value={settings.heroSubtitle}
+                        onChange={(e) => setSettings({ ...settings, heroSubtitle: e.target.value })}
+                        className="w-full bg-zinc-900/50 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:border-zinc-500 focus:ring-2 focus:ring-zinc-500/20 resize-none h-20"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-sm text-white/80 block mb-2">Button Text</label>
+                      <input 
+                        type="text"
+                        value={settings.heroButtonText || 'Shop Collection'}
+                        onChange={(e) => setSettings({ ...settings, heroButtonText: e.target.value })}
+                        className="w-full bg-zinc-900/50 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:border-zinc-500 focus:ring-2 focus:ring-zinc-500/20"
+                      />
+                    </div>
+                  </>
+                )}
+              </div>
+            </section>
+
+            <hr className="border-zinc-800/50" />
+
+            {/* Product Display */}
+            <section>
+              <h3 className="text-sm font-bold text-white/60 uppercase tracking-wider mb-4">Product Display</h3>
+              <div className="space-y-4">
+                <div>
+                  <label className="text-sm text-white/80 block mb-2">Product Card Style</label>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => setSettings({ ...settings, cardStyle: '3d' })}
+                      className={`flex-1 py-2 text-xs font-medium rounded-lg border ${settings.cardStyle !== 'flat' ? 'bg-white/10 border-white/20 text-white' : 'border-white/5 text-white/50 hover:bg-white/5'}`}
+                    >
+                      3D Interactive
+                    </button>
+                    <button
+                      onClick={() => setSettings({ ...settings, cardStyle: 'flat' })}
+                      className={`flex-1 py-2 text-xs font-medium rounded-lg border ${settings.cardStyle === 'flat' ? 'bg-white/10 border-white/20 text-white' : 'border-white/5 text-white/50 hover:bg-white/5'}`}
+                    >
+                      Flat & Minimal
+                    </button>
+                  </div>
                 </div>
                 <div>
-                  <label className="text-sm text-white/80 block mb-2">Subtitle</label>
-                  <textarea 
-                    value={settings.heroSubtitle}
-                    onChange={(e) => setSettings({ ...settings, heroSubtitle: e.target.value })}
-                    className="w-full bg-zinc-900/50 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:border-zinc-500 focus:ring-2 focus:ring-zinc-500/20 resize-none h-20"
-                  />
+                  <label className="text-sm text-white/80 block mb-2">Default Layout</label>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => setSettings({ ...settings, defaultView: 'grid' })}
+                      className={`flex-1 py-2 text-xs font-medium rounded-lg border ${settings.defaultView !== 'list' ? 'bg-white/10 border-white/20 text-white' : 'border-white/5 text-white/50 hover:bg-white/5'}`}
+                    >
+                      Grid View
+                    </button>
+                    <button
+                      onClick={() => setSettings({ ...settings, defaultView: 'list' })}
+                      className={`flex-1 py-2 text-xs font-medium rounded-lg border ${settings.defaultView === 'list' ? 'bg-white/10 border-white/20 text-white' : 'border-white/5 text-white/50 hover:bg-white/5'}`}
+                    >
+                      List View
+                    </button>
+                  </div>
                 </div>
               </div>
             </section>
 
             <hr className="border-zinc-800/50" />
 
-            {/* SEO Settings */}
+            {/* Footer & Socials */}
             <section>
-              <h3 className="text-sm font-bold text-white/60 uppercase tracking-wider mb-4">SEO & Social Sharing</h3>
+              <h3 className="text-sm font-bold text-white/60 uppercase tracking-wider mb-4">Footer & Socials</h3>
               <div className="space-y-4">
                 <div>
-                  <label className="text-sm text-white/80 block mb-2">Meta Title</label>
+                  <label className="text-sm text-white/80 block mb-2">Copyright Text</label>
                   <input 
                     type="text"
-                    placeholder="e.g. My Awesome Store | Premium Goods"
-                    value={settings.seoTitle || ''}
-                    onChange={(e) => setSettings({ ...settings, seoTitle: e.target.value })}
+                    placeholder="e.g. © 2026 My Brand"
+                    value={settings.footerText || ''}
+                    onChange={(e) => setSettings({ ...settings, footerText: e.target.value })}
                     className="w-full bg-zinc-900/50 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:border-zinc-500 focus:ring-2 focus:ring-zinc-500/20"
                   />
                 </div>
                 <div>
-                  <label className="text-sm text-white/80 block mb-2">Meta Description</label>
-                  <textarea 
-                    value={settings.seoDescription || ''}
-                    onChange={(e) => setSettings({ ...settings, seoDescription: e.target.value })}
-                    placeholder="Brief description for search engines..."
-                    className="w-full bg-zinc-900/50 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:border-zinc-500 focus:ring-2 focus:ring-zinc-500/20 resize-none h-20"
+                  <label className="text-sm text-white/80 block mb-2">Instagram URL</label>
+                  <input 
+                    type="text"
+                    placeholder="https://instagram.com/..."
+                    value={settings.socialInstagram || ''}
+                    onChange={(e) => setSettings({ ...settings, socialInstagram: e.target.value })}
+                    className="w-full bg-zinc-900/50 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:border-zinc-500 focus:ring-2 focus:ring-zinc-500/20"
                   />
                 </div>
                 <div>
-                  <label className="text-sm text-white/80 block mb-2">Social Sharing Image URL</label>
+                  <label className="text-sm text-white/80 block mb-2">X (Twitter) URL</label>
                   <input 
                     type="text"
-                    placeholder="https://..."
-                    value={settings.socialImage || ''}
-                    onChange={(e) => setSettings({ ...settings, socialImage: e.target.value })}
+                    placeholder="https://x.com/..."
+                    value={settings.socialTwitter || ''}
+                    onChange={(e) => setSettings({ ...settings, socialTwitter: e.target.value })}
+                    className="w-full bg-zinc-900/50 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:border-zinc-500 focus:ring-2 focus:ring-zinc-500/20"
+                  />
+                </div>
+                <div>
+                  <label className="text-sm text-white/80 block mb-2">TikTok URL</label>
+                  <input 
+                    type="text"
+                    placeholder="https://tiktok.com/@..."
+                    value={settings.socialTiktok || ''}
+                    onChange={(e) => setSettings({ ...settings, socialTiktok: e.target.value })}
                     className="w-full bg-zinc-900/50 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-zinc-100 focus:outline-none focus:border-zinc-500 focus:ring-2 focus:ring-zinc-500/20"
                   />
                 </div>
               </div>
             </section>
+            
           </div>
         </div>
       </div>

@@ -51,15 +51,29 @@ import {
 
 export function useStoreTheme() {
   const context = useOutletContext() || {}
-  const defaultSettings = (context.settings && context.settings.primaryColor) ? context.settings : {
+  const baseSettings = (context.settings && context.settings.primaryColor) ? context.settings : {}
+  const defaultSettings = {
     storeName: '',
+    logoUrl: '',
     announcementText: '',
+    stickyNav: true,
     primaryColor: '#4f46e5',
     buttonRadius: 'rounded',
     headerLayout: 'left',
     fontFamily: 'Inter',
+    heroLayout: 'cinematic',
+    heroImage: '',
+    heroOpacity: '60',
     heroTitle: 'Crafted with intention,\nbuilt to last.',
-    heroSubtitle: 'Carefully curated essentials for everyday living — from wardrobe to workspace.'
+    heroSubtitle: 'Carefully curated essentials for everyday living — from wardrobe to workspace.',
+    heroButtonText: 'Shop Collection',
+    cardStyle: '3d',
+    defaultView: 'grid',
+    footerText: '© 2026 Acme Goods Co. · Powered by OwnStore',
+    socialInstagram: '',
+    socialTwitter: '',
+    socialTiktok: '',
+    ...baseSettings
   }
   
   const [liveSettings, setLiveSettings] = useState(defaultSettings)
@@ -105,12 +119,16 @@ function StoreNav({ cartCount, theme }) {
           {theme.announcementText}
         </div>
       )}
-      <header className="bg-zinc-900/50 border-b border-white/10 sticky top-0 z-20 transition-colors">
+      <header className={`bg-zinc-900/50 border-b border-white/10 ${theme?.stickyNav !== false ? 'sticky top-0 z-20' : 'relative z-20'} transition-colors`}>
         <div className={`max-w-6xl mx-auto px-6 py-4 flex items-center ${theme?.headerLayout === 'center' ? 'flex-col gap-4 justify-center' : 'justify-between'}`}>
           <button onClick={() => navigate(`/store/${subdomain}`)} className="flex items-center gap-2.5 cursor-pointer">
-            <div className="w-8 h-8 rounded-lg bg-shop-primary flex items-center justify-center text-white font-bold text-sm">
-              {storeInitial}
-            </div>
+            {theme?.logoUrl ? (
+              <img src={theme.logoUrl} alt={storeName} className="h-8 w-auto object-contain" />
+            ) : (
+              <div className="w-8 h-8 rounded-lg bg-shop-primary flex items-center justify-center text-white font-bold text-sm">
+                {storeInitial}
+              </div>
+            )}
             <div className="text-left">
               <p className="font-semibold text-white font-display leading-none text-sm capitalize">{storeName}</p>
               <p className="text-[10px] text-white/50 font-mono mt-0.5">{subdomain || 'demo'}.ownstore.com</p>
@@ -186,7 +204,7 @@ function StoreNav({ cartCount, theme }) {
 
 // ── 3D Product Card ────────────────────────────────────────────────────────────
 
-const ProductCard3D = memo(function ProductCard3D({ product, onAddToCart, onQuickView }) {
+const ProductCard3D = memo(function ProductCard3D({ product, onAddToCart, onQuickView, isFlat }) {
   const navigate = useNavigate()
   const { subdomain } = useParams()
   const tilt = useTilt(14)
@@ -201,18 +219,18 @@ const ProductCard3D = memo(function ProductCard3D({ product, onAddToCart, onQuic
 
   return (
     <motion.div
-      ref={tilt.ref}
-      onMouseMove={tilt.onMouseMove}
-      onMouseLeave={tilt.onMouseLeave}
+      ref={isFlat ? null : tilt.ref}
+      onMouseMove={isFlat ? null : tilt.onMouseMove}
+      onMouseLeave={isFlat ? null : tilt.onMouseLeave}
       onClick={() => navigate(`/store/${subdomain}/product/${product.id}`)}
       whileTap={{ scale: 0.98 }}
-      className="bg-zinc-900/50  border border-white/10  rounded-[10px] overflow-visible cursor-pointer group transition-colors"
-      style={{ transformStyle: 'preserve-3d', willChange: 'transform', transition: 'box-shadow 0.2s, background-color 0.2s, border-color 0.2s' }}
+      className={`bg-zinc-900/50 border border-white/10 rounded-[10px] cursor-pointer group transition-colors ${isFlat ? 'overflow-hidden hover:bg-white/5' : 'overflow-visible'}`}
+      style={isFlat ? {} : { transformStyle: 'preserve-3d', willChange: 'transform', transition: 'box-shadow 0.2s, background-color 0.2s, border-color 0.2s' }}
     >
       {/* Image layer — pops forward */}
       <div
-        className="relative overflow-hidden bg-white/10  rounded-t-[10px]"
-        style={{ transform: 'translateZ(0)', aspectRatio: '1' }}
+        className={`relative overflow-hidden bg-white/10 ${isFlat ? '' : 'rounded-t-[10px]'}`}
+        style={isFlat ? { aspectRatio: '1' } : { transform: 'translateZ(0)', aspectRatio: '1' }}
       >
         <img
           src={product.image}
@@ -220,7 +238,7 @@ const ProductCard3D = memo(function ProductCard3D({ product, onAddToCart, onQuic
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
         />
         {/* Badges */}
-        <div className="absolute top-2 left-2 flex flex-col gap-1" style={{ transform: 'translateZ(30px)' }}>
+        <div className="absolute top-2 left-2 flex flex-col gap-1" style={isFlat ? {} : { transform: 'translateZ(30px)' }}>
           {product.badge && (
             <span className={`text-[10px] font-bold uppercase tracking-wider text-white px-2 py-1 rounded-sm shadow-md ${
               product.badge.toLowerCase() === 'sale' ? 'bg-red-500' : 
@@ -239,7 +257,7 @@ const ProductCard3D = memo(function ProductCard3D({ product, onAddToCart, onQuic
         {/* Quick View Overlay Button */}
         <div 
           className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-[2px]"
-          style={{ transform: 'translateZ(20px)' }}
+          style={isFlat ? {} : { transform: 'translateZ(20px)' }}
         >
           <button
             onClick={(e) => {
@@ -254,12 +272,12 @@ const ProductCard3D = memo(function ProductCard3D({ product, onAddToCart, onQuic
       </div>
 
       {/* Info layer */}
-      <div className="p-4" style={{ transform: 'translateZ(10px)' }}>
+      <div className="p-4" style={isFlat ? {} : { transform: 'translateZ(10px)' }}>
         <p className="text-xs font-mono text-white/50  mb-0.5">{product.category}</p>
-        <h3 className="font-semibold text-white  text-sm font-display mb-2 group-hover:text-shop-primary " style={{ transform: 'translateZ(4px)' }}>
+        <h3 className="font-semibold text-white  text-sm font-display mb-2 group-hover:text-shop-primary " style={isFlat ? {} : { transform: 'translateZ(4px)' }}>
           {product.name}
         </h3>
-        <div className="flex items-center justify-between" style={{ transform: 'translateZ(6px)' }}>
+        <div className="flex items-center justify-between" style={isFlat ? {} : { transform: 'translateZ(6px)' }}>
           <span className="font-bold text-white ">${product.price}</span>
           <button
             onClick={handleAdd}
@@ -276,7 +294,7 @@ const ProductCard3D = memo(function ProductCard3D({ product, onAddToCart, onQuic
 
 // ── List View Product Card ──────────────────────────────────────────────────────
 
-const ProductListCard = memo(function ProductListCard({ product, onAddToCart, onQuickView }) {
+const ProductListCard = memo(function ProductListCard({ product, onAddToCart, onQuickView, isFlat }) {
   const navigate = useNavigate()
   const { subdomain } = useParams()
   const [justAdded, setJustAdded] = useState(false)
@@ -452,7 +470,8 @@ export function StoreHome() {
   const [selectedCategory, setSelectedCategory] = useState('All')
   
   // Advanced Browsing State
-  const [viewMode, setViewMode] = useState('grid')
+  const theme = useStoreTheme()
+  const [viewMode, setViewMode] = useState(theme.defaultView || 'grid')
   const [sortOption, setSortOption] = useState('newest')
   const [priceFilter, setPriceFilter] = useState('all')
   const [visibleCount, setVisibleCount] = useState(4)
@@ -460,7 +479,6 @@ export function StoreHome() {
   const [recentlyViewed, setRecentlyViewed] = useState([])
 
   const cartCount = cart.reduce((s, i) => s + i.quantity, 0)
-  const theme = useStoreTheme()
 
   useEffect(() => {
     try {
@@ -513,23 +531,36 @@ export function StoreHome() {
       `}</style>
       <StoreNav cartCount={cartCount} theme={theme} />
 
-      {/* Hero banner with cinematic carousel */}
-      <div className="relative overflow-hidden bg-zinc-950 flex items-end pb-24 border-b border-zinc-800/50" style={{ minHeight: '75vh' }}>
-        <HeroCarousel images={filteredProducts.slice(0, 4).map(p => p.image).filter(Boolean)} />
-        <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/60 to-transparent pointer-events-none" />
-        <div className="absolute inset-0 bg-gradient-to-r from-zinc-950/80 via-zinc-950/20 to-transparent pointer-events-none" />
-        <div className="relative max-w-6xl mx-auto px-6 z-10 w-full pointer-events-none">
-          <p className="text-zinc-400 text-sm font-mono mb-4 tracking-widest uppercase">New arrivals · Summer 2026</p>
-          <h1 className="text-5xl md:text-7xl font-bold font-display text-white mb-6 whitespace-pre-line tracking-tight leading-tight">{theme.heroTitle}</h1>
-          <p className="text-zinc-300 text-lg md:text-xl max-w-xl mb-10 leading-relaxed pointer-events-auto">{theme.heroSubtitle}</p>
-          <button 
-            className="pointer-events-auto bg-zinc-100 hover:bg-white text-zinc-950 px-8 py-4 rounded-full font-bold text-sm shadow-[0_0_20px_rgba(255,255,255,0.15)] transition-all hover:scale-105 active:scale-95 cursor-pointer"
-            onClick={() => window.scrollTo({ top: window.innerHeight * 0.75, behavior: 'smooth' })}
-          >
-            Shop Collection
-          </button>
+      {/* Hero Section */}
+      {theme.heroLayout !== 'hidden' && (
+        <div className={`relative overflow-hidden bg-zinc-950 flex ${theme.heroLayout === 'minimalist' ? 'items-center justify-center text-center' : 'items-end text-left'} pb-24 border-b border-zinc-800/50`} style={{ minHeight: '75vh' }}>
+          {theme.heroLayout === 'cinematic' && (
+            <HeroCarousel images={filteredProducts.slice(0, 4).map(p => p.image).filter(Boolean)} />
+          )}
+          {theme.heroLayout === 'static' && theme.heroImage && (
+            <div className="absolute inset-0 w-full h-full bg-zinc-950">
+              <img src={theme.heroImage} className="absolute inset-0 w-full h-full object-cover" alt="Hero" />
+            </div>
+          )}
+          {(theme.heroLayout === 'cinematic' || theme.heroLayout === 'static') && (
+            <div className="absolute inset-0 bg-black pointer-events-none" style={{ opacity: (theme.heroOpacity || 60) / 100 }} />
+          )}
+          
+          <div className={`relative max-w-6xl mx-auto px-6 z-10 w-full pointer-events-none ${theme.heroLayout === 'minimalist' ? 'mt-20 flex flex-col items-center' : ''}`}>
+            {theme.heroLayout !== 'minimalist' && (
+              <p className="text-zinc-400 text-sm font-mono mb-4 tracking-widest uppercase">New arrivals · Summer 2026</p>
+            )}
+            <h1 className="text-5xl md:text-7xl font-bold font-display text-white mb-6 whitespace-pre-line tracking-tight leading-tight">{theme.heroTitle}</h1>
+            <p className={`text-zinc-300 text-lg md:text-xl max-w-xl mb-10 leading-relaxed pointer-events-auto`}>{theme.heroSubtitle}</p>
+            <button 
+              className="pointer-events-auto bg-zinc-100 hover:bg-white text-zinc-950 px-8 py-4 rounded-full font-bold text-sm shadow-[0_0_20px_rgba(255,255,255,0.15)] transition-all hover:scale-105 active:scale-95 cursor-pointer"
+              onClick={() => window.scrollTo({ top: window.innerHeight * 0.75, behavior: 'smooth' })}
+            >
+              {theme.heroButtonText || 'Shop Collection'}
+            </button>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Products with 3D tilt */}
       <div className="max-w-6xl mx-auto px-6 py-10" style={{ perspective: '1200px' }}>
@@ -632,9 +663,9 @@ export function StoreHome() {
                     transition={{ duration: 0.25, type: 'spring', bounce: 0 }}
                   >
                     {viewMode === 'grid' ? (
-                      <ProductCard3D product={p} onAddToCart={addToCart} onQuickView={setQuickViewProduct} />
+                      <ProductCard3D product={p} onAddToCart={addToCart} onQuickView={setQuickViewProduct} isFlat={theme.cardStyle === 'flat'} />
                     ) : (
-                      <ProductListCard product={p} onAddToCart={addToCart} onQuickView={setQuickViewProduct} />
+                      <ProductListCard product={p} onAddToCart={addToCart} onQuickView={setQuickViewProduct} isFlat={theme.cardStyle === 'flat'} />
                     )}
                   </motion.div>
                 ))}
@@ -683,11 +714,14 @@ export function StoreHome() {
       {/* Footer */}
       <footer className="border-t border-white/10  py-8 px-6 mt-4 transition-colors">
         <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-white/50 ">
-          <p>© 2026 Acme Goods Co. · Powered by <span className="text-shop-primary ">OwnStore</span></p>
+          <p>{theme.footerText || '© 2026 Acme Goods Co. · Powered by OwnStore'}</p>
           <div className="flex gap-4">
-            <Link to="/store/privacy" className="hover:text-white/70 transition-colors">Privacy Policy</Link>
-            <Link to="/store/returns" className="hover:text-white/70 transition-colors">Returns & Refunds</Link>
-            <Link to="/store/contact" className="hover:text-white/70 transition-colors">Contact Us</Link>
+            {theme.socialInstagram && <a href={theme.socialInstagram} target="_blank" rel="noreferrer" className="hover:text-white/70 transition-colors">Instagram</a>}
+            {theme.socialTwitter && <a href={theme.socialTwitter} target="_blank" rel="noreferrer" className="hover:text-white/70 transition-colors">Twitter (X)</a>}
+            {theme.socialTiktok && <a href={theme.socialTiktok} target="_blank" rel="noreferrer" className="hover:text-white/70 transition-colors">TikTok</a>}
+            <Link to="/store/privacy" className="hover:text-white/70 transition-colors">Privacy</Link>
+            <Link to="/store/returns" className="hover:text-white/70 transition-colors">Returns</Link>
+            <Link to="/store/contact" className="hover:text-white/70 transition-colors">Contact</Link>
           </div>
         </div>
       </footer>
