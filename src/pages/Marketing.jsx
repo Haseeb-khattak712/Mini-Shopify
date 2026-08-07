@@ -54,12 +54,16 @@ function StatsCounter({ target, suffix = '' }) {
 function ScrollFrames({ progress }) {
   const canvasRef = useRef(null);
   const imagesRef = useRef([]);
+  const lastDrawnIndexRef = useRef(-1);
+  const renderRequestedRef = useRef(false);
 
   useEffect(() => {
     const frameCount = 96;
     const imgs = [];
     for (let i = 0; i < frameCount; i++) {
       const img = new Image();
+      // Use decoding="async" to prevent decoding from blocking the main thread
+      img.decoding = 'async';
       img.src = `/frames/frame_${i.toString().padStart(5, '0')}.jpg`;
       imgs.push(img);
     }
@@ -69,27 +73,40 @@ function ScrollFrames({ progress }) {
       if (canvasRef.current) {
         canvasRef.current.width = imgs[0].width;
         canvasRef.current.height = imgs[0].height;
-        const ctx = canvasRef.current.getContext('2d');
+        const ctx = canvasRef.current.getContext('2d', { alpha: false }); // Disable alpha for better performance
         ctx.drawImage(imgs[0], 0, 0);
+        lastDrawnIndexRef.current = 0;
       }
     };
   }, []);
 
-  useMotionValueEvent(progress, "change", (latest) => {
+  useMotionValueEvent(progress, "change", () => {
     if (!canvasRef.current || imagesRef.current.length === 0) return;
-    const frameIndex = Math.min(95, Math.max(0, Math.floor(latest * 96)));
-    const img = imagesRef.current[frameIndex];
-    if (img && img.complete) {
-      const ctx = canvasRef.current.getContext('2d');
-      if (canvasRef.current.width !== img.width && img.width > 0) {
-        canvasRef.current.width = img.width;
-        canvasRef.current.height = img.height;
-      }
-      ctx.drawImage(img, 0, 0);
+    
+    if (!renderRequestedRef.current) {
+      renderRequestedRef.current = true;
+      requestAnimationFrame(() => {
+        const frameIndex = Math.min(95, Math.max(0, Math.floor(progress.get() * 96)));
+        
+        // ONLY draw if the frame actually changed to save massive GPU/CPU overhead
+        if (lastDrawnIndexRef.current !== frameIndex) {
+          const img = imagesRef.current[frameIndex];
+          if (img && img.complete) {
+            const ctx = canvasRef.current.getContext('2d', { alpha: false });
+            if (canvasRef.current.width !== img.width && img.width > 0) {
+              canvasRef.current.width = img.width;
+              canvasRef.current.height = img.height;
+            }
+            ctx.drawImage(img, 0, 0);
+            lastDrawnIndexRef.current = frameIndex;
+          }
+        }
+        renderRequestedRef.current = false;
+      });
     }
   });
 
-  return <canvas ref={canvasRef} className="absolute top-0 left-0 w-full h-full object-cover opacity-60" />;
+  return <canvas ref={canvasRef} className="absolute top-0 left-0 w-full h-full object-cover opacity-60 pointer-events-none" />;
 }
 
 // ── Landing Page ──────────────────────────────────────────────────────────────
