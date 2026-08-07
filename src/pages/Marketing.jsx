@@ -159,14 +159,14 @@ export function LandingPage() {
         {/* Sticky wrapper */}
         <div className="sticky top-0 h-screen overflow-hidden flex items-center">
 
-          <div className="absolute inset-0 w-full h-full bg-black z-0 pointer-events-none">
-            <video 
-              autoPlay 
-              loop 
-              muted 
-              playsInline
+          <div className="absolute inset-0 w-full h-full bg-black z-0 pointer-events-none overflow-hidden">
+            <motion.img 
+              initial={{ scale: 1 }}
+              animate={{ scale: 1.15 }}
+              transition={{ duration: 25, repeat: Infinity, repeatType: "reverse", ease: "linear" }}
               className="absolute top-0 left-0 w-full h-full object-cover opacity-60"
-              src="https://cdn.pixabay.com/video/2021/08/04/83866-584742540_large.mp4"
+              src="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=2500&q=80"
+              alt="Hero Background"
             />
             <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-black/80 pointer-events-none mix-blend-multiply" />
             <div className="absolute inset-0 bg-shop-primary/10 pointer-events-none mix-blend-overlay" />
