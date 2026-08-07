@@ -7,7 +7,8 @@ use App\Utils\Auth;
 class ReviewController {
     public function index() {
         $db = Database::getConnection();
-        $user_id = Auth::getUserId();
+        $subdomain = $_GET['subdomain'] ?? null;
+        $user_id = Auth::getUserId(false, $subdomain);
         
         if (!$user_id) {
             http_response_code(401);
@@ -29,7 +30,8 @@ class ReviewController {
 
     public function store() {
         $db = Database::getConnection();
-        $user_id = Auth::getUserId();
+        $subdomain = $_GET['subdomain'] ?? null;
+        $user_id = Auth::getUserId(false, $subdomain);
         
         if (!$user_id) {
             http_response_code(401);

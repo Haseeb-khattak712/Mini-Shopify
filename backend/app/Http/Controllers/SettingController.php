@@ -7,7 +7,8 @@ use App\Utils\Auth;
 class SettingController {
     public function show() {
         $db = Database::getConnection();
-        $user_id = Auth::getUserId();
+        $subdomain = $_GET['subdomain'] ?? null;
+        $user_id = Auth::getUserId(false, $subdomain);
         if (!$user_id) {
             http_response_code(401);
             echo json_encode(['error' => 'Unauthorized or missing subdomain']);

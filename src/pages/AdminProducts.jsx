@@ -58,7 +58,7 @@ export function AdminProducts() {
     try {
       const token = localStorage.getItem('ownstore_token') || ''
       const API_URL = import.meta.env.VITE_API_URL || '/backend/api'
-      const res = await fetch(`${API_URL}/upload.php`, {
+      const res = await fetch(`${API_URL}/upload`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}` },
         body: formData
