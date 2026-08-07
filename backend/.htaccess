@@ -11,3 +11,11 @@
 RewriteEngine On
 RewriteCond %{HTTP:Authorization} ^(.*)
 RewriteRule .* - [e=HTTP_AUTHORIZATION:%1]
+
+# Route uploads directly to public/uploads
+RewriteRule ^uploads/(.*)$ public/uploads/$1 [L]
+
+# Route all requests to public/index.php
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.*)$ public/index.php [QSA,L]

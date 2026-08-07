@@ -40,6 +40,13 @@ spl_autoload_register(function ($class) {
 
 // 3. Load Routes and Dispatch
 $request_uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+
+// Strip '/backend' from the URI if the live server is hosted in a subfolder
+$base_path = '/backend';
+if (strpos($request_uri, $base_path) === 0) {
+    $request_uri = substr($request_uri, strlen($base_path));
+}
+
 $request_method = $_SERVER['REQUEST_METHOD'];
 
 require_once __DIR__ . '/../routes/api.php';
