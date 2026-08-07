@@ -83,7 +83,7 @@ export function LandingPage() {
   return (
     <div className="bg-shop-lightbg font-body selection:bg-shop-accent selection:text-shop-primary">
       {/* Nav */}
-      <nav className={`fixed top-0 left-0 right-0 z-[100] bg-[#000000]/80 backdrop-blur-xl border-b border-white/5 py-4 transition-all duration-700 ${navVisible ? 'translate-y-0 opacity-100' : '-translate-y-full opacity-0 pointer-events-none'}`}>
+      <nav className={`fixed top-0 left-0 right-0 z-[100] py-4 transition-all duration-700 ${navVisible ? 'bg-[#000000]/80 backdrop-blur-xl border-b border-white/5' : 'bg-transparent border-transparent backdrop-blur-none'}`}>
         <div className="mx-auto max-w-[1728px] px-6 md:px-10 lg:px-16 xl:px-20 2xl:px-24 w-full flex items-center justify-between">
           <div className="flex items-center gap-3 cursor-pointer group" onClick={() => navigate('/')} style={{ perspective: '1000px' }}>
             <img src="/logo.png" alt="OwnStore Logo" className="w-10 h-10 object-contain drop-shadow-md opacity-80 mix-blend-luminosity group-hover:mix-blend-normal group-hover:opacity-100 transition-all duration-500" style={{ transition: 'transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)', transformStyle: 'preserve-3d' }} onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.15) rotateY(15deg) rotateX(10deg) translateZ(10px)'} onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1) rotateY(0deg) rotateX(0deg) translateZ(0px)'} />
