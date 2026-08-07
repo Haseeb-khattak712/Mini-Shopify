@@ -51,6 +51,47 @@ function StatsCounter({ target, suffix = '' }) {
   )
 }
 
+function ScrollFrames({ progress }) {
+  const canvasRef = useRef(null);
+  const imagesRef = useRef([]);
+
+  useEffect(() => {
+    const frameCount = 96;
+    const imgs = [];
+    for (let i = 0; i < frameCount; i++) {
+      const img = new Image();
+      img.src = `/frames/frame_${i.toString().padStart(5, '0')}.jpg`;
+      imgs.push(img);
+    }
+    imagesRef.current = imgs;
+    
+    imgs[0].onload = () => {
+      if (canvasRef.current) {
+        canvasRef.current.width = imgs[0].width;
+        canvasRef.current.height = imgs[0].height;
+        const ctx = canvasRef.current.getContext('2d');
+        ctx.drawImage(imgs[0], 0, 0);
+      }
+    };
+  }, []);
+
+  useMotionValueEvent(progress, "change", (latest) => {
+    if (!canvasRef.current || imagesRef.current.length === 0) return;
+    const frameIndex = Math.min(95, Math.max(0, Math.floor(latest * 96)));
+    const img = imagesRef.current[frameIndex];
+    if (img && img.complete) {
+      const ctx = canvasRef.current.getContext('2d');
+      if (canvasRef.current.width !== img.width && img.width > 0) {
+        canvasRef.current.width = img.width;
+        canvasRef.current.height = img.height;
+      }
+      ctx.drawImage(img, 0, 0);
+    }
+  });
+
+  return <canvas ref={canvasRef} className="absolute top-0 left-0 w-full h-full object-cover opacity-60" />;
+}
+
 // ── Landing Page ──────────────────────────────────────────────────────────────
 export function LandingPage() {
   const navigate = useNavigate()
@@ -160,14 +201,7 @@ export function LandingPage() {
         <div className="sticky top-0 h-screen overflow-hidden flex items-center">
 
           <div className="absolute inset-0 w-full h-full bg-black z-0 pointer-events-none overflow-hidden">
-            <motion.img 
-              initial={{ scale: 1 }}
-              animate={{ scale: 1.15 }}
-              transition={{ duration: 25, repeat: Infinity, repeatType: "reverse", ease: "linear" }}
-              className="absolute top-0 left-0 w-full h-full object-cover opacity-60"
-              src="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=2500&q=80"
-              alt="Hero Background"
-            />
+            <ScrollFrames progress={heroScrollProgress} />
             <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-black/80 pointer-events-none mix-blend-multiply" />
             <div className="absolute inset-0 bg-shop-primary/10 pointer-events-none mix-blend-overlay" />
           </div>
