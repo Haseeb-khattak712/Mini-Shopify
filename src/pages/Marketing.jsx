@@ -275,7 +275,6 @@ export function LandingPage() {
           <div className="absolute inset-0 w-full h-full bg-black z-0 pointer-events-none overflow-hidden">
             <ScrollFrames progress={heroScrollProgress} onLoadProgress={setLoadingProgress} />
             <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/50 to-black/90 pointer-events-none" />
-            <div className="absolute inset-0 bg-shop-primary/10 pointer-events-none" />
           </div>
 
           <div className="relative z-10 mx-auto max-w-[1728px] w-full px-6 md:px-10 lg:px-16 xl:px-20 2xl:px-24 grid lg:grid-cols-12 gap-12 items-center">
