@@ -51,7 +51,7 @@ function StatsCounter({ target, suffix = '' }) {
   )
 }
 
-function ScrollFrames({ progress }) {
+function ScrollFrames({ progress, onLoadProgress }) {
   const canvasRef = useRef(null);
   const imagesRef = useRef([]);
   const lastDrawnIndexRef = useRef(-1);
@@ -61,44 +61,36 @@ function ScrollFrames({ progress }) {
     const frameCount = 96;
     const imgs = new Array(frameCount);
     imagesRef.current = imgs;
+    let loadedCount = 0;
     
-    // Load first frame immediately with high priority
-    const firstImg = new Image();
-    firstImg.src = `/frames/frame_00000.jpg`;
-    imgs[0] = firstImg;
-    
-    firstImg.onload = () => {
-      if (canvasRef.current) {
-        canvasRef.current.width = firstImg.width;
-        canvasRef.current.height = firstImg.height;
-        const ctx = canvasRef.current.getContext('2d', { alpha: false });
-        ctx.drawImage(firstImg, 0, 0);
-        lastDrawnIndexRef.current = 0;
-      }
+    for (let i = 0; i < frameCount; i++) {
+      const img = new Image();
+      // Load all frames aggressively in parallel
+      img.src = `/frames/frame_${i.toString().padStart(5, '0')}.jpg`;
       
-      // Load remaining frames sequentially in the background 
-      // so we don't choke the network and block other components from loading
-      let i = 1;
-      function loadNext() {
-        if (i >= frameCount) return;
-        const img = new Image();
-        img.decoding = 'async';
-        img.src = `/frames/frame_${i.toString().padStart(5, '0')}.jpg`;
-        imgs[i] = img;
-        i++;
-        // Load the next one only after this one finishes
-        img.onload = loadNext;
-        img.onerror = loadNext;
-      }
+      img.onload = () => {
+        loadedCount++;
+        if (onLoadProgress) onLoadProgress(Math.round((loadedCount / frameCount) * 100));
+        
+        // Draw the first frame immediately once it's loaded
+        if (i === 0 && canvasRef.current) {
+          canvasRef.current.width = img.width;
+          canvasRef.current.height = img.height;
+          const ctx = canvasRef.current.getContext('2d', { alpha: false });
+          ctx.drawImage(img, 0, 0);
+          lastDrawnIndexRef.current = 0;
+        }
+      };
       
-      // Start background queue when browser is idle
-      if ('requestIdleCallback' in window) {
-        window.requestIdleCallback(loadNext);
-      } else {
-        setTimeout(loadNext, 100);
-      }
-    };
-  }, []);
+      img.onerror = () => {
+        // If an image fails to load, still increment so we don't get stuck forever
+        loadedCount++;
+        if (onLoadProgress) onLoadProgress(Math.round((loadedCount / frameCount) * 100));
+      };
+      
+      imgs[i] = img;
+    }
+  }, [onLoadProgress]);
 
   useMotionValueEvent(progress, "change", () => {
     if (!canvasRef.current || imagesRef.current.length === 0) return;
@@ -133,6 +125,20 @@ function ScrollFrames({ progress }) {
 export function LandingPage() {
   const navigate = useNavigate()
   const heroRef = useRef(null)
+  
+  const [loadingProgress, setLoadingProgress] = useState(0)
+  const isLoaded = loadingProgress >= 100
+
+  useEffect(() => {
+    if (!isLoaded) {
+      document.body.style.overflow = 'hidden'
+      window.scrollTo(0, 0)
+    } else {
+      document.body.style.overflow = ''
+    }
+    return () => { document.body.style.overflow = '' }
+  }, [isLoaded])
+
   const { scrollYProgress: pageScrollProgress } = useScroll()
   const { scrollYProgress: rawHeroScrollProgress } = useScroll({
     target: heroRef,
@@ -156,6 +162,39 @@ export function LandingPage() {
 
   return (
     <div className="bg-shop-lightbg font-body selection:bg-shop-accent selection:text-shop-primary">
+      {/* Loading Overlay */}
+      <AnimatePresence>
+        {!isLoaded && (
+          <motion.div 
+            initial={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.8, ease: "easeInOut" }}
+            className="fixed inset-0 z-[200] bg-black flex flex-col items-center justify-center text-white"
+          >
+            <div className="flex flex-col items-center gap-6">
+              <div className="w-16 h-16 relative">
+                <div className="absolute inset-0 rounded-full border-4 border-white/20"></div>
+                <motion.div 
+                  className="absolute inset-0 rounded-full border-4 border-shop-accent border-t-transparent"
+                  animate={{ rotate: 360 }}
+                  transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
+                />
+              </div>
+              <div className="text-2xl font-display font-medium tracking-wide">
+                Loading Experience <span className="text-shop-accent">{loadingProgress}%</span>
+              </div>
+              <div className="w-64 h-1 bg-white/10 rounded-full overflow-hidden">
+                <motion.div 
+                  className="h-full bg-shop-accent"
+                  initial={{ width: 0 }}
+                  animate={{ width: `${loadingProgress}%` }}
+                />
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Nav */}
       <nav className={`fixed top-0 left-0 right-0 z-[100] py-4 transition-all duration-700 ${navVisible ? 'bg-[#000000]/80 backdrop-blur-xl border-b border-white/5' : 'bg-transparent border-transparent backdrop-blur-none pointer-events-none'}`}>
         <div className={`mx-auto max-w-[1728px] px-6 md:px-10 lg:px-16 xl:px-20 2xl:px-24 w-full flex items-center justify-between ${!navVisible ? 'pointer-events-auto' : ''}`}>
@@ -234,7 +273,7 @@ export function LandingPage() {
         <div className="sticky top-0 h-screen overflow-hidden flex items-center">
 
           <div className="absolute inset-0 w-full h-full bg-black z-0 pointer-events-none overflow-hidden">
-            <ScrollFrames progress={heroScrollProgress} />
+            <ScrollFrames progress={heroScrollProgress} onLoadProgress={setLoadingProgress} />
             <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/50 to-black/90 pointer-events-none" />
             <div className="absolute inset-0 bg-shop-primary/10 pointer-events-none" />
           </div>
