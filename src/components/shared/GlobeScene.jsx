@@ -36,12 +36,11 @@ function Starfield() {
     canvas.height = 32;
     const ctx = canvas.getContext('2d');
 
-    // Core of the star: sharp and pinpoint but large enough to be visible
+    // Core of the star: sharp and pinpoint to look like realistic stars in deep space
     let gradient = ctx.createRadialGradient(16, 16, 0, 16, 16, 16);
     gradient.addColorStop(0, 'rgba(255,255,255,1)');
-    gradient.addColorStop(0.2, 'rgba(255,255,255,1)');    // much more visible solid core
-    gradient.addColorStop(0.4, 'rgba(255,255,255,0.5)');  // smoother falloff
-    gradient.addColorStop(0.8, 'rgba(255,255,255,0.1)');  // faint edge
+    gradient.addColorStop(0.05, 'rgba(255,255,255,0.8)'); // Sharp core
+    gradient.addColorStop(0.15, 'rgba(255,255,255,0.05)'); // Very faint, tight halo
     gradient.addColorStop(1, 'rgba(0,0,0,0)');
 
     ctx.fillStyle = gradient;
