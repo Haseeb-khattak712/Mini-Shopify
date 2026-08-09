@@ -27,15 +27,15 @@ const CITIES = [
 ];
 
 function Starfield() {
-  const count = 1500; // Reduced for performance
-  
+  const count = 3500; // Reduced for performance
+
   // Generate a hyper-realistic star texture: extremely sharp core, tiny subtle glow
   const starTexture = useMemo(() => {
     const canvas = document.createElement('canvas');
     canvas.width = 32;
     canvas.height = 32;
     const ctx = canvas.getContext('2d');
-    
+
     // Core of the star: sharp and pinpoint but large enough to be visible
     let gradient = ctx.createRadialGradient(16, 16, 0, 16, 16, 16);
     gradient.addColorStop(0, 'rgba(255,255,255,1)');
@@ -43,10 +43,10 @@ function Starfield() {
     gradient.addColorStop(0.4, 'rgba(255,255,255,0.5)');  // smoother falloff
     gradient.addColorStop(0.8, 'rgba(255,255,255,0.1)');  // faint edge
     gradient.addColorStop(1, 'rgba(0,0,0,0)');
-    
+
     ctx.fillStyle = gradient;
     ctx.fillRect(0, 0, 32, 32);
-    
+
     const texture = new THREE.CanvasTexture(canvas);
     texture.needsUpdate = true;
     return texture;
@@ -56,17 +56,17 @@ function Starfield() {
     const pos = new Float32Array(count * 3);
     const cols = new Float32Array(count * 3);
     const sz = new Float32Array(count);
-    
+
     for (let i = 0; i < count; i++) {
       // Fill the entire space evenly, gently denser in the center
       const r = Math.pow(Math.random(), 1.2) * 120; // Slightly tighter radius for higher density
       const theta = Math.random() * 2 * Math.PI;
       const phi = Math.acos(2 * Math.random() - 1);
-      
+
       const x = r * Math.sin(phi) * Math.cos(theta);
       const y = r * Math.sin(phi) * Math.sin(theta);
-      const z = r * Math.cos(phi) - 5; 
-      
+      const z = r * Math.cos(phi) - 5;
+
       pos[i * 3] = x;
       pos[i * 3 + 1] = y;
       pos[i * 3 + 2] = z;
@@ -74,12 +74,12 @@ function Starfield() {
       // Photorealistic deep-space star colors
       const colorType = Math.random();
       const color = new THREE.Color();
-      if (colorType > 0.99) color.setHex(0x95BF47); 
-      else if (colorType > 0.8) color.setHex(0xa3c2ff); 
-      else if (colorType > 0.6) color.setHex(0xffd2a1); 
-      else if (colorType > 0.4) color.setHex(0xfff4e8); 
-      else color.setHex(0xffffff); 
-      
+      if (colorType > 0.99) color.setHex(0x95BF47);
+      else if (colorType > 0.8) color.setHex(0xa3c2ff);
+      else if (colorType > 0.6) color.setHex(0xffd2a1);
+      else if (colorType > 0.4) color.setHex(0xfff4e8);
+      else color.setHex(0xffffff);
+
       cols[i * 3] = color.r;
       cols[i * 3 + 1] = color.g;
       cols[i * 3 + 2] = color.b;
@@ -97,7 +97,7 @@ function Starfield() {
       if (starTexture) starTexture.dispose();
     }
   }, [starTexture]);
-  
+
   useFrame((state) => {
     if (!pointsRef.current) return;
     pointsRef.current.rotation.y = state.clock.getElapsedTime() * 0.003;
@@ -111,14 +111,14 @@ function Starfield() {
         <bufferAttribute attach="attributes-color" count={count} array={colors} itemSize={3} />
         <bufferAttribute attach="attributes-size" count={count} array={sizes} itemSize={1} />
       </bufferGeometry>
-      <pointsMaterial 
-        size={0.07} 
-        vertexColors 
-        transparent 
-        depthWrite={false} 
-        opacity={1} 
-        blending={THREE.AdditiveBlending} 
-        sizeAttenuation={true} 
+      <pointsMaterial
+        size={0.07}
+        vertexColors
+        transparent
+        depthWrite={false}
+        opacity={1}
+        blending={THREE.AdditiveBlending}
+        sizeAttenuation={true}
         map={starTexture}
       />
     </points>
@@ -137,10 +137,10 @@ export function GlobeScene() {
       const box = new THREE.Box3().setFromObject(gltf.scene);
       const size = box.getSize(new THREE.Vector3());
       const maxDim = Math.max(size.x, size.y, size.z);
-      
+
       const scale = 200 / maxDim;
       gltf.scene.scale.set(scale, scale, scale);
-      
+
       const center = box.getCenter(new THREE.Vector3());
       gltf.scene.position.x = -center.x * scale;
       gltf.scene.position.y = -center.y * scale;
@@ -151,21 +151,21 @@ export function GlobeScene() {
           child.material.metalness = Math.max(0.4, child.material.metalness || 0);
           child.material.roughness = Math.min(0.6, child.material.roughness || 1);
           child.material.envMapIntensity = 2.0; // Boost reflections
-          
+
           if (child.material.map) {
-             child.material.map.anisotropy = 16; // 4K Texture filtering
+            child.material.map.anisotropy = 16; // 4K Texture filtering
           }
-          
+
           // Apply a subtle deep emerald-blue tone (#021a24) to enhance the oceans/dark areas
           const tint = new THREE.Color('#021a24');
           child.material.color.lerp(tint, 0.2); // 20% blend
-          
+
           // Enable better shadow/lighting interaction
           child.receiveShadow = true;
           child.castShadow = true;
         }
       });
-      
+
       setEarthModel(gltf.scene);
     });
   }, []);
@@ -173,20 +173,20 @@ export function GlobeScene() {
   useEffect(() => {
     if (globeRef.current && earthModel) {
       const scene = globeRef.current.scene();
-      
+
       const ambientGlow = new THREE.AmbientLight('#042F26', 0.8);
       scene.add(ambientGlow);
-      
+
       const rimLight = new THREE.DirectionalLight('#95BF47', 1.5);
       rimLight.position.set(-100, 100, -100);
       scene.add(rimLight);
-      
+
       // Add subtle orbital rings with hyperrealistic high-poly resolution
       const ring1Geo = new THREE.TorusGeometry(125, 0.1, 64, 256);
       const ring1Mat = new THREE.MeshBasicMaterial({ color: '#ffffff', transparent: true, opacity: 0.15 });
       const ring1 = new THREE.Mesh(ring1Geo, ring1Mat);
       ring1.rotation.x = Math.PI / 2;
-      
+
       const ring2Geo = new THREE.TorusGeometry(140, 0.05, 64, 256);
       const ring2Mat = new THREE.MeshBasicMaterial({ color: '#95BF47', transparent: true, opacity: 0.2 });
       const ring2 = new THREE.Mesh(ring2Geo, ring2Mat);
@@ -196,7 +196,7 @@ export function GlobeScene() {
       scene.add(ring1);
       scene.add(ring2);
       scene.add(earthModel);
-      
+
       return () => {
         scene.remove(earthModel);
         scene.remove(ambientGlow);
@@ -235,7 +235,7 @@ export function GlobeScene() {
       const controls = globeRef.current.controls();
       controls.autoRotate = true;
       controls.autoRotateSpeed = 0.5; // Slow, luxurious rotation
-      controls.enableZoom = false; 
+      controls.enableZoom = false;
       globeRef.current.pointOfView({ altitude: 2 }, 0);
     }
   }, [dimensions.width]);
@@ -261,12 +261,12 @@ export function GlobeScene() {
     }
     return data;
   }, []);
-  
+
   const htmlElementsData = useMemo(() => CITIES.filter(c => c.active), []);
 
   return (
     <div ref={containerRef} className="relative w-full h-full">
-      
+
       {/* Deep space void with realistic tiny stars */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[200vw] h-[200vh] z-0 pointer-events-none">
         <Canvas dpr={[1, 2]} camera={{ position: [0, 0, 10], fov: 45 }} gl={{ alpha: true, antialias: true }}>
@@ -282,24 +282,24 @@ export function GlobeScene() {
             height={dimensions.height}
             backgroundColor="rgba(0,0,0,0)"
             globeImageUrl={earthModel ? null : "//unpkg.com/three-globe/example/img/earth-night.jpg"}
-            showGlobe={!earthModel} 
+            showGlobe={!earthModel}
             showAtmosphere={true}
             atmosphereColor="#042F26"
             atmosphereAltitude={0.25}
-            
+
             // Hubs
             pointsData={CITIES}
             pointColor={() => '#95BF47'}
             pointAltitude={0.01}
             pointRadius={0.4}
-            
+
             // Ripples
             ringsData={CITIES}
-            ringColor={() => t => `rgba(149, 191, 71, ${Math.max(0, 1-t)})`}
+            ringColor={() => t => `rgba(149, 191, 71, ${Math.max(0, 1 - t)})`}
             ringMaxRadius={2.5}
             ringPropagationSpeed={0.8}
             ringRepeatPeriod={1500}
-            
+
             // Logical routes (Hyperrealistic 4k smooth curves)
             arcsData={arcsData}
             arcColor="color"
@@ -308,7 +308,7 @@ export function GlobeScene() {
             arcDashAnimateTime={d => d.animateTime}
             arcStroke={0.15} // Thin, elegant lines
             arcCircularResolution={64} // 4K geometry subdivision for perfectly smooth arcs
-            
+
             // Holographic UI elements
             htmlElementsData={htmlElementsData}
             htmlElement={d => {
