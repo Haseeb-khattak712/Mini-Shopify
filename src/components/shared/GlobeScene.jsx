@@ -27,7 +27,7 @@ const CITIES = [
 ];
 
 function Starfield() {
-  const count = 10000; // Reduced for performance
+  const count = 1500; // Reduced for performance
   
   // Generate a hyper-realistic star texture: extremely sharp core, tiny subtle glow
   const starTexture = useMemo(() => {
@@ -52,9 +52,8 @@ function Starfield() {
     return texture;
   }, []);
 
-  const { positions, velocities, colors, sizes } = useMemo(() => {
+  const { positions, colors, sizes } = useMemo(() => {
     const pos = new Float32Array(count * 3);
-    const vel = new Float32Array(count * 3);
     const cols = new Float32Array(count * 3);
     const sz = new Float32Array(count);
     
@@ -71,13 +70,6 @@ function Starfield() {
       pos[i * 3] = x;
       pos[i * 3 + 1] = y;
       pos[i * 3 + 2] = z;
-      
-      // Extremely slow outward drift to simulate vast cosmic scales
-      const speed = 0.001 + (r / 150) * 0.006 + Math.random() * 0.002;
-      const len = Math.max(0.1, Math.sqrt(x*x + y*y + z*z));
-      vel[i * 3] = (x / len) * speed;
-      vel[i * 3 + 1] = (y / len) * speed;
-      vel[i * 3 + 2] = (z / len) * speed;
 
       // Photorealistic deep-space star colors
       const colorType = Math.random();
@@ -95,7 +87,7 @@ function Starfield() {
       // Size variation: biased towards small but still very visible
       sz[i] = Math.pow(Math.random(), 2) * 2.5 + 0.4;
     }
-    return { positions: pos, velocities: vel, colors: cols, sizes: sz };
+    return { positions: pos, colors: cols, sizes: sz };
   }, []);
 
   const pointsRef = useRef(null);
@@ -108,27 +100,6 @@ function Starfield() {
   
   useFrame((state) => {
     if (!pointsRef.current) return;
-    
-    const pos = pointsRef.current.geometry.attributes.position.array;
-    for (let i = 0; i < count; i++) {
-      pos[i * 3] += velocities[i * 3];
-      pos[i * 3 + 1] += velocities[i * 3 + 1];
-      pos[i * 3 + 2] += velocities[i * 3 + 2];
-      
-      const x = pos[i * 3];
-      const y = pos[i * 3 + 1];
-      const z = pos[i * 3 + 2];
-      if (x*x + y*y + z*z > 10000) { 
-         const r = Math.random() * 10; 
-         const theta = Math.random() * 2 * Math.PI;
-         const phi = Math.acos(2 * Math.random() - 1);
-         pos[i * 3] = r * Math.sin(phi) * Math.cos(theta);
-         pos[i * 3 + 1] = r * Math.sin(phi) * Math.sin(theta);
-         pos[i * 3 + 2] = r * Math.cos(phi) - 5;
-      }
-    }
-    pointsRef.current.geometry.attributes.position.needsUpdate = true;
-    
     pointsRef.current.rotation.y = state.clock.getElapsedTime() * 0.003;
     pointsRef.current.rotation.x = Math.sin(state.clock.getElapsedTime() * 0.002) * 0.02;
   });

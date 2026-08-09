@@ -23,9 +23,9 @@ function AnimatedHeadline() {
       <AnimatePresence mode="wait">
         <motion.div
           key={index}
-          initial={{ y: 30, opacity: 0, filter: 'blur(8px)' }}
-          animate={{ y: 0, opacity: 1, filter: 'blur(0px)' }}
-          exit={{ y: -30, opacity: 0, filter: 'blur(8px)' }}
+          initial={{ y: 30, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          exit={{ y: -30, opacity: 0 }}
           transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
           className="absolute inset-0 flex items-start"
         >
@@ -139,11 +139,7 @@ export function LandingPage() {
     offset: ["start start", "end end"]
   })
   
-  const heroScrollProgress = useSpring(rawHeroScrollProgress, {
-    stiffness: 400,
-    damping: 40,
-    restDelta: 0.001
-  });
+  const heroScrollProgress = rawHeroScrollProgress;
 
   const scale = useTransform(pageScrollProgress, [0, 1], [1, 1.2])
 
@@ -239,8 +235,8 @@ export function LandingPage() {
 
           <div className="absolute inset-0 w-full h-full bg-black z-0 pointer-events-none overflow-hidden">
             <ScrollFrames progress={heroScrollProgress} />
-            <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-black/80 pointer-events-none mix-blend-multiply" />
-            <div className="absolute inset-0 bg-shop-primary/10 pointer-events-none mix-blend-overlay" />
+            <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/50 to-black/90 pointer-events-none" />
+            <div className="absolute inset-0 bg-shop-primary/10 pointer-events-none" />
           </div>
 
           <div className="relative z-10 mx-auto max-w-[1728px] w-full px-6 md:px-10 lg:px-16 xl:px-20 2xl:px-24 grid lg:grid-cols-12 gap-12 items-center">
