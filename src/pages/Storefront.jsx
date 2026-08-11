@@ -495,7 +495,7 @@ function QuickViewModal({ product, isOpen, onClose, onAddToCart }) {
 
 export function StoreHome() {
   const navigate = useNavigate();
-  const { cart, handleAddToCart, products } = useOutletContext();
+  const { cart, handleAddToCart, products, subdomain } = useOutletContext();
   const [toast, setToast] = useState('')
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState('All')
