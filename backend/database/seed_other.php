@@ -1,5 +1,5 @@
 <?php
-require_once __DIR__ . '/../db.php';
+
 
 $stmt = $db->query("SELECT * FROM users WHERE role = 'admin'");
 $admins = $stmt->fetchAll(PDO::FETCH_ASSOC);

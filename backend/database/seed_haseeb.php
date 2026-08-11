@@ -1,8 +1,4 @@
 <?php
-$db_file = __DIR__ . '/../ownstore.sqlite';
-$db = new PDO("sqlite:" . $db_file);
-$db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-
 $otherAdminId = 'usr_b1761bb0b0122bf3';
 
 $products = [
