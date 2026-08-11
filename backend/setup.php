@@ -1,8 +1,14 @@
 <?php
-require_once __DIR__ . '/db.php';
-// db.php already automatically runs init_db.php if tables are missing.
-// But we can force it here just to be sure.
-require_once __DIR__ . '/init_db.php';
+require_once __DIR__ . '/config/Database.php';
+$db = \Config\Database::getConnection();
 
-echo "Database setup complete! SQLite database created at: " . __DIR__ . "/ownstore.sqlite\n";
+try {
+    require_once __DIR__ . '/database/init_db.php';
+    require_once __DIR__ . '/database/seed_haseeb.php';
+    require_once __DIR__ . '/database/seed_other.php';
+    echo "Database setup complete! All tables and seed data have been inserted successfully.";
+} catch (Exception $e) {
+    http_response_code(500);
+    echo "Error setting up database: " . $e->getMessage();
+}
 ?>
