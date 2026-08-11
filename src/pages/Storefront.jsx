@@ -303,6 +303,8 @@ const ProductCard3D = memo(function ProductCard3D({ product, onAddToCart, onQuic
 const ProductListCard = memo(function ProductListCard({ product, onAddToCart, onQuickView, isFlat }) {
   const navigate = useNavigate()
   const { subdomain } = useParams()
+  const user = getUserContext()
+  const isOwnStore = user?.role === 'admin' && user?.subdomain === subdomain
   const [justAdded, setJustAdded] = useState(false)
 
   const handleAdd = (e) => {
@@ -748,9 +750,9 @@ export function StoreHome() {
             {theme.socialInstagram && <a href={theme.socialInstagram} target="_blank" rel="noreferrer" className="hover:text-white/70 transition-colors">Instagram</a>}
             {theme.socialTwitter && <a href={theme.socialTwitter} target="_blank" rel="noreferrer" className="hover:text-white/70 transition-colors">Twitter (X)</a>}
             {theme.socialTiktok && <a href={theme.socialTiktok} target="_blank" rel="noreferrer" className="hover:text-white/70 transition-colors">TikTok</a>}
-            <Link to="/store/privacy" className="hover:text-white/70 transition-colors">Privacy</Link>
-            <Link to="/store/returns" className="hover:text-white/70 transition-colors">Returns</Link>
-            <Link to="/store/contact" className="hover:text-white/70 transition-colors">Contact</Link>
+            <Link to={`/store/${subdomain}/privacy`} className="hover:text-white/70 transition-colors">Privacy</Link>
+            <Link to={`/store/${subdomain}/returns`} className="hover:text-white/70 transition-colors">Returns</Link>
+            <Link to={`/store/${subdomain}/contact`} className="hover:text-white/70 transition-colors">Contact</Link>
           </div>
         </div>
       </footer>
@@ -1164,7 +1166,7 @@ export function CartCheckout() {
       total: total,
       date: new Date().toISOString().split('T')[0],
       status: 'processing',
-      items: cart.map(i => ({ product_id: i.product.id, quantity: i.quantity, price: i.product.price, size: i.size, color: i.color }))
+      items: cart.map(i => ({ product_id: i.product.id, name: i.product.name, quantity: i.quantity, price: i.product.price, size: i.size, color: i.color }))
     }
     const res = await addOrder(newOrder, null, subdomain)
     
@@ -1353,7 +1355,7 @@ export function OrderConfirmation() {
   const navigate = useNavigate();
   const location = useLocation();
   const { subdomain } = useParams();
-  const { theme } = useOutletContext();
+  const { settings: theme } = useOutletContext();
   
   const orderId = location.state?.orderId || 'ORD-' + Math.floor(Math.random() * 10000);
   const cartData = location.state?.pastCart || [];
