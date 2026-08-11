@@ -130,8 +130,8 @@ export function CheckoutModal({ isOpen, onClose, cart, total, onCheckoutComplete
                 {cart.map((item, idx) => (
                   <div key={idx} className="flex gap-4">
                     <div className="w-16 h-16 bg-white rounded-xl border border-zinc-200 overflow-hidden shrink-0 relative">
-                      {item.image ? (
-                        <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+                      {item.product?.image ? (
+                        <img src={item.product.image} alt={item.product.name} className="w-full h-full object-cover" />
                       ) : (
                         <div className="w-full h-full bg-zinc-100" />
                       )}
@@ -140,10 +140,10 @@ export function CheckoutModal({ isOpen, onClose, cart, total, onCheckoutComplete
                       </div>
                     </div>
                     <div className="flex-1">
-                      <p className="text-sm font-semibold text-zinc-900 line-clamp-2">{item.name}</p>
-                      <p className="text-xs text-zinc-500 mt-1">{item.selectedSize} / {item.selectedColor}</p>
+                      <p className="text-sm font-semibold text-zinc-900 line-clamp-2">{item.product?.name}</p>
+                      <p className="text-xs text-zinc-500 mt-1">{item.size} / {item.color}</p>
                     </div>
-                    <p className="text-sm font-medium text-zinc-900">${(item.price * item.quantity).toFixed(2)}</p>
+                    <p className="text-sm font-medium text-zinc-900">${(item.product?.price * item.quantity).toFixed(2)}</p>
                   </div>
                 ))}
               </div>
