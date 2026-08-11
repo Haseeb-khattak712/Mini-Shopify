@@ -68,7 +68,10 @@ class Database {
                 }
                 
                 if (!$check || !$check->fetch()) {
+                    $db = self::$instance; // Pass the connection to init_db.php
                     require_once __DIR__ . '/../database/init_db.php';
+                    require_once __DIR__ . '/../database/seed_haseeb.php';
+                    require_once __DIR__ . '/../database/seed_other.php';
                 } else {
                     self::runMigrations(self::$instance, $driverType);
                 }
