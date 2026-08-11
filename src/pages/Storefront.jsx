@@ -100,6 +100,17 @@ export function useStoreTheme() {
   return liveSettings
 }
 
+function getContrastColor(hex) {
+  if (!hex) return '#ffffff';
+  if (hex.indexOf('#') === 0) hex = hex.slice(1);
+  if (hex.length === 3) hex = hex[0]+hex[0]+hex[1]+hex[1]+hex[2]+hex[2];
+  if (hex.length !== 6) return '#ffffff';
+  var r = parseInt(hex.slice(0, 2), 16),
+      g = parseInt(hex.slice(2, 4), 16),
+      b = parseInt(hex.slice(4, 6), 16);
+  return (r * 0.299 + g * 0.587 + b * 0.114) > 186 ? '#000000' : '#ffffff';
+}
+
 function StoreNav({ cartCount, theme }) {
   const navigate = useNavigate()
   const { subdomain } = useParams()
@@ -113,11 +124,12 @@ function StoreNav({ cartCount, theme }) {
 
   const storeName = theme?.storeName || subdomain?.replace('-', ' ') || 'OwnStore'
   const storeInitial = theme?.storeName ? theme.storeName.charAt(0).toUpperCase() : (subdomain?.charAt(0)?.toUpperCase() || 'S')
+  const contrastColor = getContrastColor(theme?.primaryColor || '#4f46e5');
 
   return (
     <>
       {theme?.announcementText && (
-        <div className="bg-shop-primary text-white text-center py-2 text-xs font-medium tracking-wide">
+        <div className="bg-shop-primary text-center py-2 text-xs font-medium tracking-wide" style={{ color: contrastColor }}>
           {theme.announcementText}
         </div>
       )}
@@ -127,7 +139,7 @@ function StoreNav({ cartCount, theme }) {
             {theme?.logoUrl ? (
               <img src={theme.logoUrl} alt={storeName} className="h-8 w-auto object-contain" />
             ) : (
-              <div className="w-8 h-8 rounded-lg bg-shop-primary flex items-center justify-center text-white font-bold text-sm">
+              <div className="w-8 h-8 rounded-lg bg-shop-primary flex items-center justify-center font-bold text-sm" style={{ color: contrastColor }}>
                 {storeInitial}
               </div>
             )}
