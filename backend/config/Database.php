@@ -6,9 +6,9 @@ use PDOException;
 
 class Database {
     private static $instance = null;
-    
+    private static $env = [];
+
     private static function loadEnv() {
-        // Try to load .env from the root directory (one level above backend, or backend root)
         $envFile = __DIR__ . '/../../.env';
         if (!file_exists($envFile)) {
             $envFile = __DIR__ . '/../.env'; // fallback to backend/.env
@@ -19,23 +19,34 @@ class Database {
                 if (strpos(trim($line), '#') === 0) continue;
                 $parts = explode('=', $line, 2);
                 if (count($parts) === 2) {
-                    putenv(trim($parts[0]) . '=' . trim($parts[1]));
+                    $key = trim($parts[0]);
+                    $val = trim($parts[1]);
+                    self::$env[$key] = $val;
+                    if (function_exists('putenv')) {
+                        putenv("$key=$val");
+                    }
                 }
             }
         }
+    }
+
+    private static function getEnvVal($key, $default = '') {
+        if (isset(self::$env[$key])) return self::$env[$key];
+        $val = getenv($key);
+        return $val !== false ? $val : $default;
     }
 
     public static function getConnection() {
         if (self::$instance === null) {
             self::loadEnv();
             try {
-                $driver = getenv('DB_CONNECTION') ?: 'sqlite';
+                $driver = self::getEnvVal('DB_CONNECTION', 'sqlite');
                 if ($driver === 'mysql') {
-                    $host = getenv('DB_HOST') ?: '127.0.0.1';
-                    $port = getenv('DB_PORT') ?: '3306';
-                    $db   = getenv('DB_DATABASE') ?: '';
-                    $user = getenv('DB_USERNAME') ?: '';
-                    $pass = getenv('DB_PASSWORD') ?: '';
+                    $host = self::getEnvVal('DB_HOST', '127.0.0.1');
+                    $port = self::getEnvVal('DB_PORT', '3306');
+                    $db   = self::getEnvVal('DB_DATABASE', '');
+                    $user = self::getEnvVal('DB_USERNAME', '');
+                    $pass = self::getEnvVal('DB_PASSWORD', '');
                     self::$instance = new PDO("mysql:host=$host;port=$port;dbname=$db", $user, $pass);
                 } else {
                     $db_file = __DIR__ . '/../ownstore.sqlite';
