@@ -1,7 +1,8 @@
 import { useState, Suspense, useEffect, useRef, lazy } from 'react'
-import { motion, useScroll, useTransform, AnimatePresence, useMotionValueEvent, useSpring } from 'framer-motion'
+import { motion, useScroll, useTransform, AnimatePresence, useMotionValueEvent, useSpring, animate } from 'framer-motion'
 import { Button, Input } from '@/components/ui/ui'
 import { HeroScene } from '@/components/shared/HeroScene'
+import { HyperRealisticLoader } from '@/components/shared/HyperRealisticLoader'
 import { useTilt } from '@/hooks/useTilt'
 
 const GlobeScene = lazy(() => import('@/components/shared/GlobeScene').then(module => ({ default: module.GlobeScene })));
@@ -127,7 +128,37 @@ export function LandingPage() {
   const heroRef = useRef(null)
   
   const [loadingProgress, setLoadingProgress] = useState(0)
-  const isLoaded = loadingProgress >= 100
+  const [displayedProgress, setDisplayedProgress] = useState(0)
+  const [isLoaded, setIsLoaded] = useState(false)
+
+  // Smooth loading animation logic
+  useEffect(() => {
+    // If the images fail to load or load instantly, we still want a graceful visual progression
+    let controls;
+    if (loadingProgress >= 100 && displayedProgress < 100) {
+      controls = animate(displayedProgress, 100, {
+        duration: 1.2,
+        ease: "easeOut",
+        onUpdate: (val) => setDisplayedProgress(Math.round(val)),
+        onComplete: () => setIsLoaded(true)
+      });
+    } else if (loadingProgress > 0 && loadingProgress < 100) {
+      controls = animate(displayedProgress, loadingProgress, {
+        duration: 0.3,
+        ease: "linear",
+        onUpdate: (val) => setDisplayedProgress(Math.round(val))
+      });
+    }
+    return () => { if (controls) controls.stop(); };
+  }, [loadingProgress, displayedProgress]);
+
+  // Failsafe in case nothing loads or throws error
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (loadingProgress < 100) setLoadingProgress(100);
+    }, 4000);
+    return () => clearTimeout(timer);
+  }, [loadingProgress]);
 
   useEffect(() => {
     if (!isLoaded) {
@@ -172,22 +203,16 @@ export function LandingPage() {
             className="fixed inset-0 z-[200] bg-black flex flex-col items-center justify-center text-white"
           >
             <div className="flex flex-col items-center gap-6">
-              <div className="w-16 h-16 relative">
-                <div className="absolute inset-0 rounded-full border-4 border-white/20"></div>
-                <motion.div 
-                  className="absolute inset-0 rounded-full border-4 border-shop-accent border-t-transparent"
-                  animate={{ rotate: 360 }}
-                  transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
-                />
-              </div>
+              <HyperRealisticLoader />
               <div className="text-2xl font-display font-medium tracking-wide">
-                Loading Experience <span className="text-shop-accent">{loadingProgress}%</span>
+                Loading Experience <span className="text-shop-accent">{displayedProgress}%</span>
               </div>
               <div className="w-64 h-1 bg-white/10 rounded-full overflow-hidden">
                 <motion.div 
                   className="h-full bg-shop-accent"
                   initial={{ width: 0 }}
-                  animate={{ width: `${loadingProgress}%` }}
+                  animate={{ width: `${displayedProgress}%` }}
+                  transition={{ duration: 0.1 }}
                 />
               </div>
             </div>
