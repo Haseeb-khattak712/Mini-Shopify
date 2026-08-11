@@ -1,5 +1,5 @@
 <?php
-// Drop existing tables (optional, usually only runs once if db is empty)
+// Drop existing tables
 $db->exec("DROP TABLE IF EXISTS products");
 $db->exec("DROP TABLE IF EXISTS orders");
 $db->exec("DROP TABLE IF EXISTS reviews");
@@ -9,66 +9,66 @@ $db->exec("DROP TABLE IF EXISTS discounts");
 
 // Create unified Users table
 $db->exec("CREATE TABLE IF NOT EXISTS users (
-    id VARCHAR(50) PRIMARY KEY,
-    name VARCHAR(255) NOT NULL,
-    email VARCHAR(255) UNIQUE NOT NULL,
-    password_hash VARCHAR(255) NOT NULL,
-    role VARCHAR(50) NOT NULL DEFAULT 'customer',
-    business_name VARCHAR(255),
-    subdomain VARCHAR(255) UNIQUE,
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    email TEXT UNIQUE NOT NULL,
+    password_hash TEXT NOT NULL,
+    role TEXT NOT NULL DEFAULT 'customer',
+    business_name TEXT,
+    subdomain TEXT UNIQUE,
     theme_settings TEXT
 )");
 
 // Create Products table
 $db->exec("CREATE TABLE IF NOT EXISTS products (
-    id VARCHAR(50) PRIMARY KEY,
-    user_id VARCHAR(50) NOT NULL,
-    name VARCHAR(255) NOT NULL,
-    price DECIMAL(10,2) NOT NULL,
-    stock INT NOT NULL,
-    category VARCHAR(255) NOT NULL,
+    id TEXT PRIMARY KEY,
+    user_id TEXT NOT NULL,
+    name TEXT NOT NULL,
+    price REAL NOT NULL,
+    stock INTEGER NOT NULL,
+    category TEXT NOT NULL,
     description TEXT,
     image TEXT,
     sizes TEXT,
     colors TEXT,
-    is_digital INT DEFAULT 0,
+    is_digital INTEGER DEFAULT 0,
     file_url TEXT,
     variant_stock TEXT
 )");
 
 // Create Orders table
 $db->exec("CREATE TABLE IF NOT EXISTS orders (
-    id VARCHAR(50) PRIMARY KEY,
-    user_id VARCHAR(50) NOT NULL,
-    customer_id VARCHAR(50),
-    customer VARCHAR(255) NOT NULL,
-    total DECIMAL(10,2) NOT NULL,
-    date VARCHAR(50) NOT NULL,
-    status VARCHAR(50) NOT NULL,
+    id TEXT PRIMARY KEY,
+    user_id TEXT NOT NULL,
+    customer_id TEXT,
+    customer TEXT NOT NULL,
+    total REAL NOT NULL,
+    date TEXT NOT NULL,
+    status TEXT NOT NULL,
     items TEXT,
-    email VARCHAR(255)
+    email TEXT
 )");
 
 // Create Reviews table
 $db->exec("CREATE TABLE IF NOT EXISTS reviews (
-    id VARCHAR(50) PRIMARY KEY,
-    user_id VARCHAR(50) NOT NULL,
-    product_id VARCHAR(50) NOT NULL,
-    author VARCHAR(255) NOT NULL,
-    rating INT NOT NULL,
+    id TEXT PRIMARY KEY,
+    user_id TEXT NOT NULL,
+    product_id TEXT NOT NULL,
+    author TEXT NOT NULL,
+    rating INTEGER NOT NULL,
     text TEXT,
-    date VARCHAR(50) NOT NULL,
-    status VARCHAR(50) DEFAULT 'approved'
+    date TEXT NOT NULL,
+    status TEXT DEFAULT 'approved'
 )");
 
 // Create Discounts table
 $db->exec("CREATE TABLE IF NOT EXISTS discounts (
-    id VARCHAR(50) PRIMARY KEY,
-    user_id VARCHAR(50) NOT NULL,
-    code VARCHAR(50) NOT NULL,
-    type VARCHAR(50) NOT NULL,
-    value DECIMAL(10,2) NOT NULL,
-    active INT DEFAULT 1
+    id TEXT PRIMARY KEY,
+    user_id TEXT NOT NULL,
+    code TEXT NOT NULL,
+    type TEXT NOT NULL,
+    value REAL NOT NULL,
+    active INTEGER DEFAULT 1
 )");
 
 // Seed demo admin user
@@ -86,7 +86,7 @@ $products = [
         'id' => 'p1',
         'user_id' => $adminId,
         'name' => 'Cotton Oxford Shirt',
-        'price' => 45.00,
+        'price' => 45,
         'stock' => 12,
         'category' => 'Apparel',
         'description' => 'A breathable, lightweight cotton shirt perfect for any occasion.',
@@ -98,7 +98,7 @@ $products = [
         'id' => 'p2',
         'user_id' => $adminId,
         'name' => 'Leather Wallet',
-        'price' => 35.00,
+        'price' => 35,
         'stock' => 4,
         'category' => 'Accessories',
         'description' => 'Slim bifold wallet made from premium full-grain leather.',
@@ -113,8 +113,8 @@ foreach ($products as $p) {
 }
 
 $orders = [
-    ['id' => 'ORD-7829', 'user_id' => $adminId, 'customer_id' => null, 'customer' => 'Alice Smith', 'total' => 125.00, 'date' => date('Y-m-d'), 'status' => 'processing', 'items' => '[]'],
-    ['id' => 'ORD-7828', 'user_id' => $adminId, 'customer_id' => null, 'customer' => 'Bob Jones', 'total' => 45.00, 'date' => date('Y-m-d', strtotime('-1 day')), 'status' => 'shipped', 'items' => '[]']
+    ['id' => 'ORD-7829', 'user_id' => $adminId, 'customer_id' => null, 'customer' => 'Alice Smith', 'total' => 125, 'date' => date('Y-m-d'), 'status' => 'processing', 'items' => '[]'],
+    ['id' => 'ORD-7828', 'user_id' => $adminId, 'customer_id' => null, 'customer' => 'Bob Jones', 'total' => 45, 'date' => date('Y-m-d', strtotime('-1 day')), 'status' => 'shipped', 'items' => '[]']
 ];
 $insertO = $db->prepare("INSERT INTO orders (id, user_id, customer_id, customer, total, date, status, items) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
 foreach ($orders as $o) {
