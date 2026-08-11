@@ -1326,7 +1326,7 @@ export function CartCheckout() {
                   <span>Total</span><span>${total}</span>
                 </div>
                 {step === 'cart' ? (
-                  <Button className="w-full" onClick={() => setIsCheckoutModalOpen(true)}>Proceed to checkout →</Button>
+                  <Button className="w-full" onClick={() => setStep('checkout')}>Proceed to checkout →</Button>
                 ) : step === 'checkout' ? (
                   <Button className="w-full" onClick={handleContinueToPayment}>Continue to payment →</Button>
                 ) : (

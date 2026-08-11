@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useMemo, Suspense, lazy } from 'react'
 import { BrowserRouter, Routes, Route, Navigate, Outlet, useOutletContext, useParams, useNavigate, useLocation } from 'react-router-dom'
 import { getStoredOrders, isAdmin, getUserContext, getStoredProducts, getStoredReviews, addOrder } from '@/services/storage'
-import { CheckoutModal } from '@/components/shared/CheckoutModal'
 
 // Code Splitting with React.lazy
 const LandingPage = lazy(() => import('@/pages/Marketing').then(m => ({ default: m.LandingPage })))
@@ -127,33 +126,8 @@ function StoreWrapper() {
         onClose={() => setIsCartOpen(false)}
         cart={cart}
         handleUpdateCart={handleUpdateCart}
-        onCheckout={() => {
-          setIsCartOpen(false)
-          setIsCheckoutModalOpen(true)
-        }}
       />
-      <CheckoutModal
-        isOpen={isCheckoutModalOpen}
-        onClose={() => setIsCheckoutModalOpen(false)}
-        cart={cart}
-        total={calculateTotal()}
-        onCheckoutComplete={async (finalTotal, email, address) => {
-          const customer = await import('@/services/storage').then(m => m.getUserContext())
-          const newOrder = {
-            id: `ORD-${Date.now()}`,
-            customer_id: customer?.id || null,
-            customer: address ? address.split(',')[0] : (customer?.name || 'Guest User'),
-            email: email || customer?.email || 'guest@example.com',
-            total: finalTotal,
-            date: new Date().toISOString().split('T')[0],
-            status: 'pending',
-            items: cart.map(i => ({ product_id: i.product.id, name: i.product.name, quantity: i.quantity, price: i.product.price, size: i.size, color: i.color }))
-          }
-          const res = await addOrder(newOrder, null, subdomain)
-          setCart([])
-          navigate(`/store/${subdomain}/confirmation`, { state: { orderId: res.id, pastCart: cart, pastTotal: finalTotal } })
-        }}
-      />
+
     </>
   )
 }
