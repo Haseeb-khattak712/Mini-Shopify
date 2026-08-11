@@ -467,7 +467,7 @@ export function Marketplace() {
                     <motion.div key={p.id} onClick={() => navigate(`/store/${p.subdomain}/product/${p.id}`)} whileTap={{ scale: 0.98 }} className="group cursor-pointer flex flex-col">
                       <div className="relative aspect-[4/5] bg-zinc-900 rounded-2xl overflow-hidden mb-5">
                         <img src={p.image} alt={p.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
-                        <button onClick={(e) => { e.stopPropagation(); navigate(`/marketplace/brand/${p.subdomain}`); }} className="absolute top-3 left-3 bg-zinc-950/80 backdrop-blur-sm border border-white/10 text-white/90 hover:text-white hover:bg-zinc-900 text-[10px] font-mono tracking-wider px-2.5 py-1 rounded-full uppercase shadow-lg cursor-pointer transition-colors">By {p.business_name}</button>
+                        <div className="absolute top-3 left-3 bg-zinc-950/80 backdrop-blur-sm border border-white/10 text-white/90 text-[10px] font-mono tracking-wider px-2.5 py-1 rounded-full uppercase shadow-lg">By {p.business_name}</div>
                         <button onClick={(e) => { e.stopPropagation(); toggleWishlist(p); }} className={`absolute top-3 right-3 w-8 h-8 backdrop-blur-md rounded-full border flex items-center justify-center transition-all duration-300 translate-x-2 group-hover:translate-x-0 cursor-pointer ${isInWishlist(p.id) ? 'bg-white text-red-500 border-white opacity-100' : 'bg-white/10 border-white/20 text-white hover:bg-white hover:text-red-500 opacity-0 group-hover:opacity-100'}`}>{isInWishlist(p.id) ? '❤️' : '♡'}</button>
                       </div>
                       <div className="flex flex-col gap-1.5 px-1">
@@ -506,12 +506,9 @@ export function Marketplace() {
                     <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300" />
                     
                     {/* Hover Badges & Buttons */}
-                    <button 
-                      onClick={(e) => { e.stopPropagation(); navigate(`/marketplace/brand/${p.subdomain}`); }}
-                      className="absolute top-3 left-3 bg-zinc-950/80 backdrop-blur-sm border border-white/10 text-white/90 hover:text-white hover:bg-zinc-900 text-[10px] font-mono tracking-wider px-2.5 py-1 rounded-full uppercase shadow-lg transform -translate-y-2 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300 cursor-pointer"
-                    >
+                    <div className="absolute top-3 left-3 bg-zinc-950/80 backdrop-blur-sm border border-white/10 text-white/90 text-[10px] font-mono tracking-wider px-2.5 py-1 rounded-full uppercase shadow-lg transform -translate-y-2 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300">
                       By {p.business_name}
-                    </button>
+                    </div>
 
                     <button 
                       onClick={(e) => { e.stopPropagation(); toggleWishlist(p); }}
