@@ -326,14 +326,14 @@ export function LandingPage() {
                 initial={{ opacity: 0, y: 100 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-100px" }} transition={{ duration: 0.8 }}
                 className="w-full max-w-[360px] aspect-[3/4] rounded-[40px] border border-white/10 shadow-2xl overflow-hidden bg-gradient-to-br from-white/[0.08] to-transparent border border-white/10 shadow-[0_30px_60px_rgba(0,0,0,0.6)] backdrop-blur-md lg:-translate-x-12 cursor-pointer group"
               >
-                <img src="https://images.unsplash.com/photo-1607082350899-7e105aa886ae?auto=format&fit=crop&w=800&q=80" alt="Mobile Storefront" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 opacity-40 mix-blend-luminosity group-hover:mix-blend-normal group-hover:opacity-100 filter group-hover:brightness-110 contrast-125" />
+                <img src="https://images.unsplash.com/photo-1441984904996-e0b6ba687e04?auto=format&fit=crop&w=800&q=80" alt="Physical Storefront" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 opacity-40 mix-blend-luminosity group-hover:mix-blend-normal group-hover:opacity-100 filter group-hover:brightness-110 contrast-125" />
               </motion.div>
 
               <motion.div
                 initial={{ opacity: 0, y: 100 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-100px" }} transition={{ duration: 0.8 }}
                 className="w-full max-w-[400px] aspect-square rounded-[40px] border border-white/10 shadow-2xl overflow-hidden bg-gradient-to-br from-shop-accent/10 to-transparent border border-shop-accent/20 shadow-[0_30px_60px_rgba(149,191,71,0.15)] backdrop-blur-md lg:translate-x-8 cursor-pointer group"
               >
-                <img src="https://images.unsplash.com/photo-1556742044-f3d4d5e825a1?auto=format&fit=crop&w=800&q=80" alt="In-Person Retail" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 opacity-40 mix-blend-luminosity group-hover:mix-blend-normal group-hover:opacity-100 filter group-hover:brightness-110 contrast-125" />
+                <img src="https://images.unsplash.com/photo-1556740714-a8395b3bf30f?auto=format&fit=crop&w=800&q=80" alt="Point of Sale" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 opacity-40 mix-blend-luminosity group-hover:mix-blend-normal group-hover:opacity-100 filter group-hover:brightness-110 contrast-125" />
               </motion.div>
             </div>
 
