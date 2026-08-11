@@ -51,7 +51,10 @@ export function AccountPage() {
             <img src="/logo.png" alt="OwnStore Logo" className="w-8 h-8 object-contain drop-shadow-md opacity-80 mix-blend-luminosity group-hover:mix-blend-normal group-hover:opacity-100 transition-all duration-500" style={{ transition: 'transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)', transformStyle: 'preserve-3d' }} onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.15) rotateY(15deg) rotateX(10deg) translateZ(10px)'} onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1) rotateY(0deg) rotateX(0deg) translateZ(0px)'} />
             <span className="font-black text-shop-accent font-logo text-lg tracking-tighter transition-colors duration-300">OwnStore</span>
           </button>
-          <Button variant="ghost" size="sm" onClick={handleLogout}>Sign out</Button>
+          <div className="flex items-center gap-4">
+            <Button variant="outline" size="sm" onClick={() => navigate('/marketplace')} className="border-white/20 hover:bg-white/10 text-white">Back to Marketplace</Button>
+            <Button variant="ghost" size="sm" onClick={handleLogout}>Sign out</Button>
+          </div>
         </div>
       </header>
       
@@ -69,7 +72,7 @@ export function AccountPage() {
               {orders.length === 0 ? (
                 <div className="text-center py-8 text-white/60  transition-colors">
                   <p>You haven't placed any orders yet.</p>
-                  <Button variant="outline" className="mt-4" onClick={() => navigate('/')}>Discover Stores</Button>
+                  <Button variant="outline" className="mt-4 border-white/20 hover:bg-white/10 text-white" onClick={() => navigate('/marketplace')}>Browse Marketplace</Button>
                 </div>
               ) : (
                 <div className="flex flex-col gap-4">

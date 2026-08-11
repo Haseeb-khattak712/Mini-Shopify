@@ -160,11 +160,8 @@ function StoreWrapper() {
 
 function LoadingSpinner() {
   return (
-    <div className="min-h-screen bg-[#000302] flex flex-col items-center justify-center font-display relative overflow-hidden">
+    <div className="min-h-screen bg-[#000302] flex flex-col items-center justify-center relative overflow-hidden">
       <div className="absolute inset-0 bg-gradient-to-tr from-shop-accent/5 via-transparent to-transparent opacity-60" />
-      <div className="text-[10px] font-mono tracking-widest text-shop-accent uppercase animate-pulse relative z-10">
-        Initializing...
-      </div>
     </div>
   )
 }
