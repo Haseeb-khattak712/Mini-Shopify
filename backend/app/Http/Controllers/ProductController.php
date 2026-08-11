@@ -48,7 +48,7 @@ class ProductController {
             exit;
         }
 
-        $id = $data['id'] ?? 'p' . time();
+        $id = $data['id'] ?? uniqid('prod_');
         $sizes = json_encode($data['sizes'] ?? []);
         $colors = json_encode($data['colors'] ?? []);
 
