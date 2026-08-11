@@ -21,9 +21,15 @@ class ProductController {
         $db = Database::getConnection();
         $user_id = $this->getUserId(false);
 
-        $stmt = $db->prepare("SELECT * FROM products WHERE user_id = ? ORDER BY id DESC");
+        $stmt = $db->prepare("
+            SELECT p.*, u.business_name, u.subdomain 
+            FROM products p
+            JOIN users u ON p.user_id = u.id
+            WHERE p.user_id = ? 
+            ORDER BY p.id DESC
+        ");
         $stmt->execute([$user_id]);
-        $products = $stmt->fetchAll();
+        $products = $stmt->fetchAll(\PDO::FETCH_ASSOC);
         
         foreach ($products as &$p) {
             $p['sizes'] = json_decode($p['sizes'], true) ?: [];
