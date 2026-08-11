@@ -1,5 +1,5 @@
 <?php
-$otherAdminId = 'usr_b1761bb0b0122bf3';
+$otherAdminId = 'usr_demo';
 
 $products = [
     [

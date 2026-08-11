@@ -147,7 +147,7 @@ function StoreWrapper() {
             total: finalTotal,
             date: new Date().toISOString().split('T')[0],
             status: 'pending',
-            items: cart.map(i => ({ product_id: i.product.id, quantity: i.quantity, price: i.product.price, size: i.size, color: i.color }))
+            items: cart.map(i => ({ product_id: i.product.id, name: i.product.name, quantity: i.quantity, price: i.product.price, size: i.size, color: i.color }))
           }
           const res = await addOrder(newOrder, null, subdomain)
           setCart([])

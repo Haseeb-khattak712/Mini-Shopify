@@ -68,7 +68,6 @@ Router::post('/api/auth/register', 'AuthController@register');
 
 // Products
 Router::get('/api/products', 'ProductController@index');
-Router::get('/api/products/inventory', 'ProductController@inventory');
 Router::post('/api/products', 'ProductController@store');
 Router::put('/api/products', 'ProductController@update');
 Router::delete('/api/products', 'ProductController@destroy');

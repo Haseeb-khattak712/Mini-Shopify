@@ -9,10 +9,10 @@ class MarketplaceController {
 
         if (isset($_GET['brands'])) {
             $stmt = $db->query("
-                SELECT id, business_name as name, subdomain, email, date_joined
+                SELECT id, business_name as name, subdomain, email
                 FROM users 
                 WHERE role = 'admin'
-                ORDER BY date_joined DESC, id DESC
+                ORDER BY id DESC
             ");
             $brands = $stmt->fetchAll(\PDO::FETCH_ASSOC);
             echo json_encode($brands);
