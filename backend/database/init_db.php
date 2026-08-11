@@ -45,7 +45,8 @@ $db->exec("CREATE TABLE IF NOT EXISTS orders (
     total REAL NOT NULL,
     date TEXT NOT NULL,
     status TEXT NOT NULL,
-    items TEXT
+    items TEXT,
+    email TEXT
 )");
 
 // Create Reviews table
@@ -56,7 +57,8 @@ $db->exec("CREATE TABLE IF NOT EXISTS reviews (
     author TEXT NOT NULL,
     rating INTEGER NOT NULL,
     text TEXT,
-    date TEXT NOT NULL
+    date TEXT NOT NULL,
+    status TEXT DEFAULT 'approved'
 )");
 
 // Create Discounts table

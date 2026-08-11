@@ -55,5 +55,19 @@ class Database {
         if (!in_array('variant_stock', $colNames)) {
             $db->exec("ALTER TABLE products ADD COLUMN variant_stock TEXT");
         }
+
+        // Migration: add email to orders
+        $orderCols = $db->query("PRAGMA table_info(orders)")->fetchAll();
+        $orderColNames = array_column($orderCols, 'name');
+        if (!in_array('email', $orderColNames)) {
+            $db->exec("ALTER TABLE orders ADD COLUMN email TEXT");
+        }
+
+        // Migration: add status to reviews
+        $reviewCols = $db->query("PRAGMA table_info(reviews)")->fetchAll();
+        $reviewColNames = array_column($reviewCols, 'name');
+        if (!in_array('status', $reviewColNames)) {
+            $db->exec("ALTER TABLE reviews ADD COLUMN status TEXT DEFAULT 'approved'");
+        }
     }
 }
