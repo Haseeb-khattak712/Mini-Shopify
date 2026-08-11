@@ -1098,87 +1098,98 @@ export function ProductDetail() {
 
 // ── Cart & Checkout ────────────────────────────────────────────────────────────
 
+
 export function CartCheckout() {
   const navigate = useNavigate();
-  const { subdomain } = useParams()
-  const { cart, handleUpdateCart, setCart, setIsCheckoutModalOpen } = useOutletContext();
-  const customer = getUserContext()
-  const theme = useStoreTheme()
+  const { subdomain } = useParams();
+  const { cart, setCart } = useOutletContext();
+  const customer = getUserContext();
+  const theme = useStoreTheme();
 
-  const onBack = () => navigate(-1);
-  const onConfirm = () => {
-    setCart([])
-    navigate(`/store/${subdomain}/confirmation`)
-  };
-  const [form, setForm] = useState({ name: customer?.name || '', email: customer?.email || '', address: '', phone: '' })
-  const [paymentForm, setPaymentForm] = useState({ cardName: '', cardNumber: '', expiry: '', cvc: '' })
-  const [errors, setErrors] = useState({})
-  const [step, setStep] = useState('cart') // 'cart', 'checkout', 'payment'
-  const [isProcessing, setIsProcessing] = useState(false)
+  const [step, setStep] = useState('cart'); // cart -> form -> processing
+  const [email, setEmail] = useState(customer?.email || '');
+  const [address, setAddress] = useState('');
+  const [cardNumber, setCardNumber] = useState('');
+  const [expiry, setExpiry] = useState('');
+  const [cvc, setCvc] = useState('');
+  
+  const [promoCode, setPromoCode] = useState('');
+  const [discount, setDiscount] = useState(null);
+  const [promoError, setPromoError] = useState('');
 
-  const cartCount = cart.reduce((s, i) => s + i.quantity, 0)
-  const subtotal = cart.reduce((s, i) => s + i.product.price * i.quantity, 0)
-  const shipping = subtotal >= 100 ? 0 : 8
-  const total = subtotal + shipping
+  const cartCount = cart.reduce((s, i) => s + i.quantity, 0);
+  const subtotal = cart.reduce((s, i) => s + i.product.price * i.quantity, 0);
+  const shipping = subtotal >= 100 ? 0 : 8;
+  const total = subtotal + shipping;
 
-  const updateQty = (idx, qty) => {
-    const item = cart[idx]
-    if (qty === 0) {
-      handleUpdateCart(item.product.id, 0, item.size, item.color)
-    } else {
-      handleUpdateCart(item.product.id, qty, item.size, item.color)
+  let finalTotal = total;
+  if (discount) {
+    if (discount.type === 'percentage') {
+      finalTotal = finalTotal - (finalTotal * (discount.value / 100));
+    } else if (discount.type === 'fixed') {
+      finalTotal = Math.max(0, finalTotal - discount.value);
     }
   }
 
-  const validateCheckout = () => {
-    const e = {}
-    if (!form.name.trim()) e.name = 'Full name is required'
-    if (!form.email.trim()) e.email = 'Email is required'
-    if (!form.address.trim()) e.address = 'Delivery address is required'
-    if (!form.phone.trim()) e.phone = 'Phone number is required'
-    setErrors(e)
-    return Object.keys(e).length === 0
-  }
+  const applyPromo = async () => {
+    if (!promoCode.trim()) return;
+    setPromoError('');
+    try {
+      const { validateDiscount } = await import('@/services/storage');
+      const res = await validateDiscount(promoCode);
+      if (res.valid) {
+        setDiscount(res.discount);
+        setPromoError('');
+      } else {
+        setDiscount(null);
+        setPromoError(res.error || 'Invalid code');
+      }
+    } catch (e) {
+      setPromoError('Failed to validate code');
+    }
+  };
 
-  const validatePayment = () => {
-    const e = {}
-    if (!paymentForm.cardName.trim()) e.cardName = 'Required'
-    if (!paymentForm.cardNumber.trim()) e.cardNumber = 'Required'
-    if (!paymentForm.expiry.trim()) e.expiry = 'Required'
-    if (!paymentForm.cvc.trim()) e.cvc = 'Required'
-    setErrors(e)
-    return Object.keys(e).length === 0
-  }
+  const handleCardFormat = (e) => {
+    const val = e.target.value.replace(/\D/g, '');
+    const formatted = val.match(/.{1,4}/g)?.join(' ') || '';
+    setCardNumber(formatted.substring(0, 19));
+  };
 
-  const handleContinueToPayment = () => {
-    if (!validateCheckout()) return
-    setStep('payment')
-  }
+  const handleExpiryFormat = (e) => {
+    const val = e.target.value.replace(/\D/g, '');
+    if (val.length > 2) {
+      setExpiry(val.substring(0, 2) + '/' + val.substring(2, 4));
+    } else {
+      setExpiry(val);
+    }
+  };
 
-  const handlePlaceOrder = async () => {
-    if (!validatePayment()) return
-    setIsProcessing(true)
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setStep('processing');
+    
+    const { addOrder } = await import('@/services/storage');
     
     const newOrder = {
+      id: `ORD-${Date.now()}`,
       customer_id: customer?.id || null,
-      customer: form.name,
-      email: form.email,
-      total: total,
+      customer: address ? address.split(',')[0] : (customer?.name || 'Guest User'),
+      email: email,
+      total: finalTotal,
       date: new Date().toISOString().split('T')[0],
-      status: 'processing',
+      status: 'pending',
       items: cart.map(i => ({ product_id: i.product.id, name: i.product.name, quantity: i.quantity, price: i.product.price, size: i.size, color: i.color }))
-    }
-    const res = await addOrder(newOrder, null, subdomain)
+    };
     
-    setTimeout(() => {
-      setIsProcessing(false)
-      setCart([])
-      navigate(`/store/${subdomain}/confirmation`, { state: { orderId: res.id, pastCart: cart, pastTotal: total } })
-    }, 2500)
-  }
+    // Simulate API call to Stripe
+    setTimeout(async () => {
+      const res = await addOrder(newOrder, null, subdomain);
+      setCart([]);
+      navigate(`/store/${subdomain}/confirmation`, { state: { orderId: res.id, pastCart: cart, pastTotal: finalTotal } });
+    }, 2000);
+  };
 
   return (
-
     <div className="min-h-screen bg-zinc-950 transition-colors storefront-theme">
       <style>{`
         .storefront-theme {
@@ -1195,158 +1206,195 @@ export function CartCheckout() {
         }
       `}</style>
       <StoreNav cartCount={cartCount} theme={theme} />
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }} className="max-w-5xl mx-auto px-6 py-8">
-        <button onClick={() => navigate(-1)} className="text-sm text-white/60  hover:text-white/90  flex items-center gap-1.5 mb-6 cursor-pointer transition-colors">
-          ← Continue shopping
+      
+      <div className="max-w-6xl mx-auto px-6 py-12">
+        <button onClick={() => navigate(-1)} className="text-sm text-white/60 hover:text-white/90 flex items-center gap-1.5 mb-8 cursor-pointer transition-colors">
+          ← Back to store
         </button>
-        <h1 className="text-2xl font-bold font-display text-white  mb-6 transition-colors">
-          {step === 'cart' ? 'Your cart' : step === 'checkout' ? 'Delivery Details' : 'Payment Details'}
-        </h1>
-
+        
         {cart.length === 0 ? (
-          <div className="bg-zinc-900/50  border border-white/10  rounded-[10px] p-12 text-center transition-colors">
+          <div className="bg-zinc-900/50 border border-white/10 rounded-[10px] p-12 text-center transition-colors">
             <p className="text-4xl mb-4">🛒</p>
-            <h2 className="font-bold font-display text-white/90  mb-2 transition-colors">Your cart is empty</h2>
-            <p className="text-sm text-white/50  mb-6 transition-colors">Add some products to get started.</p>
+            <h2 className="font-bold font-display text-white/90 mb-2 transition-colors">Your cart is empty</h2>
+            <p className="text-sm text-white/50 mb-6 transition-colors">Add some products to get started.</p>
             <Button onClick={() => navigate(-1)}>Browse products</Button>
           </div>
         ) : (
-          <div className="grid md:grid-cols-3 gap-6">
-            <div className="md:col-span-2 space-y-4">
-              <div className="bg-zinc-900/50 border border-white/10 rounded-[10px] divide-y divide-slate-100">
+          <div className="bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col md:flex-row relative">
+            
+            {step === 'processing' && (
+              <div className="absolute inset-0 z-50 bg-white/90 backdrop-blur-sm flex flex-col items-center justify-center">
+                <div className="w-12 h-12 border-4 border-zinc-200 border-t-zinc-900 rounded-full animate-spin mb-4" />
+                <p className="text-zinc-900 font-semibold text-lg animate-pulse">Processing Payment...</p>
+              </div>
+            )}
+
+            {/* Left Column: Order Summary */}
+            <div className="w-full md:w-5/12 bg-zinc-50 p-8 border-r border-zinc-100 overflow-y-auto hidden md:block">
+              <h3 className="text-lg font-bold text-zinc-900 mb-6 font-display">Order Summary</h3>
+              <div className="space-y-4 mb-8">
                 {cart.map((item, idx) => (
-                  <div key={item.product.id} className="flex items-center gap-4 p-4" style={{ animation: 'cardFadeIn 0.3s ease-out' }}>
-                    <img src={item.product.image} alt={item.product.name} className="w-16 h-16 rounded-lg object-cover border border-white/5" />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-white">{item.product.name}</p>
-                      {(item.size || item.color) && (
-                        <p className="text-xs text-white/60 mt-0.5">
-                          {[item.size, item.color].filter(Boolean).join(' · ')}
-                        </p>
+                  <div key={idx} className="flex gap-4">
+                    <div className="w-16 h-16 bg-white rounded-xl border border-zinc-200 overflow-hidden shrink-0 relative">
+                      {item.product?.image ? (
+                        <img src={item.product.image} alt={item.product.name} className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="w-full h-full bg-zinc-100" />
                       )}
-                      <p className="text-xs text-white/50 mt-0.5">${item.product.price} each</p>
+                      <div className="absolute -top-2 -right-2 w-5 h-5 bg-zinc-500 text-white rounded-full flex items-center justify-center text-xs font-bold shadow-sm">
+                        {item.quantity}
+                      </div>
                     </div>
-                    <div className="flex items-center border border-white/10 rounded-lg overflow-hidden">
-                      <button onClick={() => updateQty(idx, item.quantity - 1)} className="w-8 h-8 flex items-center justify-center text-white/60 hover:bg-zinc-950 cursor-pointer text-sm">−</button>
-                      <span className="w-8 text-center text-sm font-mono font-semibold">{item.quantity}</span>
-                      <button onClick={() => updateQty(idx, item.quantity + 1)} className="w-8 h-8 flex items-center justify-center text-white/60 hover:bg-zinc-950 cursor-pointer text-sm">+</button>
+                    <div className="flex-1">
+                      <p className="text-sm font-semibold text-zinc-900 line-clamp-2">{item.product?.name}</p>
+                      <p className="text-xs text-zinc-500 mt-1">{[item.size, item.color].filter(Boolean).join(' · ')}</p>
                     </div>
-                    <p className="font-semibold text-white w-12 text-right text-sm">${item.product.price * item.quantity}</p>
+                    <p className="text-sm font-medium text-zinc-900">${(item.product?.price * item.quantity).toFixed(2)}</p>
                   </div>
                 ))}
               </div>
 
-              {step === 'checkout' && (
-                <div className="bg-zinc-900/50 border border-white/10 rounded-[10px] p-6" style={{ animation: 'cardFadeIn 0.18s ease-out' }}>
-                  <h2 className="font-semibold text-white font-display mb-4">Delivery details</h2>
-                  <div className="flex flex-col gap-4">
-                    {[
-                      { key: 'name', placeholder: 'Full name' },
-                      { key: 'email', placeholder: 'Email address', type: 'email' },
-                      { key: 'address', placeholder: 'Full delivery address' },
-                      { key: 'phone', placeholder: 'Phone number' },
-                    ].map(({ key, placeholder, type = 'text' }) => (
-                      <div key={key}>
-                        <input
-                          type={type}
-                          placeholder={placeholder}
-                          value={form[key]}
-                          onChange={e => { setForm(f => ({ ...f, [key]: e.target.value })); setErrors(er => ({ ...er, [key]: '' })) }}
-                          className={`w-full px-3.5 py-2.5 rounded-[10px] border text-sm outline-none ${errors[key] ? 'border-red-400 bg-red-50/20' : 'border-white/10 focus:border-shop-accent focus:ring-2 focus:ring-shop-accent/20'}`}
-                        />
-                        {errors[key] && <p className="text-xs text-red-500 mt-1">⚠ {errors[key]}</p>}
-                      </div>
-                    ))}
-                  </div>
+              <div className="border-t border-zinc-200 pt-4 mb-4">
+                <div className="flex gap-2">
+                  <input 
+                    type="text" 
+                    placeholder="Promo Code (e.g. SUMMER20)" 
+                    value={promoCode}
+                    onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
+                    className="flex-1 px-3 py-2 rounded-lg border border-zinc-200 text-sm focus:outline-none focus:border-zinc-900 text-zinc-900 bg-white"
+                  />
+                  <button onClick={applyPromo} type="button" className="px-4 py-2 bg-zinc-900 text-white text-sm font-semibold rounded-lg hover:bg-zinc-800 transition-colors">Apply</button>
                 </div>
-              )}
+                {promoError && <p className="text-red-500 text-xs mt-1">{promoError}</p>}
+                {discount && <p className="text-emerald-600 text-xs mt-1">Code applied successfully!</p>}
+              </div>
 
-              {step === 'payment' && (
-                <div className="bg-zinc-900/50 border border-white/10 rounded-[10px] p-6" style={{ animation: 'cardFadeIn 0.18s ease-out' }}>
-                  <div className="flex justify-between items-center mb-4">
-                    <h2 className="font-semibold text-white font-display">Payment details</h2>
-                    <span className="text-xs text-white/60 bg-white/10 px-2 py-1 rounded font-mono">Mock Checkout</span>
-                  </div>
-                  <div className="flex flex-col gap-4">
-                    <div>
-                      <input
-                        placeholder="Name on card"
-                        value={paymentForm.cardName}
-                        onChange={e => { setPaymentForm(f => ({ ...f, cardName: e.target.value })); setErrors(er => ({ ...er, cardName: '' })) }}
-                        className={`w-full px-3.5 py-2.5 rounded-[10px] border text-sm outline-none ${errors.cardName ? 'border-red-400 bg-red-50/20' : 'border-white/10 focus:border-shop-accent'}`}
-                      />
-                      {errors.cardName && <p className="text-xs text-red-500 mt-1">⚠ {errors.cardName}</p>}
-                    </div>
-                    <div>
-                      <input
-                        placeholder="Card number (e.g. 4242 4242 4242 4242)"
-                        value={paymentForm.cardNumber}
-                        onChange={e => { setPaymentForm(f => ({ ...f, cardNumber: e.target.value })); setErrors(er => ({ ...er, cardNumber: '' })) }}
-                        className={`w-full px-3.5 py-2.5 rounded-[10px] border font-mono text-sm outline-none ${errors.cardNumber ? 'border-red-400 bg-red-50/20' : 'border-white/10 focus:border-shop-accent'}`}
-                      />
-                      {errors.cardNumber && <p className="text-xs text-red-500 mt-1">⚠ {errors.cardNumber}</p>}
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <input
-                          placeholder="MM/YY"
-                          value={paymentForm.expiry}
-                          onChange={e => { setPaymentForm(f => ({ ...f, expiry: e.target.value })); setErrors(er => ({ ...er, expiry: '' })) }}
-                          className={`w-full px-3.5 py-2.5 rounded-[10px] border text-sm outline-none ${errors.expiry ? 'border-red-400 bg-red-50/20' : 'border-white/10 focus:border-shop-accent'}`}
-                        />
-                        {errors.expiry && <p className="text-xs text-red-500 mt-1">⚠ {errors.expiry}</p>}
-                      </div>
-                      <div>
-                        <input
-                          placeholder="CVC"
-                          value={paymentForm.cvc}
-                          onChange={e => { setPaymentForm(f => ({ ...f, cvc: e.target.value })); setErrors(er => ({ ...er, cvc: '' })) }}
-                          className={`w-full px-3.5 py-2.5 rounded-[10px] border text-sm outline-none ${errors.cvc ? 'border-red-400 bg-red-50/20' : 'border-white/10 focus:border-shop-accent'}`}
-                        />
-                        {errors.cvc && <p className="text-xs text-red-500 mt-1">⚠ {errors.cvc}</p>}
-                      </div>
-                    </div>
-                  </div>
+              <div className="border-t border-zinc-200 pt-4 space-y-2 text-sm">
+                <div className="flex justify-between text-zinc-500">
+                  <span>Subtotal</span>
+                  <span>${subtotal.toFixed(2)}</span>
                 </div>
-              )}
+                <div className="flex justify-between text-zinc-500">
+                  <span>Shipping</span>
+                  <span>{shipping > 0 ? `$${shipping.toFixed(2)}` : 'Free'}</span>
+                </div>
+                {discount && (
+                  <div className="flex justify-between text-emerald-600 font-medium">
+                    <span>Discount ({promoCode})</span>
+                    <span>-{discount.type === 'percentage' ? `${discount.value}%` : `$${discount.value.toFixed(2)}`}</span>
+                  </div>
+                )}
+                <div className="flex justify-between font-bold text-lg text-zinc-900 pt-4 mt-2 border-t border-zinc-200">
+                  <span>Total</span>
+                  <span>${finalTotal.toFixed(2)}</span>
+                </div>
+              </div>
             </div>
 
-            <div>
-              <div className="bg-zinc-900/50 border border-white/10 rounded-[10px] p-5 sticky top-6">
-                <h2 className="font-semibold text-white font-display mb-4">Order summary</h2>
-                <div className="flex flex-col gap-2 text-sm mb-4">
-                  <div className="flex justify-between text-white/70"><span>Subtotal</span><span>${subtotal}</span></div>
-                  <div className="flex justify-between text-white/70">
-                    <span>Shipping</span>
-                    <span>{shipping === 0 ? <span className="text-green-600">Free</span> : `$${shipping}`}</span>
-                  </div>
-                  {shipping > 0 && <p className="text-xs text-white/50">Add ${100 - subtotal} more for free shipping</p>}
-                </div>
-                <div className="border-t border-white/5 pt-3 mb-4 flex justify-between font-bold text-white">
-                  <span>Total</span><span>${total}</span>
-                </div>
-                {step === 'cart' ? (
-                  <Button className="w-full" onClick={() => setStep('checkout')}>Proceed to checkout →</Button>
-                ) : step === 'checkout' ? (
-                  <Button className="w-full" onClick={handleContinueToPayment}>Continue to payment →</Button>
-                ) : (
-                  <Button className="w-full" onClick={handlePlaceOrder} disabled={isProcessing}>
-                    {isProcessing ? 'Processing Payment...' : 'Place order →'}
-                  </Button>
-                )}
+            {/* Right Column: Payment Form */}
+            <div className="w-full md:w-7/12 p-8 overflow-y-auto">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-xl font-bold text-zinc-900 font-display">Secure Checkout</h2>
               </div>
+
+              <form onSubmit={handleSubmit} className="space-y-6">
+                <div>
+                  <h3 className="text-sm font-semibold text-zinc-900 mb-3">Contact Information</h3>
+                  <input 
+                    type="email" 
+                    required 
+                    placeholder="Email address"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="w-full px-4 py-3 rounded-xl border border-zinc-200 bg-white text-zinc-900 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900/10 focus:border-zinc-900 transition-shadow shadow-sm"
+                  />
+                </div>
+
+                <div>
+                  <h3 className="text-sm font-semibold text-zinc-900 mb-3">Shipping Address</h3>
+                  <input 
+                    type="text" 
+                    required 
+                    placeholder="Full Address"
+                    value={address}
+                    onChange={(e) => setAddress(e.target.value)}
+                    className="w-full px-4 py-3 rounded-xl border border-zinc-200 bg-white text-zinc-900 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900/10 focus:border-zinc-900 transition-shadow shadow-sm"
+                  />
+                </div>
+
+                <div>
+                  <h3 className="text-sm font-semibold text-zinc-900 mb-3">Payment Details</h3>
+                  <div className="rounded-xl border border-zinc-200 bg-white overflow-hidden shadow-sm">
+                    <div className="p-3 border-b border-zinc-200 relative">
+                      <input 
+                        type="text" 
+                        required 
+                        placeholder="Card number"
+                        value={cardNumber}
+                        onChange={handleCardFormat}
+                        maxLength={19}
+                        className="w-full bg-transparent text-zinc-900 text-sm focus:outline-none pl-1"
+                      />
+                      <div className="absolute right-3 top-3 flex gap-1">
+                        <div className="w-8 h-5 bg-zinc-100 rounded flex items-center justify-center border border-zinc-200">
+                          <span className="text-[10px] font-bold text-blue-600">VISA</span>
+                        </div>
+                        <div className="w-8 h-5 bg-zinc-100 rounded flex items-center justify-center border border-zinc-200">
+                          <span className="text-[10px] font-bold text-orange-500">MC</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex">
+                      <div className="w-1/2 p-3 border-r border-zinc-200">
+                        <input 
+                          type="text" 
+                          required 
+                          placeholder="MM / YY"
+                          value={expiry}
+                          onChange={handleExpiryFormat}
+                          maxLength={5}
+                          className="w-full bg-transparent text-zinc-900 text-sm focus:outline-none pl-1"
+                        />
+                      </div>
+                      <div className="w-1/2 p-3">
+                        <input 
+                          type="text" 
+                          required 
+                          placeholder="CVC"
+                          value={cvc}
+                          onChange={(e) => setCvc(e.target.value.replace(/\D/g, '').substring(0, 4))}
+                          maxLength={4}
+                          className="w-full bg-transparent text-zinc-900 text-sm focus:outline-none pl-1"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="pt-4">
+                  <button 
+                    type="submit" 
+                    className="w-full bg-zinc-900 text-white font-bold text-sm py-4 rounded-xl shadow-lg hover:bg-zinc-800 transition-colors hover:shadow-xl active:scale-[0.98] transform flex items-center justify-center gap-2"
+                  >
+                    <svg className="w-4 h-4 text-white/70" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                    </svg>
+                    Pay ${finalTotal.toFixed(2)}
+                  </button>
+                  <p className="text-center text-xs text-zinc-500 mt-4 flex items-center justify-center gap-1">
+                    <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                    </svg>
+                    Payments are secure and encrypted.
+                  </p>
+                </div>
+              </form>
             </div>
           </div>
         )}
-      </motion.div>
-      <style>{`
-        @keyframes cardFadeIn {
-          from { opacity:0; transform:translateY(8px); }
-          to { opacity:1; transform:translateY(0); }
-        }
-      `}</style>
+      </div>
     </div>
-  )
+  );
 }
 
 // ── Order Confirmation ─────────────────────────────────────────────────────────
