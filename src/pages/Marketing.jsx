@@ -1,11 +1,11 @@
 import { useState, Suspense, useEffect, useRef, lazy } from 'react'
-import { motion, useScroll, useTransform, AnimatePresence, useMotionValueEvent, useSpring, animate } from 'framer-motion'
+import { motion, useScroll, useTransform, AnimatePresence, useMotionValueEvent, useSpring } from 'framer-motion'
 import { Button, Input } from '@/components/ui/ui'
 import { HeroScene } from '@/components/shared/HeroScene'
-import { HyperRealisticLoader } from '@/components/shared/HyperRealisticLoader'
 import { useTilt } from '@/hooks/useTilt'
 
 const GlobeScene = lazy(() => import('@/components/shared/GlobeScene').then(module => ({ default: module.GlobeScene })));
+import { HyperRealisticLoader } from '@/components/shared/HyperRealisticLoader'
 import { useNavigate, Link } from 'react-router-dom'
 import { isAuthenticated, register, getUserContext, isAdmin } from '@/services/storage'
 
@@ -128,47 +128,18 @@ export function LandingPage() {
   const heroRef = useRef(null)
   
   const [loadingProgress, setLoadingProgress] = useState(0)
-  const [displayedProgress, setDisplayedProgress] = useState(0)
-  const [isLoaded, setIsLoaded] = useState(false)
-
-  // Smooth loading animation logic
-  useEffect(() => {
-    // If the images fail to load or load instantly, we still want a graceful visual progression
-    let controls;
-    if (loadingProgress >= 100 && displayedProgress < 100) {
-      controls = animate(displayedProgress, 100, {
-        duration: 1.2,
-        ease: "easeOut",
-        onUpdate: (val) => setDisplayedProgress(Math.round(val)),
-        onComplete: () => setIsLoaded(true)
-      });
-    } else if (loadingProgress > 0 && loadingProgress < 100) {
-      controls = animate(displayedProgress, loadingProgress, {
-        duration: 0.3,
-        ease: "linear",
-        onUpdate: (val) => setDisplayedProgress(Math.round(val))
-      });
-    }
-    return () => { if (controls) controls.stop(); };
-  }, [loadingProgress, displayedProgress]);
-
-  // Failsafe in case nothing loads or throws error
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      if (loadingProgress < 100) setLoadingProgress(100);
-    }, 4000);
-    return () => clearTimeout(timer);
-  }, [loadingProgress]);
+  const isLoaded = loadingProgress >= 100
+  const [loaderFinished, setLoaderFinished] = useState(false)
 
   useEffect(() => {
-    if (!isLoaded) {
+    if (!loaderFinished) {
       document.body.style.overflow = 'hidden'
       window.scrollTo(0, 0)
     } else {
       document.body.style.overflow = ''
     }
     return () => { document.body.style.overflow = '' }
-  }, [isLoaded])
+  }, [loaderFinished])
 
   const { scrollYProgress: pageScrollProgress } = useScroll()
   const { scrollYProgress: rawHeroScrollProgress } = useScroll({
@@ -194,31 +165,11 @@ export function LandingPage() {
   return (
     <div className="bg-shop-lightbg font-body selection:bg-shop-accent selection:text-shop-primary">
       {/* Loading Overlay */}
-      <AnimatePresence>
-        {!isLoaded && (
-          <motion.div 
-            initial={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.8, ease: "easeInOut" }}
-            className="fixed inset-0 z-[200] bg-black flex flex-col items-center justify-center text-white"
-          >
-            <div className="flex flex-col items-center gap-6">
-              <HyperRealisticLoader />
-              <div className="text-2xl font-display font-medium tracking-wide">
-                Loading Experience <span className="text-shop-accent">{displayedProgress}%</span>
-              </div>
-              <div className="w-64 h-1 bg-white/10 rounded-full overflow-hidden">
-                <motion.div 
-                  className="h-full bg-shop-accent"
-                  initial={{ width: 0 }}
-                  animate={{ width: `${displayedProgress}%` }}
-                  transition={{ duration: 0.1 }}
-                />
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <HyperRealisticLoader 
+        isLoaded={isLoaded} 
+        progress={loadingProgress} 
+        onComplete={() => setLoaderFinished(true)} 
+      />
 
       {/* Nav */}
       <nav className={`fixed top-0 left-0 right-0 z-[100] py-4 transition-all duration-700 ${navVisible ? 'bg-[#000000]/80 backdrop-blur-xl border-b border-white/5' : 'bg-transparent border-transparent backdrop-blur-none pointer-events-none'}`}>
