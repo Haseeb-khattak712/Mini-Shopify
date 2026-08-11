@@ -317,7 +317,7 @@ export function Marketplace() {
             {brands.map((brand, i) => (
               <div 
                 key={i} 
-                onClick={() => navigate(`/marketplace/brand/${brand.subdomain}`)}
+                onClick={() => navigate(`/store/${brand.subdomain}`)}
                 className="flex flex-col items-center gap-4 min-w-[120px] cursor-pointer group"
               >
                 <div className="w-20 h-20 rounded-full border border-white/10 bg-zinc-900 flex items-center justify-center text-2xl group-hover:border-white/40 transition-colors shadow-xl text-white">
