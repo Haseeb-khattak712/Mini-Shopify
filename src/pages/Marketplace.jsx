@@ -174,9 +174,11 @@ export function Marketplace() {
                 Sign In
               </button>
             )}
-            <button onClick={() => navigate('/signup')} className="text-sm font-medium bg-white text-zinc-950 px-4 py-1.5 rounded-full hover:bg-zinc-200 transition-colors cursor-pointer">
-              Start Selling
-            </button>
+            {user?.role !== 'admin' && (
+              <button onClick={() => navigate('/signup?role=admin')} className="text-sm font-medium bg-white text-zinc-950 px-4 py-1.5 rounded-full hover:bg-zinc-200 transition-colors cursor-pointer">
+                Start Selling
+              </button>
+            )}
           </div>
           <div className="flex sm:hidden items-center gap-3">
             <button onClick={() => setIsWishlistOpen(true)} className="text-sm font-medium text-white/70 hover:text-red-400 transition-colors flex items-center gap-1.5 cursor-pointer">
@@ -209,9 +211,11 @@ export function Marketplace() {
                     Sign In
                   </button>
                 )}
-                <button onClick={() => navigate('/signup')} className="w-full text-center text-sm font-medium bg-white text-zinc-950 px-4 py-3 rounded-lg hover:bg-zinc-200 transition-colors">
-                  Start Selling
-                </button>
+                {user?.role !== 'admin' && (
+                  <button onClick={() => navigate('/signup?role=admin')} className="w-full text-center text-sm font-medium bg-white text-zinc-950 px-4 py-3 rounded-lg hover:bg-zinc-200 transition-colors">
+                    Start Selling
+                  </button>
+                )}
               </div>
             </motion.div>
           )}

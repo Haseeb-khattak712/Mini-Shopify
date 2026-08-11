@@ -742,7 +742,8 @@ export function LandingPage() {
 
 export function SignupFlow() {
   const navigate = useNavigate()
-  const [role, setRole] = useState('customer')
+  const initialRole = new URLSearchParams(window.location.search).get('role') || 'customer'
+  const [role, setRole] = useState(initialRole)
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')

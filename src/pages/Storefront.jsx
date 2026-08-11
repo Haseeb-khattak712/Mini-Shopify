@@ -209,6 +209,8 @@ function StoreNav({ cartCount, theme }) {
 const ProductCard3D = memo(function ProductCard3D({ product, onAddToCart, onQuickView, isFlat }) {
   const navigate = useNavigate()
   const { subdomain } = useParams()
+  const user = getUserContext()
+  const isOwnStore = user?.role === 'admin' && user?.subdomain === subdomain
   const tilt = useTilt(14)
   const [justAdded, setJustAdded] = useState(false)
 
@@ -366,13 +368,22 @@ const ProductListCard = memo(function ProductListCard({ product, onAddToCart, on
               <span className="text-[10px] font-mono text-green-400">In stock</span>
             )}
           </div>
-          <button
-            onClick={handleAdd}
-            className={`text-sm font-medium rounded-lg px-4 py-2 transition-all duration-200
-              ${justAdded ? 'bg-green-100 text-green-700 scale-95' : 'bg-shop-primary hover:bg-shop-accent text-white hover:scale-105 shadow-md'}`}
-          >
-            {justAdded ? '✓ Added' : 'Add to Cart'}
-          </button>
+          {isOwnStore ? (
+            <button
+              disabled
+              className="text-sm font-medium rounded-lg px-4 py-2 transition-all duration-200 bg-white/10 text-white/40 cursor-not-allowed"
+            >
+              Your Store
+            </button>
+          ) : (
+            <button
+              onClick={handleAdd}
+              className={`text-sm font-medium rounded-lg px-4 py-2 transition-all duration-200
+                ${justAdded ? 'bg-green-100 text-green-700 scale-95' : 'bg-shop-primary hover:bg-shop-accent text-white hover:scale-105 shadow-md'}`}
+            >
+              {justAdded ? '✓ Added' : 'Add to Cart'}
+            </button>
+          )}
         </div>
       </div>
     </div>
@@ -382,6 +393,9 @@ const ProductListCard = memo(function ProductListCard({ product, onAddToCart, on
 // ── Quick View Modal ────────────────────────────────────────────────────────────
 
 function QuickViewModal({ product, isOpen, onClose, onAddToCart }) {
+  const { subdomain } = useParams()
+  const user = getUserContext()
+  const isOwnStore = user?.role === 'admin' && user?.subdomain === subdomain
   const [qty, setQty] = useState(1)
   
   // Reset state when product changes
@@ -448,15 +462,24 @@ function QuickViewModal({ product, isOpen, onClose, onAddToCart }) {
                   </span>
                 </div>
                 
-                <button
-                  onClick={() => {
-                    onAddToCart(product, qty)
-                    onClose()
-                  }}
-                  className="w-full py-3 bg-shop-primary hover:bg-shop-accent text-white font-bold rounded-lg shadow-lg hover:shadow-xl transition-all active:scale-95"
-                >
-                  Add to Cart
-                </button>
+                {isOwnStore ? (
+                  <button
+                    disabled
+                    className="w-full py-3 bg-white/5 text-white/40 font-bold rounded-lg cursor-not-allowed border border-white/10"
+                  >
+                    Your Store
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => {
+                      onAddToCart(product, qty)
+                      onClose()
+                    }}
+                    className="w-full py-3 bg-shop-primary hover:bg-shop-accent text-white font-bold rounded-lg shadow-lg hover:shadow-xl transition-all active:scale-95"
+                  >
+                    Add to Cart
+                  </button>
+                )}
               </div>
             </div>
           </motion.div>
@@ -749,6 +772,8 @@ export function ProductDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { cart, handleAddToCart, products, reviews, setReviews, subdomain } = useOutletContext();
+  const user = getUserContext();
+  const isOwnStore = user?.role === 'admin' && user?.subdomain === subdomain;
   const product = (Array.isArray(products) ? products : []).find(p => String(p.id) === String(id));
 
   const productReviews = (Array.isArray(reviews) ? reviews : [])
@@ -976,9 +1001,15 @@ export function ProductDetail() {
             </div>
 
             <div className="flex gap-3 mt-auto">
-              <Button className="flex-1 active:scale-95 transition-transform" size="lg" onClick={add} disabled={availableStock === 0}>
-                Add to cart · ${(product.price * qty).toFixed(2)}
-              </Button>
+              {isOwnStore ? (
+                <Button disabled className="flex-1 bg-white/5 text-white/40 border border-white/10 cursor-not-allowed" size="lg">
+                  Your Store
+                </Button>
+              ) : (
+                <Button className="flex-1 active:scale-95 transition-transform" size="lg" onClick={add} disabled={availableStock === 0}>
+                  Add to cart · ${(product.price * qty).toFixed(2)}
+                </Button>
+              )}
             </div>
 
             <div className="mt-6 pt-5 border-t border-white/5  flex flex-col gap-2 transition-colors">
