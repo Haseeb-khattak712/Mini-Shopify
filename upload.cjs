@@ -22,14 +22,12 @@ async function upload() {
         // Upload the backend directory from local
         await client.uploadFromDir(path.join(__dirname, "backend"));
         
-        console.log("Upload complete! Renaming .env.production to env.ini...");
-        
-        // Try to rename .env.production to env.ini on the server
+        console.log("Uploading database configuration (.env.production)...");
         try {
-            await client.rename("htdocs/backend/.env.production", "htdocs/backend/env.ini");
-            console.log("Successfully renamed .env.production to env.ini!");
+            await client.uploadFrom(path.join(__dirname, ".env.production"), "env.ini");
+            console.log("Successfully uploaded database config to env.ini!");
         } catch (e) {
-            console.log("Note: Could not rename .env.production (it might already be renamed or missing).");
+            console.log("Error uploading .env.production:", e);
         }
         
         console.log("Deployment finished successfully!");

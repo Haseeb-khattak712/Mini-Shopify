@@ -5,9 +5,8 @@ $stmt = $db->query("SELECT * FROM users WHERE role = 'admin'");
 $admins = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 if (count($admins) < 2) {
-    echo "Less than 2 admins found. Admins:\n";
-    print_r($admins);
-    exit;
+    // User hasn't registered yet, skip seeding other data
+    return;
 }
 
 // Find the admin that is NOT 'demo'

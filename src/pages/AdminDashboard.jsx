@@ -34,7 +34,7 @@ function Stat3DCard({ label, value, change, positive, icon, color }) {
 export function AdminDashboard() {
   const { orders, products } = useOutletContext();
   const user = getUserContext();
-  const totalRevenue = orders.filter(o => o.status !== 'cancelled').reduce((sum, o) => sum + o.total, 0)
+  const totalRevenue = orders.filter(o => o.status !== 'cancelled').reduce((sum, o) => sum + parseFloat(o.total || 0), 0)
   const today = new Date().toISOString().split('T')[0]
   const ordersToday = orders.filter(o => o.date === today).length
   const lowStock = (products || []).filter(p => p.stock <= 5)
@@ -46,7 +46,7 @@ export function AdminDashboard() {
     d.setDate(d.getDate() - (6 - i))
     const dateStr = d.toISOString().split('T')[0]
     const shortLabel = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
-    const dayRevenue = orders.filter(o => o.date === dateStr && o.status !== 'cancelled').reduce((sum, o) => sum + o.total, 0)
+    const dayRevenue = orders.filter(o => o.date === dateStr && o.status !== 'cancelled').reduce((sum, o) => sum + parseFloat(o.total || 0), 0)
     return { day: shortLabel, revenue: dayRevenue }
   }), [orders])
 
