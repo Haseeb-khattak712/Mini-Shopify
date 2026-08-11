@@ -1,5 +1,5 @@
-# Deny access to SQLite database files and environment variables
-<FilesMatch "\.(sqlite|db)$|^\.env">
+# Deny access to SQLite database files, INI configs, and environment variables
+<FilesMatch "\.(sqlite|db|ini)$|^\.env">
     Order allow,deny
     Deny from all
 </FilesMatch>

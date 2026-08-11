@@ -13,6 +13,9 @@ class Database {
         if (!file_exists($envFile)) {
             $envFile = __DIR__ . '/../.env'; // fallback to backend/.env
         }
+        if (!file_exists($envFile)) {
+            $envFile = __DIR__ . '/../env.ini'; // InfinityFree workaround
+        }
         if (file_exists($envFile)) {
             $lines = file($envFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
             foreach ($lines as $line) {
