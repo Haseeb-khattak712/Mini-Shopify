@@ -281,24 +281,24 @@ export function Pricing() {
             
             <div className="grid md:grid-cols-3 gap-12 text-center mb-32">
               <div className="flex flex-col items-center">
-                <div className="w-32 h-32 mb-8 relative rounded-full bg-shop-accent/5 flex items-center justify-center p-4 border border-shop-accent/20 shadow-[0_0_40px_rgba(255,255,255,0.1)]">
-                  <img src="/assets/support_icon.png" alt="24/7 Support" className="w-full h-full object-contain mix-blend-screen" />
+                <div className="w-32 h-32 mb-8 relative rounded-full bg-shop-accent/5 flex items-center justify-center p-2 border border-shop-accent/20 shadow-[0_0_40px_rgba(255,255,255,0.1)]">
+                  <img src="https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=400&q=80" alt="24/7 Support" className="w-full h-full object-cover rounded-full" />
                 </div>
                 <h3 className="text-xl font-bold mb-3">24/7 Global Support</h3>
                 <p className="text-white/60 text-sm">Award-winning customer service available around the clock via live chat, email, and phone.</p>
               </div>
               
               <div className="flex flex-col items-center">
-                <div className="w-32 h-32 mb-8 relative rounded-full bg-shop-accent/5 flex items-center justify-center p-4 border border-shop-accent/20 shadow-[0_0_40px_rgba(255,255,255,0.1)]">
-                  <img src="/assets/checkout_icon.png" alt="World's Best Checkout" className="w-full h-full object-contain mix-blend-screen" />
+                <div className="w-32 h-32 mb-8 relative rounded-full bg-shop-accent/5 flex items-center justify-center p-2 border border-shop-accent/20 shadow-[0_0_40px_rgba(255,255,255,0.1)]">
+                  <img src="https://images.unsplash.com/photo-1574852859542-1b41217a7815?w=400&q=80" alt="World's Best Checkout" className="w-full h-full object-cover rounded-full" />
                 </div>
                 <h3 className="text-xl font-bold mb-3">World's Best Checkout</h3>
                 <p className="text-white/60 text-sm">Our highly optimized, one-click checkout converts 36% better than the industry average.</p>
               </div>
 
               <div className="flex flex-col items-center">
-                <div className="w-32 h-32 mb-8 relative rounded-full bg-shop-accent/5 flex items-center justify-center p-4 border border-shop-accent/20 shadow-[0_0_40px_rgba(255,255,255,0.1)]">
-                  <img src="/assets/global_icon.png" alt="Global Reach" className="w-full h-full object-contain mix-blend-screen" />
+                <div className="w-32 h-32 mb-8 relative rounded-full bg-shop-accent/5 flex items-center justify-center p-2 border border-shop-accent/20 shadow-[0_0_40px_rgba(255,255,255,0.1)]">
+                  <img src="https://images.unsplash.com/photo-1521295121783-8a321d551ad2?w=400&q=80" alt="Global Reach" className="w-full h-full object-cover rounded-full" />
                 </div>
                 <h3 className="text-xl font-bold mb-3">Global Infrastructure</h3>
                 <p className="text-white/60 text-sm">Sell anywhere with localized currencies, languages, and 99.99% proven uptime SLA.</p>
@@ -331,7 +331,7 @@ export function Pricing() {
                 </div>
                 <div className="w-full md:w-1/2 flex justify-center relative">
                   <div className="absolute inset-0 bg-shop-accent/20 blur-[100px] rounded-full"></div>
-                  <img src="/assets/pos_icon.png" alt="POS System" className="w-64 h-64 object-contain mix-blend-screen relative z-10 animate-float" />
+                  <img src="https://images.unsplash.com/photo-1556740749-887f6717d7e4?w=600&q=80" alt="POS System" className="w-64 h-64 object-cover rounded-3xl relative z-10 shadow-2xl animate-float border border-white/10" />
                 </div>
               </div>
             </div>
