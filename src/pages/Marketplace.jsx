@@ -14,8 +14,8 @@ const COLLECTIONS = [
 ]
 
 const EDITORIALS = [
-  { id: 'e1', category: 'Style', title: 'The Art of Slow Living', snippet: 'Embracing minimalism in a chaotic world.', image: 'https://images.unsplash.com/photo-1490132332152-40b37db8754b?w=800&q=80' },
-  { id: 'e2', category: 'Design', title: 'Winter Wardrobe Essentials', snippet: 'Pieces that blend form and function seamlessly.', image: 'https://images.unsplash.com/photo-1434389678369-183427d1421b?w=800&q=80' },
+  { id: 'e1', category: 'Style', title: 'The Art of Slow Living', snippet: 'Embracing minimalism in a chaotic world.', image: 'https://images.unsplash.com/photo-1517849845537-4d257902454a?w=800&q=80' },
+  { id: 'e2', category: 'Design', title: 'Winter Wardrobe Essentials', snippet: 'Pieces that blend form and function seamlessly.', image: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=800&q=80' },
   { id: 'e3', category: 'Culture', title: 'Coffee & Craftsmanship', snippet: 'Meet the artisans reshaping morning rituals.', image: 'https://images.unsplash.com/photo-1497935586351-b67a49e012bf?w=800&q=80' }
 ]
 
