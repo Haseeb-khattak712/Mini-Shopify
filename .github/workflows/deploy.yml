@@ -28,8 +28,8 @@ jobs:
     - name: Prepare Deployment Folder
       run: |
         mkdir -p deploy_package
-        cp -r dist/* deploy_package/
-        cp -r backend deploy_package/
+        cp -a dist/. deploy_package/
+        cp -a backend deploy_package/
         cp .env.production deploy_package/backend/env.ini
 
     - name: Sync Files via FTP
