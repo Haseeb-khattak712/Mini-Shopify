@@ -82,15 +82,15 @@ export function useStoreTheme() {
 
   useEffect(() => {
     // If the context changes (e.g. initial load finished), update live settings
-    if (context.settings && context.settings.primaryColor) {
-      setLiveSettings(context.settings)
+    if (context.settings && Object.keys(context.settings).length > 0) {
+      setLiveSettings({ ...defaultSettings, ...context.settings })
     }
   }, [context.settings])
 
   useEffect(() => {
     const handler = (e) => {
       if (e.data?.type === 'THEME_UPDATE') {
-        setLiveSettings(e.data.settings)
+        setLiveSettings(prev => ({ ...prev, ...e.data.settings }))
       }
     }
     window.addEventListener('message', handler)
