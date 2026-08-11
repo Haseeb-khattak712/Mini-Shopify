@@ -6,21 +6,71 @@ use PDOException;
 
 class Database {
     private static $instance = null;
-    
+    private static $env = [];
+
+    private static function loadEnv() {
+        $envFile = __DIR__ . '/../../.env';
+        if (!file_exists($envFile)) {
+            $envFile = __DIR__ . '/../.env'; // fallback to backend/.env
+        }
+        if (!file_exists($envFile)) {
+            $envFile = __DIR__ . '/../env.ini'; // InfinityFree workaround
+        }
+        if (file_exists($envFile)) {
+            $lines = file($envFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+            foreach ($lines as $line) {
+                if (strpos(trim($line), '#') === 0) continue;
+                $parts = explode('=', $line, 2);
+                if (count($parts) === 2) {
+                    $key = trim($parts[0]);
+                    $val = trim($parts[1]);
+                    self::$env[$key] = $val;
+                    if (function_exists('putenv')) {
+                        putenv("$key=$val");
+                    }
+                }
+            }
+        }
+    }
+
+    private static function getEnvVal($key, $default = '') {
+        if (isset(self::$env[$key])) return self::$env[$key];
+        $val = getenv($key);
+        return $val !== false ? $val : $default;
+    }
+
     public static function getConnection() {
         if (self::$instance === null) {
+            self::loadEnv();
             try {
-                $db_file = __DIR__ . '/../ownstore.sqlite';
-                self::$instance = new PDO("sqlite:" . $db_file);
+                $driver = self::getEnvVal('DB_CONNECTION', 'sqlite');
+                if ($driver === 'mysql') {
+                    $host = self::getEnvVal('DB_HOST', '127.0.0.1');
+                    $port = self::getEnvVal('DB_PORT', '3306');
+                    $db   = self::getEnvVal('DB_DATABASE', '');
+                    $user = self::getEnvVal('DB_USERNAME', '');
+                    $pass = self::getEnvVal('DB_PASSWORD', '');
+                    self::$instance = new PDO("mysql:host=$host;port=$port;dbname=$db", $user, $pass);
+                } else {
+                    $db_file = __DIR__ . '/../ownstore.sqlite';
+                    self::$instance = new PDO("sqlite:" . $db_file);
+                }
+                
                 self::$instance->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
                 self::$instance->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
 
                 // Auto-initialize database if empty
-                $check = self::$instance->query("SELECT name FROM sqlite_master WHERE type='table' AND name='users'");
-                if (!$check->fetch()) {
+                $driverType = self::$instance->getAttribute(PDO::ATTR_DRIVER_NAME);
+                if ($driverType === 'mysql') {
+                    $check = self::$instance->query("SHOW TABLES LIKE 'users'");
+                } else {
+                    $check = self::$instance->query("SELECT name FROM sqlite_master WHERE type='table' AND name='users'");
+                }
+                
+                if (!$check || !$check->fetch()) {
                     require_once __DIR__ . '/../database/init_db.php';
                 } else {
-                    self::runMigrations(self::$instance);
+                    self::runMigrations(self::$instance, $driverType);
                 }
             } catch (PDOException $e) {
                 http_response_code(500);
@@ -31,23 +81,32 @@ class Database {
         return self::$instance;
     }
 
-    private static function runMigrations($db) {
+    private static function getColumnNames($db, $table, $driverType) {
+        if ($driverType === 'mysql') {
+            $cols = $db->query("SHOW COLUMNS FROM `$table`")->fetchAll();
+            return array_column($cols, 'Field');
+        } else {
+            $cols = $db->query("PRAGMA table_info(`$table`)")->fetchAll();
+            return array_column($cols, 'name');
+        }
+    }
+
+    private static function runMigrations($db, $driverType) {
         // Migration: Create discounts table if it doesn't exist
         $db->exec("CREATE TABLE IF NOT EXISTS discounts (
-            id TEXT PRIMARY KEY,
-            user_id TEXT NOT NULL,
-            code TEXT NOT NULL,
-            type TEXT NOT NULL,
-            value REAL NOT NULL,
-            active INTEGER DEFAULT 1
+            id VARCHAR(50) PRIMARY KEY,
+            user_id VARCHAR(50) NOT NULL,
+            code VARCHAR(50) NOT NULL,
+            type VARCHAR(50) NOT NULL,
+            value DECIMAL(10,2) NOT NULL,
+            active INT DEFAULT 1
         )");
 
         // Migration: add missing columns to products table if they don't exist
-        $cols = $db->query("PRAGMA table_info(products)")->fetchAll();
-        $colNames = array_column($cols, 'name');
+        $colNames = self::getColumnNames($db, 'products', $driverType);
         
         if (!in_array('is_digital', $colNames)) {
-            $db->exec("ALTER TABLE products ADD COLUMN is_digital INTEGER DEFAULT 0");
+            $db->exec("ALTER TABLE products ADD COLUMN is_digital INT DEFAULT 0");
         }
         if (!in_array('file_url', $colNames)) {
             $db->exec("ALTER TABLE products ADD COLUMN file_url TEXT");
@@ -57,17 +116,15 @@ class Database {
         }
 
         // Migration: add email to orders
-        $orderCols = $db->query("PRAGMA table_info(orders)")->fetchAll();
-        $orderColNames = array_column($orderCols, 'name');
+        $orderColNames = self::getColumnNames($db, 'orders', $driverType);
         if (!in_array('email', $orderColNames)) {
-            $db->exec("ALTER TABLE orders ADD COLUMN email TEXT");
+            $db->exec("ALTER TABLE orders ADD COLUMN email VARCHAR(255)");
         }
 
         // Migration: add status to reviews
-        $reviewCols = $db->query("PRAGMA table_info(reviews)")->fetchAll();
-        $reviewColNames = array_column($reviewCols, 'name');
+        $reviewColNames = self::getColumnNames($db, 'reviews', $driverType);
         if (!in_array('status', $reviewColNames)) {
-            $db->exec("ALTER TABLE reviews ADD COLUMN status TEXT DEFAULT 'approved'");
+            $db->exec("ALTER TABLE reviews ADD COLUMN status VARCHAR(50) DEFAULT 'approved'");
         }
     }
 }
