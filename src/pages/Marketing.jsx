@@ -377,7 +377,7 @@ export function LandingPage() {
                   animate={{ y: [0, -15, 0] }} transition={{ repeat: Infinity, duration: 6, ease: "easeInOut" }}
                   className="w-full aspect-[4/3] rounded-[40px] shadow-[0_30px_60px_rgba(0,0,0,0.4)] overflow-hidden group cursor-pointer border border-white/10 bg-gradient-to-br from-white/[0.08] to-transparent border border-white/10 shadow-[0_30px_60px_rgba(0,0,0,0.6)] backdrop-blur-md"
                 >
-                  <img src="https://images.unsplash.com/photo-1586528116311-ad8ed745eb33?auto=format&fit=crop&q=80&w=800" alt="Marketplaces" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 opacity-40 mix-blend-luminosity group-hover:mix-blend-normal group-hover:opacity-100 filter group-hover:brightness-110 contrast-125" />
+                  <img src="https://images.unsplash.com/photo-1553413077-190dd305871c?auto=format&fit=crop&q=80&w=800" alt="Marketplaces" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 opacity-40 mix-blend-luminosity group-hover:mix-blend-normal group-hover:opacity-100 filter group-hover:brightness-110 contrast-125" />
                 </motion.div>
               </motion.div>
 
