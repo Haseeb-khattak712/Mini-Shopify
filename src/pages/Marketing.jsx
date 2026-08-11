@@ -319,21 +319,21 @@ export function LandingPage() {
                 initial={{ opacity: 0, y: 100 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-100px" }} transition={{ duration: 0.8 }}
                 className="w-full max-w-[480px] aspect-[4/5] rounded-[40px] border border-white/10 shadow-2xl overflow-hidden bg-gradient-to-br from-white/[0.08] to-transparent border border-white/10 shadow-[0_30px_60px_rgba(0,0,0,0.6)] backdrop-blur-md cursor-pointer group"
               >
-                <img src="https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=800&q=80" alt="Sales Dashboard" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 opacity-40 mix-blend-luminosity group-hover:mix-blend-normal group-hover:opacity-100 filter group-hover:brightness-110 contrast-125" />
+                <img src="https://images.unsplash.com/photo-1607082349566-187342175e2f?auto=format&fit=crop&w=800&q=80" alt="Online Store Management" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 opacity-40 mix-blend-luminosity group-hover:mix-blend-normal group-hover:opacity-100 filter group-hover:brightness-110 contrast-125" />
               </motion.div>
 
               <motion.div
                 initial={{ opacity: 0, y: 100 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-100px" }} transition={{ duration: 0.8 }}
                 className="w-full max-w-[360px] aspect-[3/4] rounded-[40px] border border-white/10 shadow-2xl overflow-hidden bg-gradient-to-br from-white/[0.08] to-transparent border border-white/10 shadow-[0_30px_60px_rgba(0,0,0,0.6)] backdrop-blur-md lg:-translate-x-12 cursor-pointer group"
               >
-                <img src="https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?auto=format&fit=crop&w=800&q=80" alt="Mobile Storefront" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 opacity-40 mix-blend-luminosity group-hover:mix-blend-normal group-hover:opacity-100 filter group-hover:brightness-110 contrast-125" />
+                <img src="https://images.unsplash.com/photo-1607082350899-7e105aa886ae?auto=format&fit=crop&w=800&q=80" alt="Mobile Storefront" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 opacity-40 mix-blend-luminosity group-hover:mix-blend-normal group-hover:opacity-100 filter group-hover:brightness-110 contrast-125" />
               </motion.div>
 
               <motion.div
                 initial={{ opacity: 0, y: 100 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-100px" }} transition={{ duration: 0.8 }}
                 className="w-full max-w-[400px] aspect-square rounded-[40px] border border-white/10 shadow-2xl overflow-hidden bg-gradient-to-br from-shop-accent/10 to-transparent border border-shop-accent/20 shadow-[0_30px_60px_rgba(149,191,71,0.15)] backdrop-blur-md lg:translate-x-8 cursor-pointer group"
               >
-                <img src="https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?auto=format&fit=crop&w=800&q=80" alt="Point of Sale" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 opacity-40 mix-blend-luminosity group-hover:mix-blend-normal group-hover:opacity-100 filter group-hover:brightness-110 contrast-125" />
+                <img src="https://images.unsplash.com/photo-1556742044-f3d4d5e825a1?auto=format&fit=crop&w=800&q=80" alt="In-Person Retail" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 opacity-40 mix-blend-luminosity group-hover:mix-blend-normal group-hover:opacity-100 filter group-hover:brightness-110 contrast-125" />
               </motion.div>
             </div>
 
@@ -353,7 +353,7 @@ export function LandingPage() {
                   animate={{ y: [0, -15, 0] }} transition={{ repeat: Infinity, duration: 6, ease: "easeInOut" }}
                   className="w-full aspect-[4/3] rounded-[40px] shadow-[0_30px_60px_rgba(0,0,0,0.4)] overflow-hidden group cursor-pointer border border-white/10 bg-gradient-to-br from-white/[0.08] to-transparent border border-white/10 shadow-[0_30px_60px_rgba(0,0,0,0.6)] backdrop-blur-md"
                 >
-                  <img src="https://images.unsplash.com/photo-1553413077-190dd305871c?auto=format&fit=crop&q=80&w=800" alt="Marketplaces" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 opacity-40 mix-blend-luminosity group-hover:mix-blend-normal group-hover:opacity-100 filter group-hover:brightness-110 contrast-125" />
+                  <img src="https://images.unsplash.com/photo-1587293852726-70cdb56c2866?auto=format&fit=crop&q=80&w=800" alt="Global Fulfillment & Logistics" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 opacity-40 mix-blend-luminosity group-hover:mix-blend-normal group-hover:opacity-100 filter group-hover:brightness-110 contrast-125" />
                 </motion.div>
               </motion.div>
 
@@ -365,7 +365,7 @@ export function LandingPage() {
                   animate={{ y: [0, -20, 0] }} transition={{ repeat: Infinity, duration: 7, ease: "easeInOut", delay: 1 }}
                   className="w-full aspect-[4/3] rounded-[40px] shadow-[0_30px_60px_rgba(0,0,0,0.4)] overflow-hidden group cursor-pointer border border-white/10 bg-gradient-to-br from-white/[0.08] to-transparent border border-white/10 shadow-[0_30px_60px_rgba(0,0,0,0.6)] backdrop-blur-md"
                 >
-                  <img src="https://images.unsplash.com/photo-1574852859542-1b41217a7815?auto=format&fit=crop&q=80&w=800" alt="Mobile Checkout" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 opacity-40 mix-blend-luminosity group-hover:mix-blend-normal group-hover:opacity-100 filter group-hover:brightness-110 contrast-125" />
+                  <img src="https://images.unsplash.com/photo-1611162617474-5b21e879e113?auto=format&fit=crop&q=80&w=800" alt="Social Commerce" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 opacity-40 mix-blend-luminosity group-hover:mix-blend-normal group-hover:opacity-100 filter group-hover:brightness-110 contrast-125" />
                 </motion.div>
               </motion.div>
 
@@ -418,7 +418,7 @@ export function LandingPage() {
              >
                <div className="w-full h-full rounded-xl overflow-hidden shadow-[0_30px_60px_rgba(0,0,0,0.5)] border border-white/10 relative group cursor-pointer bg-gradient-to-br from-white/[0.08] to-transparent border border-white/10 shadow-[0_30px_60px_rgba(0,0,0,0.6)] backdrop-blur-md">
                   <div className="absolute inset-0 bg-black/40 group-hover:bg-transparent transition-colors duration-700 z-10 mix-blend-overlay"/>
-                  <img src="https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?auto=format&fit=crop&w=800&q=80" alt="Visual UI Design Editor" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 opacity-40 mix-blend-luminosity group-hover:mix-blend-normal group-hover:opacity-100 filter group-hover:brightness-110 contrast-125" />
+                  <img src="https://images.unsplash.com/photo-1581291518633-83b4ebd1d83e?auto=format&fit=crop&w=800&q=80" alt="Visual UI Design Editor" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 opacity-40 mix-blend-luminosity group-hover:mix-blend-normal group-hover:opacity-100 filter group-hover:brightness-110 contrast-125" />
                </div>
              </motion.div>
 
@@ -428,7 +428,7 @@ export function LandingPage() {
              >
                <div className="w-full h-full rounded-xl overflow-hidden shadow-[0_30px_60px_rgba(0,0,0,0.5)] border border-white/10 relative group cursor-pointer bg-gradient-to-br from-white/[0.08] to-transparent border border-white/10 shadow-[0_30px_60px_rgba(0,0,0,0.6)] backdrop-blur-md">
                   <div className="absolute inset-0 bg-black/40 group-hover:bg-transparent transition-colors duration-700 z-10 mix-blend-overlay"/>
-                  <img src="https://images.unsplash.com/photo-1542831371-29b0f74f9713?auto=format&fit=crop&w=800&q=80" alt="Headless API Coding" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 opacity-40 mix-blend-luminosity group-hover:mix-blend-normal group-hover:opacity-100 filter group-hover:brightness-110 contrast-125" />
+                  <img src="https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=800&q=80" alt="Headless API Coding" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 opacity-40 mix-blend-luminosity group-hover:mix-blend-normal group-hover:opacity-100 filter group-hover:brightness-110 contrast-125" />
                </div>
              </motion.div>
 
@@ -438,7 +438,7 @@ export function LandingPage() {
              >
                <div className="w-full h-full rounded-xl overflow-hidden shadow-[0_30px_60px_rgba(0,0,0,0.5)] border border-white/10 relative group cursor-pointer bg-gradient-to-br from-white/[0.08] to-transparent border border-white/10 shadow-[0_30px_60px_rgba(0,0,0,0.6)] backdrop-blur-md">
                   <div className="absolute inset-0 bg-black/40 group-hover:bg-transparent transition-colors duration-700 z-10 mix-blend-overlay"/>
-                  <img src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=800&q=80" alt="App Integrations Analytics" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 opacity-40 mix-blend-luminosity group-hover:mix-blend-normal group-hover:opacity-100 filter group-hover:brightness-110 contrast-125" />
+                  <img src="https://images.unsplash.com/photo-1504868584819-f8e8b4b6d7e3?auto=format&fit=crop&w=800&q=80" alt="App Integrations Analytics" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 opacity-40 mix-blend-luminosity group-hover:mix-blend-normal group-hover:opacity-100 filter group-hover:brightness-110 contrast-125" />
                </div>
              </motion.div>
           </div>
