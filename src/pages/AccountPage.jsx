@@ -26,7 +26,7 @@ export function AccountPage() {
         console.error('Failed to load orders', err)
         setLoading(false)
       })
-  }, [user, navigate])
+  }, [user?.id, navigate])
 
   const handleLogout = () => {
     logout()
