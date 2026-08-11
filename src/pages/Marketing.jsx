@@ -127,9 +127,10 @@ export function LandingPage() {
   const navigate = useNavigate()
   const heroRef = useRef(null)
   
-  const [loadingProgress, setLoadingProgress] = useState(0)
+  const hasSeenLoader = sessionStorage.getItem('ownstore_loader_seen') === 'true'
+  const [loadingProgress, setLoadingProgress] = useState(hasSeenLoader ? 100 : 0)
   const isLoaded = loadingProgress >= 100
-  const [loaderFinished, setLoaderFinished] = useState(false)
+  const [loaderFinished, setLoaderFinished] = useState(hasSeenLoader)
 
   useEffect(() => {
     if (!loaderFinished) {
@@ -165,11 +166,16 @@ export function LandingPage() {
   return (
     <div className="bg-shop-lightbg font-body selection:bg-shop-accent selection:text-shop-primary">
       {/* Loading Overlay */}
-      <HyperRealisticLoader 
-        isLoaded={isLoaded} 
-        progress={loadingProgress} 
-        onComplete={() => setLoaderFinished(true)} 
-      />
+      {!hasSeenLoader && (
+        <HyperRealisticLoader 
+          isLoaded={isLoaded} 
+          progress={loadingProgress} 
+          onComplete={() => {
+            setLoaderFinished(true)
+            sessionStorage.setItem('ownstore_loader_seen', 'true')
+          }} 
+        />
+      )}
 
       {/* Nav */}
       <nav className={`fixed top-0 left-0 right-0 z-[100] py-4 transition-all duration-700 ${navVisible ? 'bg-[#000000]/80 backdrop-blur-xl border-b border-white/5' : 'bg-transparent border-transparent backdrop-blur-none pointer-events-none'}`}>
