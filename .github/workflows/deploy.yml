@@ -30,7 +30,7 @@ jobs:
         mkdir -p deploy_package
         cp -r dist/* deploy_package/
         cp -r backend deploy_package/
-        mv deploy_package/backend/.env.production deploy_package/backend/env.ini
+        cp .env.production deploy_package/backend/env.ini
 
     - name: Sync Files via FTP
       uses: SamKirkland/FTP-Deploy-Action@v4.3.5
