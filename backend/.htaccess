@@ -1,7 +1,12 @@
 # Deny access to SQLite database files, INI configs, and environment variables
 <FilesMatch "\.(sqlite|db|ini)$|^\.env">
-    Order allow,deny
-    Deny from all
+    <IfModule !mod_authz_core.c>
+        Order allow,deny
+        Deny from all
+    </IfModule>
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
 </FilesMatch>
 
 # Allow CORS if needed at Apache level, though PHP handles it in db.php
