@@ -43,11 +43,11 @@ function HeroCarousel({ images }) {
 // ── Store Nav ─────────────────────────────────────────────────────────────────
 
 import { useNavigate, useOutletContext, useParams, useLocation } from 'react-router-dom'
-import { 
-  addReview, 
-  addOrder, 
-  isAuthenticated, 
-  getUserContext, 
+import {
+  addReview,
+  addOrder,
+  isAuthenticated,
+  getUserContext,
   getStoredOrders
 } from '@/services/storage'
 
@@ -77,7 +77,7 @@ export function useStoreTheme() {
     socialTiktok: '',
     ...baseSettings
   }
-  
+
   const [liveSettings, setLiveSettings] = useState(defaultSettings)
 
   useEffect(() => {
@@ -103,11 +103,11 @@ export function useStoreTheme() {
 function getContrastColor(hex) {
   if (!hex) return '#ffffff';
   if (hex.indexOf('#') === 0) hex = hex.slice(1);
-  if (hex.length === 3) hex = hex[0]+hex[0]+hex[1]+hex[1]+hex[2]+hex[2];
+  if (hex.length === 3) hex = hex[0] + hex[0] + hex[1] + hex[1] + hex[2] + hex[2];
   if (hex.length !== 6) return '#ffffff';
   var r = parseInt(hex.slice(0, 2), 16),
-      g = parseInt(hex.slice(2, 4), 16),
-      b = parseInt(hex.slice(4, 6), 16);
+    g = parseInt(hex.slice(2, 4), 16),
+    b = parseInt(hex.slice(4, 6), 16);
   return (r * 0.299 + g * 0.587 + b * 0.114) > 186 ? '#000000' : '#ffffff';
 }
 
@@ -129,7 +129,7 @@ function StoreNav({ cartCount, theme }) {
   return (
     <>
       {theme?.announcementText && (
-        <div className="bg-shop-primary text-center py-2 text-xs font-medium tracking-wide" style={{ color: contrastColor }}>
+        <div className="bg-shop-primary text-center py-2 text-xs font-medium tracking-wide" style={{ color: 'pink' }}>
           {theme.announcementText}
         </div>
       )}
@@ -139,7 +139,7 @@ function StoreNav({ cartCount, theme }) {
             {theme?.logoUrl ? (
               <img src={theme.logoUrl} alt={storeName} className="h-8 w-auto object-contain" />
             ) : (
-              <div className="w-8 h-8 rounded-lg bg-shop-primary flex items-center justify-center font-bold text-sm" style={{ color: contrastColor }}>
+              <div className="w-8 h-8 rounded-lg bg-shop-primary flex items-center justify-center font-bold text-sm" style={{ color: 'pink' }}>
                 {storeInitial}
               </div>
             )}
@@ -210,7 +210,7 @@ function StoreNav({ cartCount, theme }) {
             </motion.div>
           )}
         </AnimatePresence>
-      <style>{`@keyframes badgePop { from { transform:scale(0) } to { transform:scale(1) } }`}</style>
+        <style>{`@keyframes badgePop { from { transform:scale(0) } to { transform:scale(1) } }`}</style>
       </header>
     </>
   )
@@ -258,10 +258,9 @@ const ProductCard3D = memo(function ProductCard3D({ product, onAddToCart, onQuic
         {/* Badges */}
         <div className="absolute top-2 left-2 flex flex-col gap-1" style={isFlat ? {} : { transform: 'translateZ(30px)' }}>
           {product.badge && (
-            <span className={`text-[10px] font-bold uppercase tracking-wider text-white px-2 py-1 rounded-sm shadow-md ${
-              product.badge.toLowerCase() === 'sale' ? 'bg-red-500' : 
-              product.badge.toLowerCase() === 'new' ? 'bg-blue-500' : 'bg-shop-primary'
-            }`}>
+            <span className={`text-[10px] font-bold uppercase tracking-wider text-white px-2 py-1 rounded-sm shadow-md ${product.badge.toLowerCase() === 'sale' ? 'bg-red-500' :
+                product.badge.toLowerCase() === 'new' ? 'bg-blue-500' : 'bg-shop-primary'
+              }`}>
               {product.badge}
             </span>
           )}
@@ -271,9 +270,9 @@ const ProductCard3D = memo(function ProductCard3D({ product, onAddToCart, onQuic
             </span>
           )}
         </div>
-        
+
         {/* Quick View Overlay Button */}
-        <div 
+        <div
           className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-[2px]"
           style={isFlat ? {} : { transform: 'translateZ(20px)' }}
         >
@@ -342,10 +341,9 @@ const ProductListCard = memo(function ProductListCard({ product, onAddToCart, on
         />
         <div className="absolute top-2 left-2 flex flex-col gap-1">
           {product.badge && (
-            <span className={`text-[10px] font-bold uppercase tracking-wider text-white px-2 py-1 rounded-sm shadow-md ${
-              product.badge.toLowerCase() === 'sale' ? 'bg-red-500' : 
-              product.badge.toLowerCase() === 'new' ? 'bg-blue-500' : 'bg-shop-primary'
-            }`}>
+            <span className={`text-[10px] font-bold uppercase tracking-wider text-white px-2 py-1 rounded-sm shadow-md ${product.badge.toLowerCase() === 'sale' ? 'bg-red-500' :
+                product.badge.toLowerCase() === 'new' ? 'bg-blue-500' : 'bg-shop-primary'
+              }`}>
               {product.badge}
             </span>
           )}
@@ -372,7 +370,7 @@ const ProductListCard = memo(function ProductListCard({ product, onAddToCart, on
           </h3>
           <p className="text-sm text-white/60 line-clamp-2 md:line-clamp-3 mb-4">{product.description}</p>
         </div>
-        
+
         <div className="flex items-center justify-between mt-auto">
           <div className="flex flex-col">
             <span className="font-bold text-white text-lg">${product.price}</span>
@@ -411,7 +409,7 @@ function QuickViewModal({ product, isOpen, onClose, onAddToCart }) {
   const user = getUserContext()
   const isOwnStore = user?.role === 'admin' && user?.subdomain === subdomain
   const [qty, setQty] = useState(1)
-  
+
   // Reset state when product changes
   useEffect(() => {
     if (isOpen) setQty(1)
@@ -423,32 +421,31 @@ function QuickViewModal({ product, isOpen, onClose, onAddToCart }) {
     <AnimatePresence>
       {isOpen && (
         <>
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             onClick={onClose}
             className="fixed inset-0 bg-zinc-950/80 backdrop-blur-sm z-50 transition-colors"
           />
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, y: 40, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
             className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-4xl bg-zinc-900/50 border border-white/10 shadow-2xl rounded-2xl z-50 overflow-hidden flex flex-col md:flex-row transition-colors"
           >
-            <button 
+            <button
               onClick={onClose}
               className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center bg-black/20 hover:bg-black/40 text-white rounded-full z-10 transition-colors"
             >
               ✕
             </button>
-            
+
             {/* Image */}
             <div className="w-full md:w-1/2 h-64 md:h-auto bg-zinc-800 relative">
               <img src={product.image} alt={product.name} loading="lazy" decoding="async" className="w-full h-full object-cover" />
               {product.badge && (
-                <span className={`absolute top-4 left-4 text-[10px] font-bold uppercase tracking-wider text-white px-2 py-1 rounded-sm shadow-md ${
-                  product.badge.toLowerCase() === 'sale' ? 'bg-red-500' : 
-                  product.badge.toLowerCase() === 'new' ? 'bg-blue-500' : 'bg-shop-primary'
-                }`}>
+                <span className={`absolute top-4 left-4 text-[10px] font-bold uppercase tracking-wider text-white px-2 py-1 rounded-sm shadow-md ${product.badge.toLowerCase() === 'sale' ? 'bg-red-500' :
+                    product.badge.toLowerCase() === 'new' ? 'bg-blue-500' : 'bg-shop-primary'
+                  }`}>
                   {product.badge}
                 </span>
               )}
@@ -459,7 +456,7 @@ function QuickViewModal({ product, isOpen, onClose, onAddToCart }) {
               <span className="text-xs font-mono text-white/50 mb-2">{product.category}</span>
               <h2 className="text-2xl font-bold text-white font-display mb-2">{product.name}</h2>
               <p className="text-2xl font-bold text-shop-primary mb-4">${product.price}</p>
-              
+
               <p className="text-sm text-white/70 leading-relaxed mb-6">
                 {product.description}
               </p>
@@ -475,7 +472,7 @@ function QuickViewModal({ product, isOpen, onClose, onAddToCart }) {
                     {product.stock} in stock
                   </span>
                 </div>
-                
+
                 {isOwnStore ? (
                   <button
                     disabled
@@ -511,7 +508,7 @@ export function StoreHome() {
   const [toast, setToast] = useState('')
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState('All')
-  
+
   // Advanced Browsing State
   const theme = useStoreTheme()
   const [viewMode, setViewMode] = useState(theme.defaultView || 'grid')
@@ -528,7 +525,7 @@ export function StoreHome() {
       const viewedIds = JSON.parse(localStorage.getItem('recently_viewed') || '[]')
       const viewedProducts = viewedIds.map(id => (Array.isArray(products) ? products : PRODUCTS).find(p => p.id === id)).filter(Boolean)
       setRecentlyViewed(viewedProducts)
-    } catch (e) {}
+    } catch (e) { }
   }, [products])
 
   const filteredProducts = (Array.isArray(products) ? products : PRODUCTS).filter(p => {
@@ -538,7 +535,7 @@ export function StoreHome() {
     if (priceFilter === 'under50') matchesPrice = p.price < 50
     else if (priceFilter === '50to100') matchesPrice = p.price >= 50 && p.price <= 100
     else if (priceFilter === 'over100') matchesPrice = p.price > 100
-    
+
     return matchesSearch && matchesCategory && matchesPrice
   }).sort((a, b) => {
     if (sortOption === 'price-asc') return a.price - b.price
@@ -588,14 +585,14 @@ export function StoreHome() {
           {(theme.heroLayout === 'cinematic' || theme.heroLayout === 'static') && (
             <div className="absolute inset-0 bg-black pointer-events-none" style={{ opacity: (theme.heroOpacity || 60) / 100 }} />
           )}
-          
+
           <div className={`relative max-w-6xl mx-auto px-6 z-10 w-full pointer-events-none ${theme.heroLayout === 'minimalist' ? 'mt-20 flex flex-col items-center' : ''}`}>
             {theme.heroLayout !== 'minimalist' && (
               <p className="text-zinc-400 text-sm font-mono mb-4 tracking-widest uppercase">New arrivals · Summer 2026</p>
             )}
             <h1 className="text-5xl md:text-7xl font-bold font-display text-white mb-6 whitespace-pre-line tracking-tight leading-tight">{theme.heroTitle}</h1>
             <p className={`text-zinc-300 text-lg md:text-xl max-w-xl mb-10 leading-relaxed pointer-events-auto`}>{theme.heroSubtitle}</p>
-            <button 
+            <button
               className="pointer-events-auto bg-zinc-100 hover:bg-white text-zinc-950 px-8 py-4 rounded-full font-bold text-sm shadow-[0_0_20px_rgba(255,255,255,0.15)] transition-all hover:scale-105 active:scale-95 cursor-pointer"
               onClick={() => window.scrollTo({ top: window.innerHeight * 0.75, behavior: 'smooth' })}
             >
@@ -615,77 +612,77 @@ export function StoreHome() {
             <span className="text-sm text-white/50  font-mono transition-colors">{filteredProducts.length} items</span>
           </div>
 
-            <div className="flex flex-col sm:flex-row items-center gap-3">
-              <input
-                type="text"
-                placeholder="Search products..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full sm:w-64 px-4 py-2 text-sm border border-white/10 bg-zinc-900/50 text-white rounded-full focus:outline-none focus:ring-2 focus:ring-shop-accent/20 focus:border-shop-accent transition-colors"
-              />
-            </div>
+          <div className="flex flex-col sm:flex-row items-center gap-3">
+            <input
+              type="text"
+              placeholder="Search products..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full sm:w-64 px-4 py-2 text-sm border border-white/10 bg-zinc-900/50 text-white rounded-full focus:outline-none focus:ring-2 focus:ring-shop-accent/20 focus:border-shop-accent transition-colors"
+            />
+          </div>
+        </div>
+
+        {/* Advanced Toolbar */}
+        <div className="flex flex-col md:flex-row items-center justify-between gap-4 mb-8 bg-white/5 border border-white/10 rounded-xl p-3">
+          <div className="flex items-center gap-2 overflow-x-auto w-full md:w-auto">
+            {['All', 'Apparel', 'Accessories', 'Home'].map(cat => (
+              <button
+                key={cat}
+                onClick={() => { setSelectedCategory(cat); setVisibleCount(4); }}
+                className={`whitespace-nowrap px-4 py-1.5 rounded-full text-sm font-medium transition-colors cursor-pointer ${selectedCategory === cat ? 'bg-shop-primary text-white' : 'bg-white/10 text-white/70 hover:bg-white/20'}`}
+              >
+                {cat}
+              </button>
+            ))}
           </div>
 
-          {/* Advanced Toolbar */}
-          <div className="flex flex-col md:flex-row items-center justify-between gap-4 mb-8 bg-white/5 border border-white/10 rounded-xl p-3">
-            <div className="flex items-center gap-2 overflow-x-auto w-full md:w-auto">
-              {['All', 'Apparel', 'Accessories', 'Home'].map(cat => (
-                <button
-                  key={cat}
-                  onClick={() => { setSelectedCategory(cat); setVisibleCount(4); }}
-                  className={`whitespace-nowrap px-4 py-1.5 rounded-full text-sm font-medium transition-colors cursor-pointer ${selectedCategory === cat ? 'bg-shop-primary text-white' : 'bg-white/10 text-white/70 hover:bg-white/20'}`}
-                >
-                  {cat}
-                </button>
-              ))}
-            </div>
+          <div className="flex items-center gap-4 w-full md:w-auto">
+            {/* Price Filter */}
+            <select
+              value={priceFilter}
+              onChange={(e) => { setPriceFilter(e.target.value); setVisibleCount(4); }}
+              className="bg-transparent text-sm text-white/80 border-none outline-none cursor-pointer"
+            >
+              <option value="all" className="bg-zinc-900/50">Any Price</option>
+              <option value="under50" className="bg-zinc-900/50">Under $50</option>
+              <option value="50to100" className="bg-zinc-900/50">$50 - $100</option>
+              <option value="over100" className="bg-zinc-900/50">Over $100</option>
+            </select>
 
-            <div className="flex items-center gap-4 w-full md:w-auto">
-              {/* Price Filter */}
-              <select 
-                value={priceFilter} 
-                onChange={(e) => { setPriceFilter(e.target.value); setVisibleCount(4); }}
-                className="bg-transparent text-sm text-white/80 border-none outline-none cursor-pointer"
+            <div className="w-px h-4 bg-white/20"></div>
+
+            {/* Sort By */}
+            <select
+              value={sortOption}
+              onChange={(e) => setSortOption(e.target.value)}
+              className="bg-transparent text-sm text-white/80 border-none outline-none cursor-pointer"
+            >
+              <option value="newest" className="bg-zinc-900/50">Newest</option>
+              <option value="price-asc" className="bg-zinc-900/50">Price: Low to High</option>
+              <option value="price-desc" className="bg-zinc-900/50">Price: High to Low</option>
+              <option value="bestselling" className="bg-zinc-900/50">Bestselling</option>
+            </select>
+
+            <div className="w-px h-4 bg-white/20 hidden sm:block"></div>
+
+            {/* View Toggle */}
+            <div className="hidden sm:flex bg-black/40 rounded-lg p-1 gap-1">
+              <button
+                onClick={() => setViewMode('grid')}
+                className={`p-1.5 rounded-md transition-colors ${viewMode === 'grid' ? 'bg-shop-primary text-white' : 'text-white/50 hover:text-white'}`}
               >
-                <option value="all" className="bg-zinc-900/50">Any Price</option>
-                <option value="under50" className="bg-zinc-900/50">Under $50</option>
-                <option value="50to100" className="bg-zinc-900/50">$50 - $100</option>
-                <option value="over100" className="bg-zinc-900/50">Over $100</option>
-              </select>
-
-              <div className="w-px h-4 bg-white/20"></div>
-
-              {/* Sort By */}
-              <select 
-                value={sortOption} 
-                onChange={(e) => setSortOption(e.target.value)}
-                className="bg-transparent text-sm text-white/80 border-none outline-none cursor-pointer"
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+              </button>
+              <button
+                onClick={() => setViewMode('list')}
+                className={`p-1.5 rounded-md transition-colors ${viewMode === 'list' ? 'bg-shop-primary text-white' : 'text-white/50 hover:text-white'}`}
               >
-                <option value="newest" className="bg-zinc-900/50">Newest</option>
-                <option value="price-asc" className="bg-zinc-900/50">Price: Low to High</option>
-                <option value="price-desc" className="bg-zinc-900/50">Price: High to Low</option>
-                <option value="bestselling" className="bg-zinc-900/50">Bestselling</option>
-              </select>
-
-              <div className="w-px h-4 bg-white/20 hidden sm:block"></div>
-
-              {/* View Toggle */}
-              <div className="hidden sm:flex bg-black/40 rounded-lg p-1 gap-1">
-                <button 
-                  onClick={() => setViewMode('grid')}
-                  className={`p-1.5 rounded-md transition-colors ${viewMode === 'grid' ? 'bg-shop-primary text-white' : 'text-white/50 hover:text-white'}`}
-                >
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
-                </button>
-                <button 
-                  onClick={() => setViewMode('list')}
-                  className={`p-1.5 rounded-md transition-colors ${viewMode === 'list' ? 'bg-shop-primary text-white' : 'text-white/50 hover:text-white'}`}
-                >
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
-                </button>
-              </div>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
+              </button>
             </div>
           </div>
+        </div>
 
         {filteredProducts.length === 0 ? (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-12 bg-zinc-900/50 rounded-[10px] border border-white/10 transition-colors">
@@ -717,7 +714,7 @@ export function StoreHome() {
 
             {filteredProducts.length > visibleCount && (
               <div className="mt-12 text-center">
-                <button 
+                <button
                   onClick={() => setVisibleCount(v => v + 4)}
                   className="px-8 py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-full text-white text-sm font-semibold transition-colors"
                 >
@@ -743,15 +740,15 @@ export function StoreHome() {
         </div>
       )}
 
-      <QuickViewModal 
-        product={quickViewProduct} 
-        isOpen={!!quickViewProduct} 
-        onClose={() => setQuickViewProduct(null)} 
+      <QuickViewModal
+        product={quickViewProduct}
+        isOpen={!!quickViewProduct}
+        onClose={() => setQuickViewProduct(null)}
         onAddToCart={(p, qty) => {
           handleAddToCart(p, qty)
           setToast(`Added ${qty}x ${p.name} to cart`)
           setTimeout(() => setToast(''), 2500)
-        }} 
+        }}
       />
 
       {/* Footer */}
@@ -792,7 +789,7 @@ export function ProductDetail() {
 
   const productReviews = (Array.isArray(reviews) ? reviews : [])
     .filter(r => (r.product_id === id || r.productId === id) && (r.status || 'approved') === 'approved');
-  const averageRating = productReviews.length 
+  const averageRating = productReviews.length
     ? (productReviews.reduce((sum, r) => sum + r.rating, 0) / productReviews.length).toFixed(1)
     : 0;
 
@@ -800,7 +797,7 @@ export function ProductDetail() {
   const [qty, setQty] = useState(1);
   const [selectedSize, setSelectedSize] = useState('');
   const [selectedColor, setSelectedColor] = useState('');
-  
+
   const productImages = product ? (product.image || '').split(',').map(s => s.trim()).filter(Boolean) : [];
   const [selectedImage, setSelectedImage] = useState('');
 
@@ -839,7 +836,7 @@ export function ProductDetail() {
         const viewed = JSON.parse(localStorage.getItem('recently_viewed') || '[]')
         const updated = [product.id, ...viewed.filter(id => id !== product.id)].slice(0, 8)
         localStorage.setItem('recently_viewed', JSON.stringify(updated))
-      } catch (e) {}
+      } catch (e) { }
     }
   }, [product?.id]);
 
@@ -903,10 +900,10 @@ export function ProductDetail() {
   const variantKey = [selectedColor, selectedSize].filter(Boolean).join('-');
   let availableStock = product.stock;
   if (variantKey && product.variant_stock) {
-      const vStock = typeof product.variant_stock === 'string' ? JSON.parse(product.variant_stock) : product.variant_stock;
-      if (vStock[variantKey] !== undefined) {
-          availableStock = parseInt(vStock[variantKey], 10);
-      }
+    const vStock = typeof product.variant_stock === 'string' ? JSON.parse(product.variant_stock) : product.variant_stock;
+    if (vStock[variantKey] !== undefined) {
+      availableStock = parseInt(vStock[variantKey], 10);
+    }
   }
 
   return (
@@ -943,12 +940,12 @@ export function ProductDetail() {
             >
               <img src={selectedImage || productImages[0]} alt={product.name} loading="eager" decoding="async" className="w-full h-full object-cover" />
             </div>
-            
+
             {productImages.length > 1 && (
               <div className="flex gap-3 overflow-x-auto pb-2 custom-scrollbar">
                 {productImages.map((img, idx) => (
-                  <button 
-                    key={idx} 
+                  <button
+                    key={idx}
                     onClick={() => setSelectedImage(img)}
                     className={`w-20 h-20 shrink-0 rounded-lg overflow-hidden border-2 transition-colors ${selectedImage === img ? 'border-shop-primary' : 'border-transparent hover:border-white/20'}`}
                   >
@@ -962,7 +959,7 @@ export function ProductDetail() {
           <div className="flex flex-col">
             <span className="text-xs font-mono font-medium text-white/50  bg-white/10  px-2 py-0.5 rounded w-fit mb-3 transition-colors">{product.category}</span>
             <h1 className="text-3xl font-bold font-display text-white  mb-2 transition-colors">{product.name}</h1>
-            
+
             {productReviews.length > 0 && (
               <div className="flex items-center gap-2 mb-2">
                 <span className="text-yellow-400 text-sm">{'★'.repeat(Math.round(averageRating))}{'☆'.repeat(5 - Math.round(averageRating))}</span>
@@ -1039,7 +1036,7 @@ export function ProductDetail() {
         {/* Reviews Section */}
         <div className="mt-10 bg-zinc-900/50  border border-white/10  rounded-[10px] p-8 transition-colors">
           <h2 className="font-bold font-display text-white  mb-6 text-xl transition-colors">Customer Reviews</h2>
-          
+
           <div className="grid md:grid-cols-2 gap-10">
             <div>
               {productReviews.length === 0 ? (
@@ -1065,22 +1062,22 @@ export function ProductDetail() {
               <div className="flex flex-col gap-3">
                 <div className="flex items-center gap-2">
                   <label className="text-sm text-white/70 ">Rating:</label>
-                  <select 
-                    value={reviewForm.rating} 
+                  <select
+                    value={reviewForm.rating}
                     onChange={e => setReviewForm(f => ({ ...f, rating: +e.target.value }))}
                     className="px-2 py-1 rounded border border-white/10  bg-zinc-900/50  text-sm outline-none "
                   >
-                    {[5,4,3,2,1].map(num => <option key={num} value={num}>{num} Stars</option>)}
+                    {[5, 4, 3, 2, 1].map(num => <option key={num} value={num}>{num} Stars</option>)}
                   </select>
                 </div>
-                <input 
-                  placeholder="Your Name" 
+                <input
+                  placeholder="Your Name"
                   value={reviewForm.author}
                   onChange={e => setReviewForm(f => ({ ...f, author: e.target.value }))}
                   className="w-full px-3 py-2 text-sm rounded border border-white/10  bg-zinc-900/50  text-white  outline-none focus:border-shop-accent"
                 />
-                <textarea 
-                  placeholder="What did you think about this product?" 
+                <textarea
+                  placeholder="What did you think about this product?"
                   rows={3}
                   value={reviewForm.text}
                   onChange={e => setReviewForm(f => ({ ...f, text: e.target.value }))}
@@ -1124,7 +1121,7 @@ export function CartCheckout() {
   const [cardNumber, setCardNumber] = useState('');
   const [expiry, setExpiry] = useState('');
   const [cvc, setCvc] = useState('');
-  
+
   const [promoCode, setPromoCode] = useState('');
   const [discount, setDiscount] = useState(null);
   const [promoError, setPromoError] = useState('');
@@ -1179,9 +1176,9 @@ export function CartCheckout() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setStep('processing');
-    
+
     const { addOrder } = await import('@/services/storage');
-    
+
     const newOrder = {
       id: `ORD-${Date.now()}`,
       customer_id: customer?.id || null,
@@ -1192,7 +1189,7 @@ export function CartCheckout() {
       status: 'pending',
       items: cart.map(i => ({ product_id: i.product.id, name: i.product.name, quantity: i.quantity, price: i.product.price, size: i.size, color: i.color }))
     };
-    
+
     // Simulate API call to Stripe
     setTimeout(async () => {
       const res = await addOrder(newOrder, null, subdomain);
@@ -1218,12 +1215,12 @@ export function CartCheckout() {
         }
       `}</style>
       <StoreNav cartCount={cartCount} theme={theme} />
-      
+
       <div className="max-w-6xl mx-auto px-6 py-12">
         <button onClick={() => navigate(-1)} className="text-sm text-white/60 hover:text-white/90 flex items-center gap-1.5 mb-8 cursor-pointer transition-colors">
           ← Back to store
         </button>
-        
+
         {cart.length === 0 ? (
           <div className="bg-zinc-900/50 border border-white/10 rounded-[10px] p-12 text-center transition-colors">
             <p className="text-4xl mb-4">🛒</p>
@@ -1233,7 +1230,7 @@ export function CartCheckout() {
           </div>
         ) : (
           <div className="bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col md:flex-row relative">
-            
+
             {step === 'processing' && (
               <div className="absolute inset-0 z-50 bg-white/90 backdrop-blur-sm flex flex-col items-center justify-center">
                 <div className="w-12 h-12 border-4 border-zinc-200 border-t-zinc-900 rounded-full animate-spin mb-4" />
@@ -1268,9 +1265,9 @@ export function CartCheckout() {
 
               <div className="border-t border-zinc-200 pt-4 mb-4">
                 <div className="flex gap-2">
-                  <input 
-                    type="text" 
-                    placeholder="Promo Code (e.g. SUMMER20)" 
+                  <input
+                    type="text"
+                    placeholder="Promo Code (e.g. SUMMER20)"
                     value={promoCode}
                     onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
                     className="flex-1 px-3 py-2 rounded-lg border border-zinc-200 text-sm focus:outline-none focus:border-zinc-900 text-zinc-900 bg-white"
@@ -1312,9 +1309,9 @@ export function CartCheckout() {
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div>
                   <h3 className="text-sm font-semibold text-zinc-900 mb-3">Contact Information</h3>
-                  <input 
-                    type="email" 
-                    required 
+                  <input
+                    type="email"
+                    required
                     placeholder="Email address"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
@@ -1324,9 +1321,9 @@ export function CartCheckout() {
 
                 <div>
                   <h3 className="text-sm font-semibold text-zinc-900 mb-3">Shipping Address</h3>
-                  <input 
-                    type="text" 
-                    required 
+                  <input
+                    type="text"
+                    required
                     placeholder="Full Address"
                     value={address}
                     onChange={(e) => setAddress(e.target.value)}
@@ -1338,9 +1335,9 @@ export function CartCheckout() {
                   <h3 className="text-sm font-semibold text-zinc-900 mb-3">Payment Details</h3>
                   <div className="rounded-xl border border-zinc-200 bg-white overflow-hidden shadow-sm">
                     <div className="p-3 border-b border-zinc-200 relative">
-                      <input 
-                        type="text" 
-                        required 
+                      <input
+                        type="text"
+                        required
                         placeholder="Card number"
                         value={cardNumber}
                         onChange={handleCardFormat}
@@ -1358,9 +1355,9 @@ export function CartCheckout() {
                     </div>
                     <div className="flex">
                       <div className="w-1/2 p-3 border-r border-zinc-200">
-                        <input 
-                          type="text" 
-                          required 
+                        <input
+                          type="text"
+                          required
                           placeholder="MM / YY"
                           value={expiry}
                           onChange={handleExpiryFormat}
@@ -1369,9 +1366,9 @@ export function CartCheckout() {
                         />
                       </div>
                       <div className="w-1/2 p-3">
-                        <input 
-                          type="text" 
-                          required 
+                        <input
+                          type="text"
+                          required
                           placeholder="CVC"
                           value={cvc}
                           onChange={(e) => setCvc(e.target.value.replace(/\D/g, '').substring(0, 4))}
@@ -1384,8 +1381,8 @@ export function CartCheckout() {
                 </div>
 
                 <div className="pt-4">
-                  <button 
-                    type="submit" 
+                  <button
+                    type="submit"
                     className="w-full bg-zinc-900 text-white font-bold text-sm py-4 rounded-xl shadow-lg hover:bg-zinc-800 transition-colors hover:shadow-xl active:scale-[0.98] transform flex items-center justify-center gap-2"
                   >
                     <svg className="w-4 h-4 text-white/70" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -1416,11 +1413,11 @@ export function OrderConfirmation() {
   const location = useLocation();
   const { subdomain } = useParams();
   const { settings: theme } = useOutletContext();
-  
+
   const orderId = location.state?.orderId || 'ORD-' + Math.floor(Math.random() * 10000);
   const cartData = location.state?.pastCart || [];
   const total = location.state?.pastTotal || 0;
-  
+
   const onHome = () => navigate(`/store/${subdomain}`);
   const tilt = useTilt(6)
 
@@ -1433,7 +1430,7 @@ export function OrderConfirmation() {
     doc.text(`Order ID: ${orderId}`, 20, 30)
     doc.text(`Store: ${subdomain || 'OwnStore'}`, 20, 40)
     doc.text(`Total: $${total.toFixed(2)}`, 20, 50)
-    
+
     let y = 70
     cartData.forEach((item, idx) => {
       doc.text(`${item.quantity}x ${item.product.name} - $${(item.product.price * item.quantity).toFixed(2)}`, 20, y)
@@ -1540,8 +1537,8 @@ export function CartSidebar({ isOpen, onClose, cart, handleUpdateCart, onCheckou
     <AnimatePresence>
       {isOpen && (
         <>
-          <motion.div 
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} 
+          <motion.div
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             onClick={onClose}
             className="fixed inset-0 bg-zinc-900/50/40 backdrop-blur-sm z-40 transition-colors"
           />
@@ -1553,7 +1550,7 @@ export function CartSidebar({ isOpen, onClose, cart, handleUpdateCart, onCheckou
               <h2 className="text-xl font-bold font-display text-white  transition-colors">Your Cart ({cartCount})</h2>
               <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-white/10  text-white/60 transition-colors cursor-pointer">✕</button>
             </div>
-            
+
             <div className="flex-1 overflow-y-auto p-6">
               {cart.length === 0 ? (
                 <div className="h-full flex flex-col items-center justify-center text-center text-white/60">
@@ -1589,7 +1586,7 @@ export function CartSidebar({ isOpen, onClose, cart, handleUpdateCart, onCheckou
                 </div>
               )}
             </div>
-            
+
             {cart.length > 0 && (
               <div className="p-6 border-t border-white/5  bg-zinc-950  transition-colors">
                 <div className="flex justify-between items-center mb-4 text-white  font-semibold transition-colors">
