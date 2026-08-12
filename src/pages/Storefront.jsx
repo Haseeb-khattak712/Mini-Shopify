@@ -169,7 +169,7 @@ function StoreNav({ cartCount, theme }) {
             >
               🛒 <span className="hidden md:inline">Cart</span>
               {cartCount > 0 && (
-                <span className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-shop-primary text-white text-[10px] font-bold rounded-full flex items-center justify-center font-mono"
+                <span className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-shop-primary text-black text-[10px] font-bold rounded-full flex items-center justify-center font-mono"
                   style={{ animation: 'badgePop 0.3s cubic-bezier(0.34,1.56,0.64,1)' }}>
                   {cartCount}
                 </span>
@@ -259,7 +259,7 @@ const ProductCard3D = memo(function ProductCard3D({ product, onAddToCart, onQuic
         <div className="absolute top-2 left-2 flex flex-col gap-1" style={isFlat ? {} : { transform: 'translateZ(30px)' }}>
           {product.badge && (
             <span className={`text-[10px] font-bold uppercase tracking-wider text-white px-2 py-1 rounded-sm shadow-md ${product.badge.toLowerCase() === 'sale' ? 'bg-red-500' :
-                product.badge.toLowerCase() === 'new' ? 'bg-blue-500' : 'bg-shop-primary'
+              product.badge.toLowerCase() === 'new' ? 'bg-blue-500' : 'bg-shop-primary'
               }`}>
               {product.badge}
             </span>
@@ -342,7 +342,7 @@ const ProductListCard = memo(function ProductListCard({ product, onAddToCart, on
         <div className="absolute top-2 left-2 flex flex-col gap-1">
           {product.badge && (
             <span className={`text-[10px] font-bold uppercase tracking-wider text-white px-2 py-1 rounded-sm shadow-md ${product.badge.toLowerCase() === 'sale' ? 'bg-red-500' :
-                product.badge.toLowerCase() === 'new' ? 'bg-blue-500' : 'bg-shop-primary'
+              product.badge.toLowerCase() === 'new' ? 'bg-blue-500' : 'bg-shop-primary'
               }`}>
               {product.badge}
             </span>
@@ -444,7 +444,7 @@ function QuickViewModal({ product, isOpen, onClose, onAddToCart }) {
               <img src={product.image} alt={product.name} loading="lazy" decoding="async" className="w-full h-full object-cover" />
               {product.badge && (
                 <span className={`absolute top-4 left-4 text-[10px] font-bold uppercase tracking-wider text-white px-2 py-1 rounded-sm shadow-md ${product.badge.toLowerCase() === 'sale' ? 'bg-red-500' :
-                    product.badge.toLowerCase() === 'new' ? 'bg-blue-500' : 'bg-shop-primary'
+                  product.badge.toLowerCase() === 'new' ? 'bg-blue-500' : 'bg-shop-primary'
                   }`}>
                   {product.badge}
                 </span>
